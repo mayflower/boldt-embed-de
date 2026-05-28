@@ -1,0 +1,13 @@
+{
+  "status": "pass",
+  "issue_count": 0,
+  "checks": {
+    "structure": [],
+    "json": [],
+    "jsonl": [],
+    "package_import": [],
+    "adrs": [],
+    "model_cards": [],
+    "placeholders": []
+  }
+}

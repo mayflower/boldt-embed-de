@@ -28,22 +28,44 @@ REQUIRED_DIRS = [
     "data",
     "data/schema",
     "data/samples",
+    "data/synthetic",
     "model_cards",
     "outputs",
 ]
 
-REQUIRED_FILES = [
-    "README.md",
-    "CLAUDE.md",
-    "LICENSE",
-    "pyproject.toml",
-    "Makefile",
-    "src/boldt_embed/__init__.py",
-    "configs/training_causal.json",
-    "configs/training_bidirectional.json",
-    "configs/training_reranker.json",
-    "configs/evaluation.json",
+_SRC_MODULES = [
+    "__init__", "textutil", "config", "instructions", "pooling", "matryoshka",
+    "losses", "merging", "metrics", "data", "hard_negatives", "eval_harness",
+    "model_causal", "model_bidirectional", "reranker", "cli",
 ]
+_SCRIPTS = [
+    "validate_repo", "run_smoke_tests", "run_local_benchmark",
+    "run_mteb_benchmark_template", "write_reports",
+    "train_causal", "train_bidirectional", "train_reranker",
+]
+_DOCS = [
+    "RESEARCH_NOTES_2026", "ARCHITECTURE_PLAN", "DATA_PLAN",
+    "SYNTHETIC_PAIRS", "VALIDATION_POLICY", "BENCHMARK_PLAN",
+]
+_ADRS = [
+    "ADR-001-base-model-and-license", "ADR-002-causal-vs-bidirectional",
+    "ADR-003-pooling-strategy", "ADR-004-training-data-and-licensing",
+    "ADR-005-benchmark-protocol", "ADR-006-release-and-model-card",
+]
+
+REQUIRED_FILES = [
+    "README.md", "CLAUDE.md", "LICENSE", "pyproject.toml", "Makefile",
+    "configs/training_causal.json", "configs/training_bidirectional.json",
+    "configs/training_reranker.json", "configs/evaluation.json",
+    "benchmarks/toy_de_retrieval.json", "benchmarks/stress_cases_de.jsonl",
+    "benchmarks/mteb_german_tasks.json", "benchmarks/baselines.json",
+    "data/schema/pair_schema.json", "data/samples/toy_pairs_de.jsonl",
+    "data/samples/toy_triples_de.jsonl", "data/synthetic/prompt_specs.json",
+]
+REQUIRED_FILES += [f"src/boldt_embed/{m}.py" for m in _SRC_MODULES]
+REQUIRED_FILES += [f"scripts/{s}.py" for s in _SCRIPTS]
+REQUIRED_FILES += [f"docs/{d}.md" for d in _DOCS]
+REQUIRED_FILES += [f"docs/adr/{a}.md" for a in _ADRS]
 
 ADR_SECTIONS = ("## Status", "## Context", "## Decision", "## Consequences")
 MODEL_CARD_SECTIONS = (
@@ -70,7 +92,7 @@ def check_structure() -> List[Issue]:
 
 def check_json() -> List[Issue]:
     issues: List[Issue] = []
-    for sub in ("configs", "benchmarks", "data/schema"):
+    for sub in ("configs", "benchmarks", "data/schema", "data/synthetic"):
         for path in sorted((ROOT / sub).glob("*.json")):
             try:
                 json.loads(path.read_text(encoding="utf-8"))

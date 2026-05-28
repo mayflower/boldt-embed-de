@@ -1,0 +1,34 @@
+name: ci
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install (core only — stdlib, no ML deps)
+        run: pip install -e .
+      - name: Structural validation
+        run: python scripts/validate_repo.py --format markdown
+      - name: Smoke tests
+        run: python scripts/run_smoke_tests.py --format markdown
+      - name: Local benchmark plumbing
+        run: python scripts/run_local_benchmark.py --format markdown
+      - name: Unit tests
+        run: python -m unittest discover -s tests
+      - name: Training dry-runs (no weights)
+        run: |
+          python scripts/train_causal.py --dry-run
+          python scripts/train_bidirectional.py --dry-run
+          python scripts/train_reranker.py --dry-run

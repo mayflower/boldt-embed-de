@@ -1,0 +1,40 @@
+{
+  "status": "pass",
+  "checks": [
+    {
+      "name": "structure",
+      "passed": true,
+      "detail": "validate_repo pass"
+    },
+    {
+      "name": "configs",
+      "passed": true,
+      "detail": "all 4 configs load"
+    },
+    {
+      "name": "data",
+      "passed": true,
+      "detail": "triples=7 pairs=6 errors=[]"
+    },
+    {
+      "name": "hard_negatives",
+      "passed": true,
+      "detail": "all families generate"
+    },
+    {
+      "name": "numeric_core",
+      "passed": true,
+      "detail": "pooling/matryoshka/merging/losses OK"
+    },
+    {
+      "name": "dry_runs",
+      "passed": true,
+      "detail": "causal/bi/reranker dry-runs pass"
+    },
+    {
+      "name": "benchmark_plumbing",
+      "passed": true,
+      "detail": "bm25 recall@1=1.0"
+    }
+  ]
+}
