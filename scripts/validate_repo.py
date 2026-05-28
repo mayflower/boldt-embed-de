@@ -68,6 +68,7 @@ REQUIRED_FILES += [f"docs/{d}.md" for d in _DOCS]
 REQUIRED_FILES += [f"docs/adr/{a}.md" for a in _ADRS]
 REQUIRED_FILES += [
     "RELEASE_CHECKLIST.md",
+    "AUDIT.md",
     "model_cards/Boldt-Embed-DE-350M-v1-causal.md",
     "model_cards/Boldt-Embed-DE-350M-v1-bi.md",
     "model_cards/Boldt-Reranker-DE-350M-v1.md",
