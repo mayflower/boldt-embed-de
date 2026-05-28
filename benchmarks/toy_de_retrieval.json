@@ -1,0 +1,103 @@
+{
+  "description": "Tiny German retrieval benchmark for validating metric plumbing only.",
+  "corpus": [
+    {
+      "id": "d1",
+      "text": "Die Kündigungsfrist für eine Wohnung beträgt in der Regel drei Monate, wenn keine besondere Ausnahme gilt."
+    },
+    {
+      "id": "d2",
+      "text": "Bei einem abgelaufenen ELSTER-Zertifikat muss ein neues Zertifikat beantragt und aktiviert werden."
+    },
+    {
+      "id": "d3",
+      "text": "Kleinunternehmer weisen auf Rechnungen keine Umsatzsteuer aus und verweisen auf § 19 UStG."
+    },
+    {
+      "id": "d4",
+      "text": "Eine Mietminderung kommt in Betracht, wenn ein erheblicher Mangel der Wohnung vorliegt."
+    },
+    {
+      "id": "d5",
+      "text": "Der Widerruf eines Vertrags unterscheidet sich vom Rücktritt und von der Gewährleistung."
+    },
+    {
+      "id": "d6",
+      "text": "In der Schweiz wird häufig ss statt ß geschrieben; dies kann Suchanfragen beeinflussen."
+    },
+    {
+      "id": "d7",
+      "text": "Eine Krankmeldung für ein Kind muss dem Arbeitgeber rechtzeitig mitgeteilt werden."
+    },
+    {
+      "id": "d8",
+      "text": "Gemäß § 543 Abs. 2 Nr. 3 BGB kann eine fristlose Kündigung bei Mietrückstand möglich sein."
+    },
+    {
+      "id": "d9",
+      "text": "Österreich verwendet teils andere Begriffe, zum Beispiel Jänner statt Januar."
+    },
+    {
+      "id": "d10",
+      "text": "Technische Dokumentation sollte Versionen, Produkte und Fehlermeldungen genau unterscheiden."
+    }
+  ],
+  "queries": [
+    {
+      "id": "q1",
+      "query": "kündigungsfrist mietvertrag drei monate ausnahme",
+      "positive_doc_ids": [
+        "d1"
+      ]
+    },
+    {
+      "id": "q2",
+      "query": "elster zertifikat abgelaufen neu beantragen",
+      "positive_doc_ids": [
+        "d2"
+      ]
+    },
+    {
+      "id": "q3",
+      "query": "rechnung ohne umsatzsteuer kleinunternehmer paragraph 19",
+      "positive_doc_ids": [
+        "d3"
+      ]
+    },
+    {
+      "id": "q4",
+      "query": "unterschied widerruf rücktritt gewährleistung",
+      "positive_doc_ids": [
+        "d5"
+      ]
+    },
+    {
+      "id": "q5",
+      "query": "fristlose kündigung mietrückstand § 543 absatz 2",
+      "positive_doc_ids": [
+        "d8"
+      ]
+    },
+    {
+      "id": "q6",
+      "query": "schweiz ss statt ß suche",
+      "positive_doc_ids": [
+        "d6"
+      ]
+    },
+    {
+      "id": "q7",
+      "query": "krankmeldung kind arbeitgeber frist",
+      "positive_doc_ids": [
+        "d7"
+      ]
+    },
+    {
+      "id": "q8",
+      "query": "jänner januar österreich begriff",
+      "positive_doc_ids": [
+        "d9"
+      ]
+    }
+  ]
+}

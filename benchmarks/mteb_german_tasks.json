@@ -1,0 +1,54 @@
+{
+  "note": "Task names can change across MTEB versions. Verify with mteb.get_tasks() before a real run.",
+  "languages": [
+    "deu",
+    "de"
+  ],
+  "suggested_tasks": [
+    {
+      "name": "GermanQuADRetrieval",
+      "type": "Retrieval",
+      "priority": "high"
+    },
+    {
+      "name": "GerDaLIRSmall",
+      "type": "Retrieval",
+      "priority": "high"
+    },
+    {
+      "name": "STS22",
+      "type": "STS",
+      "priority": "medium"
+    },
+    {
+      "name": "MassiveIntentClassification",
+      "type": "Classification",
+      "priority": "medium"
+    },
+    {
+      "name": "MLDR",
+      "type": "Retrieval",
+      "priority": "medium"
+    },
+    {
+      "name": "MIRACL",
+      "type": "Retrieval",
+      "priority": "medium"
+    }
+  ],
+  "metrics": [
+    "ndcg_at_10",
+    "mrr_at_10",
+    "recall_at_100",
+    "spearman",
+    "accuracy",
+    "v_measure"
+  ],
+  "baselines": [
+    "deepset-mxbai-embed-de-large-v1",
+    "intfloat/multilingual-e5-large-instruct",
+    "BAAI/bge-m3",
+    "jinaai/jina-embeddings-v3",
+    "Qwen/Qwen3-Embedding-0.6B"
+  ]
+}

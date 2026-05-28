@@ -1,0 +1,25 @@
+{
+  "policy": "Evaluate baselines under the same harness before using their scores in release claims.",
+  "baseline_models": [
+    {
+      "model": "deepset-mxbai-embed-de-large-v1",
+      "reason": "German-specialized baseline"
+    },
+    {
+      "model": "intfloat/multilingual-e5-large-instruct",
+      "reason": "strong multilingual instruct baseline"
+    },
+    {
+      "model": "BAAI/bge-m3",
+      "reason": "multilingual retrieval baseline"
+    },
+    {
+      "model": "jinaai/jina-embeddings-v3",
+      "reason": "multilingual embedding baseline"
+    },
+    {
+      "model": "Qwen/Qwen3-Embedding-0.6B",
+      "reason": "decoder LLM embedding reference"
+    }
+  ]
+}

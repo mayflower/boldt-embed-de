@@ -1,0 +1,370 @@
+{
+  "status": "pass",
+  "benchmark": "toy_de_retrieval.json",
+  "note": "Tiny German retrieval benchmark for validating metric plumbing only.",
+  "disclaimer": "This local benchmark validates metric/Matryoshka plumbing only with a BM25 baseline and a deterministic hashing stand-in. It is NOT evidence of Boldt embedding quality.",
+  "methods": {
+    "bm25": {
+      "aggregate": {
+        "ndcg@1": 1.0,
+        "mrr@1": 1.0,
+        "recall@1": 1.0,
+        "map@1": 1.0,
+        "ndcg@3": 1.0,
+        "mrr@3": 1.0,
+        "recall@3": 1.0,
+        "map@3": 1.0,
+        "ndcg@5": 1.0,
+        "mrr@5": 1.0,
+        "recall@5": 1.0,
+        "map@5": 1.0,
+        "ndcg@10": 1.0,
+        "mrr@10": 1.0,
+        "recall@10": 1.0,
+        "map@10": 1.0
+      },
+      "queries": [
+        {
+          "query_id": "q1",
+          "query": "kündigungsfrist mietvertrag drei monate ausnahme",
+          "positive_doc_ids": [
+            "d1"
+          ],
+          "top5": [
+            "d1",
+            "d2",
+            "d3",
+            "d4",
+            "d5"
+          ],
+          "metrics": {
+            "ndcg@1": 1.0,
+            "mrr@1": 1.0,
+            "recall@1": 1.0,
+            "map@1": 1.0,
+            "ndcg@3": 1.0,
+            "mrr@3": 1.0,
+            "recall@3": 1.0,
+            "map@3": 1.0,
+            "ndcg@5": 1.0,
+            "mrr@5": 1.0,
+            "recall@5": 1.0,
+            "map@5": 1.0,
+            "ndcg@10": 1.0,
+            "mrr@10": 1.0,
+            "recall@10": 1.0,
+            "map@10": 1.0
+          }
+        },
+        {
+          "query_id": "q2",
+          "query": "elster zertifikat abgelaufen neu beantragen",
+          "positive_doc_ids": [
+            "d2"
+          ],
+          "top5": [
+            "d2",
+            "d1",
+            "d3",
+            "d4",
+            "d5"
+          ],
+          "metrics": {
+            "ndcg@1": 1.0,
+            "mrr@1": 1.0,
+            "recall@1": 1.0,
+            "map@1": 1.0,
+            "ndcg@3": 1.0,
+            "mrr@3": 1.0,
+            "recall@3": 1.0,
+            "map@3": 1.0,
+            "ndcg@5": 1.0,
+            "mrr@5": 1.0,
+            "recall@5": 1.0,
+            "map@5": 1.0,
+            "ndcg@10": 1.0,
+            "mrr@10": 1.0,
+            "recall@10": 1.0,
+            "map@10": 1.0
+          }
+        },
+        {
+          "query_id": "q3",
+          "query": "rechnung ohne umsatzsteuer kleinunternehmer paragraph 19",
+          "positive_doc_ids": [
+            "d3"
+          ],
+          "top5": [
+            "d3",
+            "d1",
+            "d2",
+            "d4",
+            "d5"
+          ],
+          "metrics": {
+            "ndcg@1": 1.0,
+            "mrr@1": 1.0,
+            "recall@1": 1.0,
+            "map@1": 1.0,
+            "ndcg@3": 1.0,
+            "mrr@3": 1.0,
+            "recall@3": 1.0,
+            "map@3": 1.0,
+            "ndcg@5": 1.0,
+            "mrr@5": 1.0,
+            "recall@5": 1.0,
+            "map@5": 1.0,
+            "ndcg@10": 1.0,
+            "mrr@10": 1.0,
+            "recall@10": 1.0,
+            "map@10": 1.0
+          }
+        },
+        {
+          "query_id": "q4",
+          "query": "unterschied widerruf rücktritt gewährleistung",
+          "positive_doc_ids": [
+            "d5"
+          ],
+          "top5": [
+            "d5",
+            "d1",
+            "d2",
+            "d3",
+            "d4"
+          ],
+          "metrics": {
+            "ndcg@1": 1.0,
+            "mrr@1": 1.0,
+            "recall@1": 1.0,
+            "map@1": 1.0,
+            "ndcg@3": 1.0,
+            "mrr@3": 1.0,
+            "recall@3": 1.0,
+            "map@3": 1.0,
+            "ndcg@5": 1.0,
+            "mrr@5": 1.0,
+            "recall@5": 1.0,
+            "map@5": 1.0,
+            "ndcg@10": 1.0,
+            "mrr@10": 1.0,
+            "recall@10": 1.0,
+            "map@10": 1.0
+          }
+        },
+        {
+          "query_id": "q5",
+          "query": "fristlose kündigung mietrückstand § 543 absatz 2",
+          "positive_doc_ids": [
+            "d8"
+          ],
+          "top5": [
+            "d8",
+            "d3",
+            "d1",
+            "d2",
+            "d4"
+          ],
+          "metrics": {
+            "ndcg@1": 1.0,
+            "mrr@1": 1.0,
+            "recall@1": 1.0,
+            "map@1": 1.0,
+            "ndcg@3": 1.0,
+            "mrr@3": 1.0,
+            "recall@3": 1.0,
+            "map@3": 1.0,
+            "ndcg@5": 1.0,
+            "mrr@5": 1.0,
+            "recall@5": 1.0,
+            "map@5": 1.0,
+            "ndcg@10": 1.0,
+            "mrr@10": 1.0,
+            "recall@10": 1.0,
+            "map@10": 1.0
+          }
+        },
+        {
+          "query_id": "q6",
+          "query": "schweiz ss statt ß suche",
+          "positive_doc_ids": [
+            "d6"
+          ],
+          "top5": [
+            "d6",
+            "d9",
+            "d1",
+            "d2",
+            "d3"
+          ],
+          "metrics": {
+            "ndcg@1": 1.0,
+            "mrr@1": 1.0,
+            "recall@1": 1.0,
+            "map@1": 1.0,
+            "ndcg@3": 1.0,
+            "mrr@3": 1.0,
+            "recall@3": 1.0,
+            "map@3": 1.0,
+            "ndcg@5": 1.0,
+            "mrr@5": 1.0,
+            "recall@5": 1.0,
+            "map@5": 1.0,
+            "ndcg@10": 1.0,
+            "mrr@10": 1.0,
+            "recall@10": 1.0,
+            "map@10": 1.0
+          }
+        },
+        {
+          "query_id": "q7",
+          "query": "krankmeldung kind arbeitgeber frist",
+          "positive_doc_ids": [
+            "d7"
+          ],
+          "top5": [
+            "d7",
+            "d1",
+            "d2",
+            "d3",
+            "d4"
+          ],
+          "metrics": {
+            "ndcg@1": 1.0,
+            "mrr@1": 1.0,
+            "recall@1": 1.0,
+            "map@1": 1.0,
+            "ndcg@3": 1.0,
+            "mrr@3": 1.0,
+            "recall@3": 1.0,
+            "map@3": 1.0,
+            "ndcg@5": 1.0,
+            "mrr@5": 1.0,
+            "recall@5": 1.0,
+            "map@5": 1.0,
+            "ndcg@10": 1.0,
+            "mrr@10": 1.0,
+            "recall@10": 1.0,
+            "map@10": 1.0
+          }
+        },
+        {
+          "query_id": "q8",
+          "query": "jänner januar österreich begriff",
+          "positive_doc_ids": [
+            "d9"
+          ],
+          "top5": [
+            "d9",
+            "d1",
+            "d2",
+            "d3",
+            "d4"
+          ],
+          "metrics": {
+            "ndcg@1": 1.0,
+            "mrr@1": 1.0,
+            "recall@1": 1.0,
+            "map@1": 1.0,
+            "ndcg@3": 1.0,
+            "mrr@3": 1.0,
+            "recall@3": 1.0,
+            "map@3": 1.0,
+            "ndcg@5": 1.0,
+            "mrr@5": 1.0,
+            "recall@5": 1.0,
+            "map@5": 1.0,
+            "ndcg@10": 1.0,
+            "mrr@10": 1.0,
+            "recall@10": 1.0,
+            "map@10": 1.0
+          }
+        }
+      ]
+    },
+    "hashing_stand_in": {
+      "aggregate": {
+        "ndcg@1": 1.0,
+        "mrr@1": 1.0,
+        "recall@1": 1.0,
+        "map@1": 1.0,
+        "ndcg@3": 1.0,
+        "mrr@3": 1.0,
+        "recall@3": 1.0,
+        "map@3": 1.0,
+        "ndcg@5": 1.0,
+        "mrr@5": 1.0,
+        "recall@5": 1.0,
+        "map@5": 1.0,
+        "ndcg@10": 1.0,
+        "mrr@10": 1.0,
+        "recall@10": 1.0,
+        "map@10": 1.0
+      },
+      "matryoshka_by_dim": {
+        "256": {
+          "ndcg@1": 1.0,
+          "mrr@1": 1.0,
+          "recall@1": 1.0,
+          "map@1": 1.0,
+          "ndcg@3": 1.0,
+          "mrr@3": 1.0,
+          "recall@3": 1.0,
+          "map@3": 1.0,
+          "ndcg@5": 1.0,
+          "mrr@5": 1.0,
+          "recall@5": 1.0,
+          "map@5": 1.0,
+          "ndcg@10": 1.0,
+          "mrr@10": 1.0,
+          "recall@10": 1.0,
+          "map@10": 1.0
+        },
+        "128": {
+          "ndcg@1": 1.0,
+          "mrr@1": 1.0,
+          "recall@1": 1.0,
+          "map@1": 1.0,
+          "ndcg@3": 1.0,
+          "mrr@3": 1.0,
+          "recall@3": 1.0,
+          "map@3": 1.0,
+          "ndcg@5": 1.0,
+          "mrr@5": 1.0,
+          "recall@5": 1.0,
+          "map@5": 1.0,
+          "ndcg@10": 1.0,
+          "mrr@10": 1.0,
+          "recall@10": 1.0,
+          "map@10": 1.0
+        },
+        "64": {
+          "ndcg@1": 1.0,
+          "mrr@1": 1.0,
+          "recall@1": 1.0,
+          "map@1": 1.0,
+          "ndcg@3": 1.0,
+          "mrr@3": 1.0,
+          "recall@3": 1.0,
+          "map@3": 1.0,
+          "ndcg@5": 1.0,
+          "mrr@5": 1.0,
+          "recall@5": 1.0,
+          "map@5": 1.0,
+          "ndcg@10": 1.0,
+          "mrr@10": 1.0,
+          "recall@10": 1.0,
+          "map@10": 1.0
+        }
+      }
+    }
+  },
+  "stress_cases": {
+    "compound": 1,
+    "legal_ref": 1,
+    "negation": 1,
+    "number_date": 1,
+    "orthography": 1,
+    "regional": 1
+  }
+}

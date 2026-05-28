@@ -1,0 +1,6 @@
+{"case": "compound", "query": "Krankenversicherungsbeitragsbemessungsgrenze", "positive_hint": "health insurance contribution assessment ceiling"}
+{"case": "legal_ref", "query": "§ 543 Abs. 2 Nr. 3 BGB Mietrückstand", "positive_hint": "German civil code rent arrears termination"}
+{"case": "negation", "query": "nicht erforderlich trotz Frist", "positive_hint": "negated requirement"}
+{"case": "regional", "query": "Jänner statt Januar Österreich", "positive_hint": "Austrian month terminology"}
+{"case": "orthography", "query": "ss statt ß Schweiz", "positive_hint": "Swiss spelling"}
+{"case": "number_date", "query": "Frist 14 Tage Widerruf 2026", "positive_hint": "date and duration sensitive"}
