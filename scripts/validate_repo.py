@@ -66,6 +66,12 @@ REQUIRED_FILES += [f"src/boldt_embed/{m}.py" for m in _SRC_MODULES]
 REQUIRED_FILES += [f"scripts/{s}.py" for s in _SCRIPTS]
 REQUIRED_FILES += [f"docs/{d}.md" for d in _DOCS]
 REQUIRED_FILES += [f"docs/adr/{a}.md" for a in _ADRS]
+REQUIRED_FILES += [
+    "RELEASE_CHECKLIST.md",
+    "model_cards/Boldt-Embed-DE-350M-v1-causal.md",
+    "model_cards/Boldt-Embed-DE-350M-v1-bi.md",
+    "model_cards/Boldt-Reranker-DE-350M-v1.md",
+]
 
 ADR_SECTIONS = ("## Status", "## Context", "## Decision", "## Consequences")
 MODEL_CARD_SECTIONS = (
