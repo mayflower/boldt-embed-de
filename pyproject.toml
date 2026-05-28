@@ -1,0 +1,47 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "boldt-embed-de"
+version = "0.1.0"
+description = "German-first embedding model family (causal, bidirectional, reranker) based on Boldt/Boldt-DC-350M."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "Apache-2.0" }
+authors = [{ name = "Boldt-Embed-DE maintainers" }]
+keywords = ["embeddings", "german", "retrieval", "reranker", "matryoshka", "sentence-transformers"]
+
+# The core package and ALL validation gates run on the Python standard library
+# only. Heavy ML dependencies are optional and used solely by the training and
+# real-benchmark code paths (which are dry-runnable without weights here).
+dependencies = []
+
+[project.optional-dependencies]
+train = [
+  "torch>=2.1",
+  "transformers>=4.40",
+  "sentence-transformers>=3.0",
+  "accelerate>=0.30",
+  "datasets>=2.19",
+  "peft>=0.11",
+]
+eval = [
+  "mteb>=1.12",
+  "sentence-transformers>=3.0",
+]
+dev = [
+  "ruff>=0.5",
+]
+
+[project.scripts]
+boldt-validate = "boldt_embed.cli:main_validate"
+boldt-smoke = "boldt_embed.cli:main_smoke"
+boldt-bench = "boldt_embed.cli:main_bench"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"

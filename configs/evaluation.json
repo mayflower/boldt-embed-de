@@ -1,0 +1,35 @@
+{
+  "metrics": [
+    "ndcg_at_10",
+    "mrr_at_10",
+    "recall_at_10",
+    "recall_at_100",
+    "map_at_10"
+  ],
+  "matryoshka_dims": [
+    1024,
+    768,
+    512,
+    256,
+    128,
+    64
+  ],
+  "stress_tests": [
+    "compounds",
+    "negation",
+    "legal_refs",
+    "dates_numbers",
+    "regional_variants",
+    "entity_disambiguation"
+  ],
+  "report_metadata_required": [
+    "command",
+    "commit",
+    "model",
+    "dataset",
+    "split",
+    "metric",
+    "hardware",
+    "output_path"
+  ]
+}

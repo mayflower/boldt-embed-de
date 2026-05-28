@@ -1,0 +1,15 @@
+{
+  "model_name_or_path": "Boldt/Boldt-DC-350M",
+  "variant": "reranker",
+  "input_template": "Anfrage: {query}\nDokument: {document}\nIst das Dokument relevant für die Anfrage?",
+  "output_mode": "binary_logit_or_scalar_score",
+  "positive_label": "Ja",
+  "negative_label": "Nein",
+  "max_length": 1536,
+  "hard_negative_sources": [
+    "bm25",
+    "embedder",
+    "reranker_mined"
+  ],
+  "dry_run": true
+}

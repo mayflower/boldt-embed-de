@@ -1,0 +1,23 @@
+{
+  "model_name_or_path": "Boldt/Boldt-DC-350M",
+  "variant": "causal",
+  "pooling": "eos_or_last_token",
+  "normalize_embeddings": true,
+  "embedding_dim": 1024,
+  "matryoshka_dims": [
+    1024,
+    768,
+    512,
+    256,
+    128,
+    64
+  ],
+  "query_instruction": "Instruct: Repräsentiere die Suchanfrage für die Suche nach passenden deutschen Dokumenten.\nQuery: {query}",
+  "document_instruction": "{document}",
+  "loss": "multiple_negatives_ranking_loss_with_hard_negatives",
+  "temperature": 0.03,
+  "max_query_length": 256,
+  "max_document_length": 1024,
+  "dtype": "bfloat16",
+  "dry_run": true
+}

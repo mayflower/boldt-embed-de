@@ -1,0 +1,40 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+.ipynb_checkpoints/
+.pytest_cache/
+.ruff_cache/
+
+# Secrets / env
+.env
+*.key
+
+# Model weights & large binary artifacts (never commit)
+*.bin
+*.safetensors
+*.pt
+*.pth
+*.ckpt
+*.onnx
+*.gguf
+checkpoints/
+wandb/
+
+# Raw / cached datasets (only small toy samples under data/samples are tracked)
+data/raw/
+data/cache/
+data/processed/
+
+# Large eval artifacts (small json/md reports under outputs/ ARE tracked)
+outputs/**/*.npy
+outputs/**/*.parquet
+outputs/**/*.arrow
+mteb_results/
+
+.DS_Store

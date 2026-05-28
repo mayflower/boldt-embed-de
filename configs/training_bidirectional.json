@@ -1,0 +1,28 @@
+{
+  "model_name_or_path": "Boldt/Boldt-DC-350M",
+  "variant": "bidirectional",
+  "adaptation": "masked_next_token_prediction",
+  "pooling_ablation": [
+    "mean",
+    "eos",
+    "latent_attention_optional"
+  ],
+  "normalize_embeddings": true,
+  "embedding_dim": 1024,
+  "matryoshka_dims": [
+    1024,
+    768,
+    512,
+    256,
+    128,
+    64
+  ],
+  "mmtp_steps_dry_run": 2,
+  "contrastive_steps_dry_run": 2,
+  "checkpoint_merging": [
+    "linear",
+    "slerp",
+    "adapter_merge"
+  ],
+  "dry_run": true
+}
