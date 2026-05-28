@@ -1,0 +1,23 @@
+{
+  "version": "2026-05-28.v1",
+  "language": "de",
+  "generator_model": "RECORD_AT_GENERATION_TIME",
+  "notes": "Record the exact generator model id, decoding params, and this version with every produced batch (ADR-004 reproducibility).",
+  "templates": {
+    "query_from_passage": "Gegeben ist die folgende deutsche Passage:\n\"\"\"{passage}\"\"\"\nFormuliere eine kurze, natürliche deutsche Suchanfrage, die durch diese Passage beantwortet wird. Gib ausschließlich die Suchanfrage zurück.",
+    "paraphrase_positive": "Formuliere die folgende deutsche Passage sinnerhaltend um, ohne Fakten zu verändern:\n\"\"\"{passage}\"\"\"",
+    "hard_negative_compound": "Schreibe einen deutschen Satz, der dem folgenden ähnelt, aber ein anderes zusammengesetztes Substantiv behandelt, sodass er die Anfrage NICHT beantwortet:\n\"\"\"{passage}\"\"\"",
+    "hard_negative_negation": "Schreibe eine negierte Variante des folgenden deutschen Satzes, die die Aussage ins Gegenteil verkehrt:\n\"\"\"{passage}\"\"\"",
+    "hard_negative_legal_ref": "Schreibe einen ähnlichen deutschen Satz, der sich aber auf eine andere Rechtsnorm (§/Absatz) bezieht:\n\"\"\"{passage}\"\"\"",
+    "hard_negative_dates_numbers": "Schreibe einen ähnlichen deutschen Satz mit anderen Zahlen, Fristen oder Datumsangaben:\n\"\"\"{passage}\"\"\"",
+    "hard_negative_regional_variant": "Schreibe einen ähnlichen deutschen Satz, der einen regionalen Begriff durch einen anderen Begriff ersetzt und damit etwas anderes meint:\n\"\"\"{passage}\"\"\"",
+    "hard_negative_entity_disambiguation": "Schreibe einen deutschen Satz über eine andere Bedeutung des mehrdeutigen Begriffs aus folgender Passage:\n\"\"\"{passage}\"\"\""
+  },
+  "filters": {
+    "min_chars": 8,
+    "max_chars": 2000,
+    "require_german": true,
+    "max_neg_positive_jaccard": 0.97
+  },
+  "neg_types": ["compound", "negation", "legal_ref", "dates_numbers", "regional_variant", "entity_disambiguation"]
+}

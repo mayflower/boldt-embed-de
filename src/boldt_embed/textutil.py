@@ -24,3 +24,12 @@ def normalize(text: str) -> str:
 
 def tokenize(text: str) -> List[str]:
     return _TOKEN_RE.findall(normalize(text))
+
+
+def jaccard(a, b) -> float:
+    """Token-set Jaccard similarity. Accepts any iterables; empty -> 0.0."""
+    sa, sb = set(a), set(b)
+    if not sa or not sb:
+        return 0.0
+    union = len(sa | sb)
+    return len(sa & sb) / union if union else 0.0
