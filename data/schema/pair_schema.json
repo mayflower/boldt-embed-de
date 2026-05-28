@@ -1,0 +1,31 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://boldt-embed-de/schema/pair_schema.json",
+  "title": "Boldt-Embed-DE contrastive training record",
+  "description": "One JSON object per line (JSONL). Enforced in code by boldt_embed.data.validate_record.",
+  "type": "object",
+  "required": ["query", "positive", "source", "license"],
+  "additionalProperties": true,
+  "properties": {
+    "query": { "type": "string", "minLength": 1 },
+    "positive": { "type": "string", "minLength": 1 },
+    "negatives": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "description": "Optional hard negatives. If omitted, in-batch negatives are used."
+    },
+    "neg_types": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": ["compound", "negation", "legal_ref", "dates_numbers", "regional_variant", "entity_disambiguation", "lexical", "random"]
+      }
+    },
+    "source": { "type": "string", "minLength": 1, "description": "Provenance tag." },
+    "license": {
+      "type": "string",
+      "enum": ["cc0-1.0", "cc-by-4.0", "cc-by-sa-4.0", "apache-2.0", "mit", "public-domain", "synthetic"]
+    },
+    "lang": { "type": "string", "default": "de" }
+  }
+}
