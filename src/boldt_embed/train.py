@@ -343,3 +343,128 @@ def encode_texts(
             pooled = F.normalize(pooled, p=2, dim=1)
             vectors.extend(pooled.cpu().tolist())
     return vectors
+
+
+def _rerank_inputs(template: str, query: str, documents: Sequence[str]) -> List[str]:
+    return [template.replace("{query}", query).replace("{document}", d) for d in documents]
+
+
+def train_reranker_real(
+    config,
+    triples,
+    *,
+    output_dir: str,
+    device_index: int = 0,
+    epochs: int = 15,
+    lr: float = 2e-5,
+    max_len: int = 128,
+    log: Callable[[str], None] = print,
+) -> Dict[str, object]:
+    """Train a real cross-encoder reranker (LlamaForSequenceClassification, 1 logit, BCE)."""
+    import torch
+    import torch.nn.functional as F
+    from transformers import AutoModelForSequenceClassification, AutoTokenizer
+
+    dev = pick_device(None, device_index)
+    log(f"[rr] device={dev}")
+    tok = AutoTokenizer.from_pretrained(config.model_name_or_path, trust_remote_code=True)
+    if tok.pad_token is None:
+        tok.pad_token = tok.eos_token
+    tok.padding_side = "right"
+    model = AutoModelForSequenceClassification.from_pretrained(
+        config.model_name_or_path, num_labels=1, trust_remote_code=True,
+        torch_dtype=torch.float32).to(dev)
+    model.config.pad_token_id = tok.pad_token_id
+
+    texts: List[str] = []
+    labels: List[float] = []
+    for t in triples:
+        texts += _rerank_inputs(config.input_template, t["query"], [t["positive"]])
+        labels.append(1.0)
+        for neg in t.get("negatives", []) or []:
+            texts += _rerank_inputs(config.input_template, t["query"], [neg])
+            labels.append(0.0)
+    y = torch.tensor(labels, device=dev)
+
+    opt = torch.optim.AdamW(model.parameters(), lr=lr)
+    model.train()
+    losses: List[float] = []
+    t0 = time.time()
+    for epoch in range(epochs):
+        opt.zero_grad()
+        enc = tok(texts, padding=True, truncation=True, max_length=max_len,
+                  return_tensors="pt").to(dev)
+        logits = model(**enc).logits.squeeze(-1)
+        loss = F.binary_cross_entropy_with_logits(logits, y)
+        loss.backward()
+        torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
+        opt.step()
+        losses.append(float(loss.item()))
+        log(f"[rr] epoch {epoch + 1}/{epochs} loss={losses[-1]:.4f}")
+
+    # pairwise accuracy: does score(query, positive) > score(query, negative)?
+    model.eval()
+    correct = total = 0
+    with torch.no_grad():
+        for t in triples:
+            pos = _rerank_inputs(config.input_template, t["query"], [t["positive"]])
+            negs = _rerank_inputs(config.input_template, t["query"], t.get("negatives") or [])
+            if not negs:
+                continue
+            enc = tok(pos + negs, padding=True, truncation=True, max_length=max_len,
+                      return_tensors="pt").to(dev)
+            s = model(**enc).logits.squeeze(-1)
+            pos_s, neg_s = s[0], s[1:]
+            correct += int((pos_s > neg_s).all().item())
+            total += 1
+    pairwise_acc = correct / total if total else None
+
+    out_path = Path(output_dir)
+    out_path.mkdir(parents=True, exist_ok=True)
+    model.save_pretrained(out_path)
+    tok.save_pretrained(out_path)
+    return {
+        "status": "trained",
+        "variant": "reranker",
+        "base_model": config.model_name_or_path,
+        "device": dev,
+        "gpu_name": torch.cuda.get_device_name(torch.device(dev)) if dev.startswith("cuda") else "cpu",
+        "num_positive_pairs": int(sum(labels)),
+        "num_negative_pairs": int(len(labels) - sum(labels)),
+        "epochs": epochs,
+        "initial_loss": losses[0] if losses else None,
+        "final_loss": losses[-1] if losses else None,
+        "loss_curve": losses,
+        "train_pairwise_accuracy": pairwise_acc,
+        "wall_time_sec": round(time.time() - t0, 2),
+        "checkpoint": str(out_path),
+    }
+
+
+def rerank_scores_real(
+    model_path: str,
+    query: str,
+    documents: Sequence[str],
+    template: str,
+    *,
+    device_index: int = 0,
+    max_len: int = 128,
+) -> List[float]:
+    """Score (query, document) pairs with a trained reranker -> sigmoid relevance in [0,1]."""
+    import torch
+    from transformers import AutoModelForSequenceClassification, AutoTokenizer
+
+    dev = pick_device(None, device_index)
+    tok = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True)
+    if tok.pad_token is None:
+        tok.pad_token = tok.eos_token
+    tok.padding_side = "right"
+    model = AutoModelForSequenceClassification.from_pretrained(
+        model_path, num_labels=1, trust_remote_code=True, torch_dtype=torch.float32).to(dev).eval()
+    model.config.pad_token_id = tok.pad_token_id
+    inputs = _rerank_inputs(template, query, documents)
+    with torch.no_grad():
+        enc = tok(inputs, padding=True, truncation=True, max_length=max_len,
+                  return_tensors="pt").to(dev)
+        logits = model(**enc).logits.squeeze(-1)
+        return torch.sigmoid(logits).cpu().tolist()

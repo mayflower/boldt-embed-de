@@ -1,0 +1,58 @@
+{
+  "status": "ok",
+  "scale_disclaimer": "Tiny REAL reranker run (7 triples). Proves training + reranking; not production.",
+  "run_metadata": {
+    "command": "scripts/run_real_reranker.py",
+    "commit": "c46767fd5a66598cb68df09bc52ab130249f416c",
+    "date": "2026-05-29",
+    "hardware": "Linux-6.11.0-1013-gcp-x86_64-with-glibc2.39",
+    "gpu": "NVIDIA RTX A6000",
+    "torch": "2.6.0+cu124"
+  },
+  "training": {
+    "status": "trained",
+    "variant": "reranker",
+    "base_model": "Boldt/Boldt-DC-350M",
+    "device": "cuda:0",
+    "gpu_name": "NVIDIA RTX A6000",
+    "num_positive_pairs": 7,
+    "num_negative_pairs": 7,
+    "epochs": 15,
+    "initial_loss": 0.9899006485939026,
+    "final_loss": 8.28515476314351e-06,
+    "loss_curve": [
+      0.9899006485939026,
+      3.9857337474823,
+      0.627945065498352,
+      2.584746837615967,
+      0.7783137559890747,
+      0.854764997959137,
+      0.23425328731536865,
+      0.27902355790138245,
+      0.06081439182162285,
+      0.006021768786013126,
+      0.0005488353781402111,
+      8.553468069294468e-05,
+      2.46322979364777e-05,
+      1.1945347978326026e-05,
+      8.28515476314351e-06
+    ],
+    "train_pairwise_accuracy": 1.0,
+    "wall_time_sec": 5.65,
+    "checkpoint": "/bigdata/johann/src/boldtembed/boldt-embed-de/outputs/checkpoints/reranker-toy"
+  },
+  "reranking_eval": {
+    "baseline_idorder": {
+      "ndcg@10": 0.47797724421213306,
+      "mrr@10": 0.32237103174603177,
+      "recall@10": 1.0,
+      "map@10": 0.32237103174603177
+    },
+    "reranked": {
+      "ndcg@10": 0.47686677810844114,
+      "mrr@10": 0.32202380952380955,
+      "recall@10": 1.0,
+      "map@10": 0.32202380952380955
+    }
+  }
+}
