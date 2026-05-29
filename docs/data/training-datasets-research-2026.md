@@ -15,6 +15,7 @@ in-domain memorization. (Facts below verified from HF dataset cards on 2026-05-2
 | `unicamp-dl/mmarco` (`german`) | passage ranking (q→passage) | de, 93.8 GB | **Apache-2.0** (card; verify MS-MARCO upstream) | **web (MS MARCO)** | ✅ **Top pick for training** — non-Wikipedia → disjoint from GermanQuAD/GerDaLIR |
 | `clips/mqa` (`de`) | FAQ/CQA (question→answer) | de, part of 100M–1B | **CC0-1.0** | web (Common Crawl) | ✅ cleanest license; web domain |
 | `nthakur/swim-ir-monolingual` (`de`) | synthetic q→passage | de, **447k** | **CC-BY-SA-4.0** | **Wikipedia** (via MIRACL) | ◑ good, but ⚠️ overlaps MIRACL **and** GermanQuAD (Wikipedia) — dedup or don't eval on those |
+| `deutsche-telekom/wikipedia-22-12-de-dpr` | DPR q→passage (+ formal/informal **imperative** variants) | de, 135k contexts × 1–6 q ≈ several×100k pairs | **CC-BY-SA-4.0** (code MIT) | **Wikipedia** (2022-12) | ✅ **strong German-native pick**; questions independently generated (no GermanQuAD query leakage); German register variants serve our robustness goal; ⚠️ same Wikipedia passage-overlap → dedup vs GermanQuAD/MIRACL or eval on GerDaLIR |
 | German Wikipedia (e.g. `wikimedia/wikipedia` `20231101.de`) | corpus for synthetic / mined pairs | de, millions | **CC-BY-SA-4.0** | Wikipedia | ◑ clean corpus; same Wikipedia-overlap caveat |
 | Synthetic from FineWeb-2 (de) | generated q→passage (our pipeline) | de, scalable | `synthetic` | web (base-model domain) | ✅ clean; matches base pretraining domain |
 
@@ -31,6 +32,7 @@ in-domain memorization. (Facts below verified from HF dataset cards on 2026-05-2
 | mMARCO-de (web) | ✅ disjoint | ✅ disjoint | ✅ disjoint |
 | clips/mqa (web FAQ) | ✅ disjoint | ✅ disjoint | ✅ disjoint |
 | SWIM-IR-de (Wikipedia) | ⚠️ overlap (dedup) | ✅ disjoint | ❌ same corpus — don't eval |
+| DT wikipedia-22-12-de-dpr (Wikipedia) | ⚠️ overlap (dedup) | ✅ disjoint | ⚠️ overlap (dedup) |
 | Wikipedia-mined (Wikipedia) | ⚠️ overlap (dedup) | ✅ disjoint | ⚠️ overlap |
 
 **Cleanest honest setup:** train on **mMARCO-de + clips/mqa** (web), evaluate on **GermanQuAD +
@@ -57,6 +59,7 @@ GermanQuAD/MMTEB numbers honest (ADR-009, `docs/data/leakage-policy.md`).
 
 ## Sources (fetched 2026-05-29)
 - clips/mqa — https://huggingface.co/datasets/clips/mqa (CC0-1.0; de; FAQ/CQA from Common Crawl)
+- deutsche-telekom/wikipedia-22-12-de-dpr — https://huggingface.co/datasets/deutsche-telekom/wikipedia-22-12-de-dpr · https://github.com/telekom/wikipedia-22-12-de-dpr (CC-BY-SA-4.0; de; 135k Wikipedia contexts + question/imperative variants; built from Cohere/wikipedia-22-12-de-embeddings)
 - SWIM-IR — https://huggingface.co/datasets/nthakur/swim-ir-monolingual (CC-BY-SA-4.0; de 447k) · paper arXiv 2311.05800 (NAACL'24)
 - mMARCO — https://huggingface.co/datasets/unicamp-dl/mmarco (Apache-2.0 per card; `german` config)
 - deepset-mxbai-embed-de-large-v1 — https://huggingface.co/mixedbread-ai/deepset-mxbai-embed-de-large-v1 (30M+ German pairs, explicit train/test de-overlap)

@@ -24,6 +24,7 @@ Permissive, **non-benchmark** German sources, disjoint from the eval set:
 |---|---|---|---|
 | `unicamp-dl/mmarco` (`german`) | Apache-2.0 (card; verify MS-MARCO upstream) | web | top pick; non-Wikipedia → disjoint from GermanQuAD/GerDaLIR |
 | `clips/mqa` (`de`) | CC0-1.0 | web FAQ/CQA | cleanest license |
+| `deutsche-telekom/wikipedia-22-12-de-dpr` | CC-BY-SA-4.0 (code MIT) | Wikipedia 2022-12 | German-native DPR + formal/informal imperative variants; questions not from GermanQuAD; ⚠️ dedup vs GermanQuAD/MIRACL |
 | `nthakur/swim-ir-monolingual` (`de`) | CC-BY-SA-4.0 | Wikipedia | 447k synthetic; ⚠️ dedup vs GermanQuAD/MIRACL |
 | German Wikipedia / FineWeb-2 (de) | CC-BY-SA-4.0 / ODC-By | wiki / web | for synthetic + mined pairs |
 
