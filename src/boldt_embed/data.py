@@ -44,6 +44,7 @@ NEG_TYPES: Set[str] = {
     "dates_numbers",
     "regional_variant",
     "entity_disambiguation",
+    "outcome_flip",
     "lexical",
     "random",
 }

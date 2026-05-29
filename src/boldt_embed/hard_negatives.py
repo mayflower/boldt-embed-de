@@ -127,6 +127,29 @@ def neg_entity_disambiguation(text: str) -> Optional[str]:
     return None
 
 
+# --- outcome_flip: keep the topic but flip the outcome (similar facts, different result) ---
+_OUTCOME_SWAPS: List[Tuple[str, str]] = [
+    ("ausgeschlossen", "möglich"),
+    ("möglich", "ausgeschlossen"),
+    ("unzulässig", "zulässig"),
+    ("zulässig", "unzulässig"),
+    ("unwirksam", "wirksam"),
+    ("wirksam", "unwirksam"),
+    ("wird gewährt", "wird abgelehnt"),
+    ("wird abgelehnt", "wird gewährt"),
+    ("erlaubt", "verboten"),
+    ("verboten", "erlaubt"),
+]
+
+
+def neg_outcome_flip(text: str) -> Optional[str]:
+    """Same facts/topic, opposite outcome (a 'similar but different result' negative)."""
+    for src, dst in _OUTCOME_SWAPS:
+        if re.search(rf"\b{re.escape(src)}\b", text, flags=re.IGNORECASE):
+            return _changed(text, re.sub(rf"\b{re.escape(src)}\b", dst, text, count=1, flags=re.IGNORECASE))
+    return None
+
+
 GENERATORS: Dict[str, Callable[[str], Optional[str]]] = {
     "compound": neg_compound,
     "negation": neg_negation,
@@ -134,7 +157,23 @@ GENERATORS: Dict[str, Callable[[str], Optional[str]]] = {
     "dates_numbers": neg_dates_numbers,
     "regional_variant": neg_regional_variant,
     "entity_disambiguation": neg_entity_disambiguation,
+    "outcome_flip": neg_outcome_flip,
 }
+
+# The ten query types a German retrieval set should cover (prompt 05). LLM templates per
+# type live in data/synthetic/prompt_specs.json -> query_type_templates.
+QUERY_TYPES: Tuple[str, ...] = (
+    "keyword",
+    "question",
+    "short_vague",
+    "long_detailed",
+    "entity",
+    "date_number",
+    "legal_admin",
+    "support",
+    "summary",
+    "negation_contradiction",
+)
 
 
 def make_hard_negatives(text: str, categories: Optional[Sequence[str]] = None) -> Dict[str, str]:

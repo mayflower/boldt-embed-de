@@ -23,7 +23,13 @@ German contrastive pairs with strong, category-tagged hard negatives.
 - LLM-based generation is reproduced from: `prompt_specs.json` version + generator model id
   + decoding params. Bump the `version` field whenever a template changes.
 
-## Hard-negative families
+## Hard-negative families (7)
 `compound`, `negation`, `legal_ref`, `dates_numbers`, `regional_variant`,
-`entity_disambiguation`. Each shipped toy triple in `data/samples/toy_triples_de.jsonl`
-exercises at least one family; `tests/test_hard_negatives.py` checks each generator.
+`entity_disambiguation`, `outcome_flip` (same facts, opposite result). Each shipped toy triple
+exercises at least one; `tests/test_hard_negatives.py` + `test_query_types.py` check generators.
+
+## Query types (10)
+`keyword`, `question`, `short_vague`, `long_detailed`, `entity`, `date_number`, `legal_admin`,
+`support`, `summary`, `negation_contradiction` — enumerated in `boldt_embed.hard_negatives.QUERY_TYPES`
+with one LLM template each in `data/synthetic/prompt_specs.json -> query_type_templates`. The
+`query_type` field is part of the training-pair schema.

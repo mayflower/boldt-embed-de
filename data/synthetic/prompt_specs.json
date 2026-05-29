@@ -1,5 +1,5 @@
 {
-  "version": "2026-05-28.v1",
+  "version": "2026-05-29.v2",
   "language": "de",
   "generator_model": "RECORD_AT_GENERATION_TIME",
   "notes": "Record the exact generator model id, decoding params, and this version with every produced batch (ADR-004 reproducibility).",
@@ -19,5 +19,17 @@
     "require_german": true,
     "max_neg_positive_jaccard": 0.97
   },
-  "neg_types": ["compound", "negation", "legal_ref", "dates_numbers", "regional_variant", "entity_disambiguation"]
+  "neg_types": ["compound", "negation", "legal_ref", "dates_numbers", "regional_variant", "entity_disambiguation", "outcome_flip"],
+  "query_type_templates": {
+    "keyword": "Erzeuge eine knappe deutsche Stichwort-Suchanfrage (2-5 Wörter) zu dieser Passage:\n\"\"\"{passage}\"\"\"",
+    "question": "Formuliere eine natürliche deutsche Frage, die durch diese Passage beantwortet wird:\n\"\"\"{passage}\"\"\"",
+    "short_vague": "Formuliere eine kurze, vage deutsche Suchanfrage, wie sie ein eiliger Nutzer eingeben würde:\n\"\"\"{passage}\"\"\"",
+    "long_detailed": "Formuliere eine lange, detaillierte deutsche Suchanfrage mit mehreren Bedingungen zu dieser Passage:\n\"\"\"{passage}\"\"\"",
+    "entity": "Formuliere eine deutsche Suchanfrage, die sich auf die zentrale Entität (Person/Organisation/Produkt) der Passage konzentriert:\n\"\"\"{passage}\"\"\"",
+    "date_number": "Formuliere eine deutsche Suchanfrage, die auf eine Frist, ein Datum oder eine Zahl in der Passage abzielt:\n\"\"\"{passage}\"\"\"",
+    "legal_admin": "Formuliere eine deutsche Suchanfrage im behördlich-juristischen Stil (ggf. mit § / Absatz) zu dieser Passage:\n\"\"\"{passage}\"\"\"",
+    "support": "Formuliere eine deutsche Kundensupport-Anfrage, die durch diese Passage gelöst würde:\n\"\"\"{passage}\"\"\"",
+    "summary": "Formuliere eine deutsche Suchanfrage, die nach einer Zusammenfassung des Passageninhalts sucht:\n\"\"\"{passage}\"\"\"",
+    "negation_contradiction": "Formuliere eine deutsche Suchanfrage mit einer Negation oder Bedingung, die zur Passage passt:\n\"\"\"{passage}\"\"\""
+  }
 }
