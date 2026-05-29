@@ -43,22 +43,27 @@ d = model.encode(docs, normalize_embeddings=True)
 - Data: license-clean German pairs/triples + synthetic (see DATA_PLAN, ADR-004).
 
 ## Evaluation
-**Real tiny run (NOT a public-benchmark claim).** Executed on an NVIDIA RTX A6000 on
-2026-05-29 (`scripts/run_real_training.py`; saved to `outputs/real-training/real-training-report.json`).
-Trained 15 epochs on 7 toy German triples; evaluated on the 8-query toy retrieval benchmark
-with real embeddings (last-token pooling, query instruction):
 
-| Model | nDCG@10 | MRR@10 | Recall@1 |
-|---|---:|---:|---:|
-| Base `Boldt-DC-350M` (untrained) | 0.774 | 0.698 | 0.50 |
-| + contrastive (this tiny run) | 0.938 | 0.917 | 0.875 |
+### Real GermanQuAD run (held-out test retrieval)
+Trained on **11,494 real GermanQuAD pairs** (deepset/germanquad, CC-BY-4.0), 2 epochs / 720
+steps, ~6 min on an NVIDIA RTX A6000 (2026-05-29). Evaluated on the **held-out test split**
+(2,204 questions vs 474 unique passages), last-token pooling + German query instruction.
+Saved: `outputs/real-training/germanquad-report.json` (`scripts/train_causal_germanquad.py`).
 
-Caveat: 7 training examples → training loss reaches 0 (the 435M model trivially separates
-them); the 8-query eval set is tiny. This shows the pipeline trains and improves a *real*
-model, **not** production quality.
+| Model | nDCG@10 | MRR@10 | Recall@1 | Recall@10 | Recall@100 |
+|---|---:|---:|---:|---:|---:|
+| Base `Boldt-DC-350M` (untrained) | 0.006 | 0.005 | 0.003 | 0.011 | 0.120 |
+| **+ contrastive (GermanQuAD)** | **0.879** | **0.851** | **0.779** | **0.963** | **0.995** |
 
-**Public-benchmark evaluation (MMTEB / GermanDPR) remains pending** — to be run with full run
-metadata per ADR-005 once trained on real corpora. Numbers are reported only from saved runs.
+A real, large improvement on held-out German data. **Scope/caveats:** single in-domain
+dataset (GermanQuAD) with a small 474-passage corpus — strong in-domain retrieval, **not** a
+broad multi-task or multi-domain claim.
+
+### Broader public benchmark (MMTEB) — not run
+Full MMTEB German + GermanDPR + cross-domain evaluation remains pending (needs the larger task
+downloads); see `docs/benchmark-report.md`. Numbers are reported only from saved runs (ADR-005).
+
+(An earlier toy 7-triple smoke run is superseded by the GermanQuAD run above.)
 
 ## Limitations
 - ~435M-param German-first model (LlamaForCausalLM, hidden 1024, 24 layers): not a "best

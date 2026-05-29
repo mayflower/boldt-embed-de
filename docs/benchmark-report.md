@@ -5,10 +5,11 @@ gpu, torch, date). Generated from executed runs; unrun items say **not run** wit
 
 ## 1. Executive summary
 The training/eval pipeline is implemented and **verified on real hardware** (NVIDIA RTX
-A6000): all three tracks load `Boldt/Boldt-DC-350M` and train for real. On a **tiny toy set**
-the causal embedder improves German toy retrieval (nDCG@10 0.774 → 0.94). These are
-*plumbing/pipeline* results, **not** production-quality or public-leaderboard claims. The
-public MMTEB German evaluation is **not run** (needs licensed corpora + dataset downloads).
+A6000): all three tracks load `Boldt/Boldt-DC-350M` and train for real. **Headline real
+result:** fine-tuning the causal embedder on **11,494 real GermanQuAD pairs** (CC-BY-4.0)
+lifts held-out test retrieval from near-random to **nDCG@10 = 0.879 / Recall@1 = 0.779**
+(2,204 queries vs 474 passages). This is a genuine in-domain German retrieval model. Caveat:
+one dataset / small corpus — **not** a broad multi-domain or full-MMTEB claim (still not run).
 
 ## 2. Model variants compared
 | Variant | Status | Notes |
@@ -34,11 +35,14 @@ bidirectional (10 MNTP + 12 contrastive steps) and reranker (15 epochs) ≈ tens
 
 ## 6. Results tables
 
-### 6a. Causal embedder — toy retrieval (real model, `outputs/real-training/real-training-report.json`)
-| Model | nDCG@10 | MRR@10 | Recall@1 |
-|---|---:|---:|---:|
-| Base (untrained) | 0.774 | 0.698 | 0.50 |
-| + contrastive (tiny) | 0.938 | 0.917 | 0.875 |
+### 6a. Causal embedder — REAL GermanQuAD held-out retrieval (`outputs/real-training/germanquad-report.json`)
+11,494 train pairs · 2 epochs / 720 steps · A6000 · test: 2,204 queries vs 474 passages.
+| Model | nDCG@10 | MRR@10 | Recall@1 | Recall@10 | Recall@100 |
+|---|---:|---:|---:|---:|---:|
+| Base `Boldt-DC-350M` (untrained) | 0.006 | 0.005 | 0.003 | 0.011 | 0.120 |
+| **+ contrastive (GermanQuAD)** | **0.879** | **0.851** | **0.779** | **0.963** | **0.995** |
+
+(An earlier 7-triple toy smoke run — base 0.774 → 0.94 on an 8-query toy set — is superseded.)
 
 ### 6b. Bidirectional (LLM2Vec) — training signal (`bidirectional-report.json`)
 | Phase | initial loss | final loss |
