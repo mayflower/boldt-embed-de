@@ -1,0 +1,21 @@
+{
+  "description": "Scored German stress test: each case maps to a positive doc among distractors.",
+  "corpus": [
+    {"id": "s1", "text": "Die Krankenversicherungsbeitragsbemessungsgrenze legt fest, bis zu welchem Einkommen Beiträge erhoben werden."},
+    {"id": "s2", "text": "Gemäß § 543 Abs. 2 Nr. 3 BGB ist eine fristlose Kündigung bei erheblichem Mietrückstand möglich."},
+    {"id": "s3", "text": "Eine gesonderte Genehmigung ist trotz Ablauf der Frist nicht erforderlich."},
+    {"id": "s4", "text": "In Österreich heißt der erste Monat des Jahres Jänner statt Januar."},
+    {"id": "s5", "text": "In der Schweiz schreibt man häufig ss statt ß, zum Beispiel Strasse."},
+    {"id": "s6", "text": "Die Widerrufsfrist beträgt 14 Tage und läuft im Jahr 2026 ab."},
+    {"id": "s7", "text": "Ein einfaches Rezept für Apfelkuchen mit Zimt und Zucker."},
+    {"id": "s8", "text": "Die Geschichte der Eisenbahn begann im 19. Jahrhundert."}
+  ],
+  "cases": [
+    {"id": "c1", "case": "compound", "query": "Krankenversicherungsbeitragsbemessungsgrenze", "positive_doc_ids": ["s1"]},
+    {"id": "c2", "case": "legal_ref", "query": "§ 543 Abs. 2 Nr. 3 BGB Mietrückstand", "positive_doc_ids": ["s2"]},
+    {"id": "c3", "case": "negation", "query": "nicht erforderlich trotz Frist", "positive_doc_ids": ["s3"]},
+    {"id": "c4", "case": "regional", "query": "Jänner statt Januar Österreich", "positive_doc_ids": ["s4"]},
+    {"id": "c5", "case": "orthography", "query": "ss statt ß Schweiz Strasse", "positive_doc_ids": ["s5"]},
+    {"id": "c6", "case": "number_date", "query": "Frist 14 Tage Widerruf 2026", "positive_doc_ids": ["s6"]}
+  ]
+}

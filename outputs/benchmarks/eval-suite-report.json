@@ -1,0 +1,165 @@
+{
+  "encoder": "HashingEncoder(dim=256) STAND-IN (not Boldt)",
+  "disclaimer": "Default HashingEncoder validates plumbing only; not a Boldt quality claim.",
+  "sts": {
+    "spearman": 0.8675328468813838,
+    "n": 8
+  },
+  "classification": {
+    "accuracy": 1.0,
+    "n_test": 3,
+    "n_classes": 3
+  },
+  "clustering": {
+    "v_measure": 0.16904258874082645,
+    "n": 9,
+    "k": 3
+  },
+  "crosslingual_de_en": {
+    "ndcg@1": 0.0,
+    "mrr@1": 0.0,
+    "recall@1": 0.0,
+    "map@1": 0.0,
+    "ndcg@5": 0.5981973151785931,
+    "mrr@5": 0.4583333333333333,
+    "recall@5": 1.0,
+    "map@5": 0.4583333333333333,
+    "ndcg@10": 0.5981973151785931,
+    "mrr@10": 0.4583333333333333,
+    "recall@10": 1.0,
+    "map@10": 0.4583333333333333
+  },
+  "rag": {
+    "ndcg@1": 0.8,
+    "mrr@1": 0.8,
+    "recall@1": 0.8,
+    "map@1": 0.8,
+    "ndcg@5": 0.9,
+    "mrr@5": 0.8666666666666666,
+    "recall@5": 1.0,
+    "map@5": 0.8666666666666666,
+    "ndcg@10": 0.9,
+    "mrr@10": 0.8666666666666666,
+    "recall@10": 1.0,
+    "map@10": 0.8666666666666666
+  },
+  "stress_bm25": {
+    "by_case": {
+      "compound": {
+        "ndcg@1": 1.0,
+        "mrr@1": 1.0,
+        "recall@1": 1.0,
+        "map@1": 1.0,
+        "ndcg@3": 1.0,
+        "mrr@3": 1.0,
+        "recall@3": 1.0,
+        "map@3": 1.0,
+        "ndcg@10": 1.0,
+        "mrr@10": 1.0,
+        "recall@10": 1.0,
+        "map@10": 1.0
+      },
+      "legal_ref": {
+        "ndcg@1": 1.0,
+        "mrr@1": 1.0,
+        "recall@1": 1.0,
+        "map@1": 1.0,
+        "ndcg@3": 1.0,
+        "mrr@3": 1.0,
+        "recall@3": 1.0,
+        "map@3": 1.0,
+        "ndcg@10": 1.0,
+        "mrr@10": 1.0,
+        "recall@10": 1.0,
+        "map@10": 1.0
+      },
+      "negation": {
+        "ndcg@1": 1.0,
+        "mrr@1": 1.0,
+        "recall@1": 1.0,
+        "map@1": 1.0,
+        "ndcg@3": 1.0,
+        "mrr@3": 1.0,
+        "recall@3": 1.0,
+        "map@3": 1.0,
+        "ndcg@10": 1.0,
+        "mrr@10": 1.0,
+        "recall@10": 1.0,
+        "map@10": 1.0
+      },
+      "number_date": {
+        "ndcg@1": 1.0,
+        "mrr@1": 1.0,
+        "recall@1": 1.0,
+        "map@1": 1.0,
+        "ndcg@3": 1.0,
+        "mrr@3": 1.0,
+        "recall@3": 1.0,
+        "map@3": 1.0,
+        "ndcg@10": 1.0,
+        "mrr@10": 1.0,
+        "recall@10": 1.0,
+        "map@10": 1.0
+      },
+      "orthography": {
+        "ndcg@1": 1.0,
+        "mrr@1": 1.0,
+        "recall@1": 1.0,
+        "map@1": 1.0,
+        "ndcg@3": 1.0,
+        "mrr@3": 1.0,
+        "recall@3": 1.0,
+        "map@3": 1.0,
+        "ndcg@10": 1.0,
+        "mrr@10": 1.0,
+        "recall@10": 1.0,
+        "map@10": 1.0
+      },
+      "regional": {
+        "ndcg@1": 1.0,
+        "mrr@1": 1.0,
+        "recall@1": 1.0,
+        "map@1": 1.0,
+        "ndcg@3": 1.0,
+        "mrr@3": 1.0,
+        "recall@3": 1.0,
+        "map@3": 1.0,
+        "ndcg@10": 1.0,
+        "mrr@10": 1.0,
+        "recall@10": 1.0,
+        "map@10": 1.0
+      }
+    },
+    "overall": {
+      "ndcg@1": 1.0,
+      "mrr@1": 1.0,
+      "recall@1": 1.0,
+      "map@1": 1.0,
+      "ndcg@3": 1.0,
+      "mrr@3": 1.0,
+      "recall@3": 1.0,
+      "map@3": 1.0,
+      "ndcg@10": 1.0,
+      "mrr@10": 1.0,
+      "recall@10": 1.0,
+      "map@10": 1.0
+    }
+  },
+  "efficiency_matryoshka": {
+    "bytes_per_vector_full_fp32": 1024,
+    "by_dim": {
+      "256": {
+        "bytes": 1024,
+        "fraction_of_full": 1.0
+      },
+      "128": {
+        "bytes": 512,
+        "fraction_of_full": 0.5
+      },
+      "64": {
+        "bytes": 256,
+        "fraction_of_full": 0.25
+      }
+    }
+  }
+}

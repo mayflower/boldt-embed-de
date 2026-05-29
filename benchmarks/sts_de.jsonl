@@ -1,0 +1,8 @@
+{"a": "Die Katze schläft auf dem Sofa.", "b": "Auf dem Sofa schläft eine Katze.", "score": 0.9}
+{"a": "Berlin ist die Hauptstadt Deutschlands.", "b": "Die deutsche Hauptstadt ist Berlin.", "score": 0.95}
+{"a": "Die Rechnung enthält keine Umsatzsteuer.", "b": "Auf der Rechnung wird keine Mehrwertsteuer ausgewiesen.", "score": 0.9}
+{"a": "Die Kündigungsfrist beträgt drei Monate.", "b": "Man muss drei Monate vorher kündigen.", "score": 0.85}
+{"a": "Der Hund bellt laut.", "b": "Ein Hund macht Geräusche.", "score": 0.65}
+{"a": "Ich gehe heute einkaufen.", "b": "Wir kaufen morgen Lebensmittel.", "score": 0.45}
+{"a": "Das Wetter ist heute sonnig.", "b": "Die Aktienkurse sind gestern gefallen.", "score": 0.05}
+{"a": "Er fährt mit dem Auto zur Arbeit.", "b": "Sie kocht ein Abendessen.", "score": 0.05}

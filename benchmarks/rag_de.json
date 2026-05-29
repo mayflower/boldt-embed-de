@@ -1,0 +1,18 @@
+{
+  "description": "Tiny German RAG retrieval set: question -> supporting passage (plumbing).",
+  "corpus": [
+    {"id": "r1", "text": "Die gesetzliche Gewährleistungsfrist für Neuware beträgt in Deutschland zwei Jahre."},
+    {"id": "r2", "text": "Ein Bußgeld für falsches Parken im eingeschränkten Halteverbot kann mehrere Euro betragen."},
+    {"id": "r3", "text": "Der Antrag auf Elterngeld kann bis zu drei Monate rückwirkend gestellt werden."},
+    {"id": "r4", "text": "Die Hauptuntersuchung beim TÜV ist für Pkw in der Regel alle zwei Jahre fällig."},
+    {"id": "r5", "text": "Ein verlorener Personalausweis sollte umgehend bei der Meldebehörde gemeldet werden."},
+    {"id": "r6", "text": "Die Abgabefrist für die Grundsteuererklärung wurde mehrfach verlängert."}
+  ],
+  "queries": [
+    {"id": "g1", "query": "Wie lange habe ich Gewährleistung auf neue Ware?", "positive_doc_ids": ["r1"]},
+    {"id": "g2", "query": "Wie lange rückwirkend kann ich Elterngeld beantragen?", "positive_doc_ids": ["r3"]},
+    {"id": "g3", "query": "Wie oft muss ein Auto zum TÜV?", "positive_doc_ids": ["r4"]},
+    {"id": "g4", "query": "Was tun bei verlorenem Personalausweis?", "positive_doc_ids": ["r5"]},
+    {"id": "g5", "query": "Wie hoch ist das Bußgeld fürs Parken im Halteverbot?", "positive_doc_ids": ["r2"]}
+  ]
+}

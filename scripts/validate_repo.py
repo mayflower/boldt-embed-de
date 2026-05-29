@@ -43,7 +43,7 @@ _SRC_MODULES = [
 _SCRIPTS = [
     "validate_repo", "run_smoke_tests", "run_local_benchmark",
     "run_mteb_benchmark_template", "write_reports", "run_real_training",
-    "run_real_bidirectional", "run_real_reranker",
+    "run_real_bidirectional", "run_real_reranker", "run_eval_suite",
     "validate_data_schema", "export_sentence_transformers",
     "train_causal", "train_bidirectional", "train_reranker",
 ]
@@ -65,6 +65,9 @@ REQUIRED_FILES = [
     "configs/training_reranker.json", "configs/evaluation.json",
     "benchmarks/toy_de_retrieval.json", "benchmarks/stress_cases_de.jsonl",
     "benchmarks/mteb_german_tasks.json", "benchmarks/baselines.json",
+    "benchmarks/sts_de.jsonl", "benchmarks/classification_de.jsonl",
+    "benchmarks/clustering_de.jsonl", "benchmarks/crosslingual_deen.json",
+    "benchmarks/rag_de.json", "benchmarks/stress_de.json",
     "data/schema/pair_schema.json", "data/samples/toy_pairs_de.jsonl",
     "data/samples/toy_triples_de.jsonl", "data/synthetic/prompt_specs.json",
 ]

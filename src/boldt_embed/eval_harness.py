@@ -18,7 +18,7 @@ from typing import Callable, Dict, List, Optional, Sequence, Tuple
 
 from .losses import cosine_similarity
 from .matryoshka import truncate_normalized
-from .metrics import aggregate, metrics_for_query
+from .metrics import accuracy, aggregate, metrics_for_query, spearman, v_measure
 from .textutil import normalize, tokenize
 
 
@@ -138,3 +138,102 @@ def summarize_stress(cases: Sequence[dict]) -> Dict[str, int]:
     for c in cases:
         counts[c.get("case", "unknown")] += 1
     return dict(sorted(counts.items()))
+
+
+# --------------------------------------------------------- task evals (pluggable encoder)
+# `encode` is any callable: List[str] -> List[List[float]] (HashingEncoder().encode, or a
+# lambda wrapping a real model's encode_texts).
+
+def retrieval_with_encoder(data: dict, encode, ks: Sequence[int] = (1, 5, 10)) -> dict:
+    corpus = data["corpus"]
+    doc_ids = [d["id"] for d in corpus]
+    doc_vecs = encode([d["text"] for d in corpus])
+    q_vecs = encode([q["query"] for q in data["queries"]])
+    rows = []
+    for i, q in enumerate(data["queries"]):
+        ranked = cosine_rank(q_vecs[i], list(zip(doc_ids, doc_vecs)))
+        rows.append(metrics_for_query(ranked, set(q["positive_doc_ids"]), ks))
+    return aggregate(rows)
+
+
+def evaluate_sts(pairs: Sequence[dict], encode) -> dict:
+    a = encode([p["a"] for p in pairs])
+    b = encode([p["b"] for p in pairs])
+    sims = [cosine_similarity(a[i], b[i]) for i in range(len(pairs))]
+    gold = [p["score"] for p in pairs]
+    return {"spearman": spearman(sims, gold), "n": len(pairs)}
+
+
+def evaluate_classification(train_items: Sequence[dict], test_items: Sequence[dict], encode) -> dict:
+    tr = encode([it["text"] for it in train_items])
+    groups: Dict[str, List[List[float]]] = defaultdict(list)
+    for it, v in zip(train_items, tr):
+        groups[it["label"]].append(v)
+    centroids = {lab: [sum(c[j] for c in vs) / len(vs) for j in range(len(vs[0]))]
+                 for lab, vs in groups.items()}
+    te = encode([it["text"] for it in test_items])
+    preds = []
+    for v in te:
+        best_lab, best_sim = None, None
+        for lab, c in centroids.items():
+            s = cosine_similarity(v, c)
+            if best_sim is None or s > best_sim:
+                best_sim, best_lab = s, lab
+        preds.append(best_lab)
+    return {"accuracy": accuracy([it["label"] for it in test_items], preds),
+            "n_test": len(test_items), "n_classes": len(centroids)}
+
+
+def _kmeans(vectors: Sequence[Sequence[float]], k: int, iters: int = 15) -> List[int]:
+    centroids = [list(vectors[i]) for i in range(min(k, len(vectors)))]
+    labels = [0] * len(vectors)
+    for _ in range(iters):
+        for i, v in enumerate(vectors):
+            best, best_d = 0, None
+            for ci, c in enumerate(centroids):
+                d = sum((a - b) ** 2 for a, b in zip(v, c))
+                if best_d is None or d < best_d:
+                    best_d, best = d, ci
+            labels[i] = best
+        new = []
+        for ci in range(len(centroids)):
+            members = [vectors[i] for i in range(len(vectors)) if labels[i] == ci]
+            if members:
+                dim = len(members[0])
+                new.append([sum(m[j] for m in members) / len(members) for j in range(dim)])
+            else:
+                new.append(centroids[ci])
+        centroids = new
+    return labels
+
+
+def evaluate_clustering(items: Sequence[dict], encode, k: int) -> dict:
+    vecs = encode([it["text"] for it in items])
+    pred = _kmeans(vecs, k)
+    true = [it["label"] for it in items]
+    return {"v_measure": v_measure(true, pred), "n": len(items), "k": k}
+
+
+def evaluate_stress(data: dict, ks: Sequence[int] = (1, 3, 10)) -> dict:
+    """Per-category German stress retrieval using the BM25 lexical baseline (deterministic)."""
+    corpus = data["corpus"]
+    by_cat: Dict[str, List[dict]] = defaultdict(list)
+    overall = []
+    for c in data["cases"]:
+        ranked = bm25_rank(c["query"], corpus)
+        m = metrics_for_query(ranked, set(c["positive_doc_ids"]), ks)
+        by_cat[c["case"]].append(m)
+        overall.append(m)
+    return {"by_case": {k: aggregate(v) for k, v in sorted(by_cat.items())},
+            "overall": aggregate(overall)}
+
+
+def efficiency_report(encoder_dim: int, matryoshka_dims: Sequence[int]) -> dict:
+    """Storage efficiency of Matryoshka truncation (fp32 bytes/vector per dim)."""
+    return {
+        "bytes_per_vector_full_fp32": 4 * encoder_dim,
+        "by_dim": {
+            d: {"bytes": 4 * d, "fraction_of_full": round(d / encoder_dim, 4)}
+            for d in matryoshka_dims if d <= encoder_dim
+        },
+    }

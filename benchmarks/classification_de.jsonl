@@ -1,0 +1,9 @@
+{"text": "Wie hoch darf die Mietkaution sein?", "label": "miete", "split": "train"}
+{"text": "Kann der Vermieter die Miete jährlich erhöhen?", "label": "miete", "split": "train"}
+{"text": "Wann muss ich die Steuererklärung abgeben?", "label": "steuer", "split": "train"}
+{"text": "Welche Belege brauche ich für die Steuererklärung?", "label": "steuer", "split": "train"}
+{"text": "Wie melde ich mein krankes Kind beim Arbeitgeber?", "label": "gesundheit", "split": "train"}
+{"text": "Welcher Arzt behandelt chronische Rückenschmerzen?", "label": "gesundheit", "split": "train"}
+{"text": "Darf der Vermieter die Kaution einbehalten?", "label": "miete", "split": "test"}
+{"text": "Bis wann muss die Umsatzsteuer gezahlt werden?", "label": "steuer", "split": "test"}
+{"text": "Wie bekomme ich eine ärztliche Krankschreibung?", "label": "gesundheit", "split": "test"}

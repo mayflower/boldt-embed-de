@@ -1,0 +1,16 @@
+{
+  "description": "Tiny cross-lingual DE->EN retrieval: German queries, English documents (plumbing).",
+  "corpus": [
+    {"id": "e1", "text": "Berlin is the capital and largest city of Germany."},
+    {"id": "e2", "text": "The notice period for a rented apartment is usually three months."},
+    {"id": "e3", "text": "Small businesses do not charge VAT under the small-business rule."},
+    {"id": "e4", "text": "A sick child must be reported to the employer in good time."},
+    {"id": "e5", "text": "The recipe combines apples, cinnamon and sugar for a cake."}
+  ],
+  "queries": [
+    {"id": "x1", "query": "Was ist die Hauptstadt von Deutschland?", "positive_doc_ids": ["e1"]},
+    {"id": "x2", "query": "Wie lang ist die Kündigungsfrist für eine Mietwohnung?", "positive_doc_ids": ["e2"]},
+    {"id": "x3", "query": "Kleinunternehmer ohne Umsatzsteuer", "positive_doc_ids": ["e3"]},
+    {"id": "x4", "query": "Krankmeldung für ein Kind beim Arbeitgeber", "positive_doc_ids": ["e4"]}
+  ]
+}
