@@ -17,9 +17,10 @@ This module enforces ADR-004 (data licensing) and ADR-005 (leakage control).
 from __future__ import annotations
 
 import json
+import re
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, Iterable, List, Sequence, Set
+from typing import Dict, Iterable, List, Sequence, Set, Tuple
 
 from .textutil import normalize, tokenize
 
@@ -204,3 +205,40 @@ def find_leakage(
                      "score": round(best_score, 4), "eval_text": best_text}
                 )
     return hits
+
+
+# ------------------------------------------------------------------------------ PII
+# Conservative German-aware PII patterns (ADR-004 safety dimension). Tuned to avoid
+# flagging legal references like "§ 543" or plain years.
+_PII_PATTERNS: Dict[str, "re.Pattern[str]"] = {
+    "email": re.compile(r"[\w.+-]+@[\w-]+\.[A-Za-z]{2,}"),
+    "iban_de": re.compile(r"\bDE\d{2}[ ]?(?:\d{4}[ ]?){4}\d{2}\b"),
+    "phone": re.compile(r"(?<![\w.])(?:\+49|0049|0)[\d][\d /()-]{6,}\d"),
+    "ipv4": re.compile(r"\b(?:\d{1,3}\.){3}\d{1,3}\b"),
+}
+
+
+def find_pii(text: str) -> List[Tuple[str, str]]:
+    """Return [(kind, matched_text)] of likely PII in a single string."""
+    hits: List[Tuple[str, str]] = []
+    if not isinstance(text, str):
+        return hits
+    for kind, pat in _PII_PATTERNS.items():
+        for m in pat.finditer(text):
+            hits.append((kind, m.group(0)))
+    return hits
+
+
+def scan_pii(records: Sequence[dict]) -> List[dict]:
+    """Scan query/positive/negatives of every record for PII. Empty list == clean."""
+    out: List[dict] = []
+    for i, rec in enumerate(records):
+        if not isinstance(rec, dict):
+            continue
+        fields = [("query", rec.get("query")), ("positive", rec.get("positive"))]
+        for j, neg in enumerate(rec.get("negatives", []) or []):
+            fields.append((f"negatives[{j}]", neg))
+        for field, value in fields:
+            for kind, match in find_pii(value if isinstance(value, str) else ""):
+                out.append({"record": i, "field": field, "kind": kind, "match": match})
+    return out

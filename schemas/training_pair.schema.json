@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://boldt-embed-de/schemas/training_pair.schema.json",
+  "title": "Boldt-Embed-DE training pair/triple",
+  "description": "One JSON object per line (JSONL). Enforced in code by boldt_embed.data.validate_record and scripts/validate_data_schema.py.",
+  "type": "object",
+  "required": ["query", "positive", "source", "license"],
+  "additionalProperties": true,
+  "properties": {
+    "query": {"type": "string", "minLength": 1},
+    "positive": {"type": "string", "minLength": 1},
+    "negatives": {"type": "array", "items": {"type": "string", "minLength": 1}},
+    "neg_types": {
+      "type": "array",
+      "items": {"type": "string", "enum": ["compound", "negation", "legal_ref", "dates_numbers", "regional_variant", "entity_disambiguation", "outcome_flip", "lexical", "random"]}
+    },
+    "query_type": {
+      "type": "string",
+      "enum": ["keyword", "question", "short_vague", "long_detailed", "entity", "date_number", "legal_admin", "support", "summary", "negation_contradiction"]
+    },
+    "source": {"type": "string", "minLength": 1},
+    "license": {"type": "string", "enum": ["cc0-1.0", "cc-by-4.0", "cc-by-sa-4.0", "apache-2.0", "mit", "public-domain", "synthetic"]},
+    "lang": {"type": "string", "default": "de"}
+  }
+}

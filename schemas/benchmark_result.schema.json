@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://boldt-embed-de/schemas/benchmark_result.schema.json",
+  "title": "Boldt-Embed-DE benchmark result record",
+  "description": "A single reported benchmark number with the run metadata required by ADR-005. A result missing any required metadata field is treated as 'not reported'.",
+  "type": "object",
+  "required": ["command", "commit", "model", "dataset", "split", "metric", "value", "hardware", "output_path"],
+  "additionalProperties": true,
+  "properties": {
+    "command": {"type": "string", "minLength": 1},
+    "commit": {"type": "string", "minLength": 7},
+    "model": {"type": "string", "minLength": 1},
+    "dataset": {"type": "string", "minLength": 1},
+    "split": {"type": "string", "enum": ["train", "dev", "validation", "test", "toy"]},
+    "metric": {"type": "string", "minLength": 1},
+    "value": {"type": "number"},
+    "matryoshka_dim": {"type": ["integer", "null"]},
+    "hardware": {"type": "string", "minLength": 1},
+    "output_path": {"type": "string", "minLength": 1},
+    "status": {"type": "string", "enum": ["reported", "not_run"]}
+  }
+}

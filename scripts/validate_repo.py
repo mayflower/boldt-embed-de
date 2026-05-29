@@ -29,6 +29,8 @@ REQUIRED_DIRS = [
     "data/schema",
     "data/samples",
     "data/synthetic",
+    "schemas",
+    "docs/data",
     "model_cards",
     "outputs",
 ]
@@ -41,6 +43,7 @@ _SRC_MODULES = [
 _SCRIPTS = [
     "validate_repo", "run_smoke_tests", "run_local_benchmark",
     "run_mteb_benchmark_template", "write_reports", "run_real_training",
+    "validate_data_schema",
     "train_causal", "train_bidirectional", "train_reranker",
 ]
 _DOCS = [
@@ -68,6 +71,10 @@ REQUIRED_FILES += [f"src/boldt_embed/{m}.py" for m in _SRC_MODULES]
 REQUIRED_FILES += [f"scripts/{s}.py" for s in _SCRIPTS]
 REQUIRED_FILES += [f"docs/{d}.md" for d in _DOCS]
 REQUIRED_FILES += ["docs/research/llm2embed-2026.md"]
+REQUIRED_FILES += [
+    "schemas/training_pair.schema.json", "schemas/benchmark_result.schema.json",
+    "docs/data/data-sources.md", "docs/data/license-policy.md", "docs/data/leakage-policy.md",
+]
 REQUIRED_FILES += [f"docs/adr/{a}.md" for a in _ADRS]
 REQUIRED_FILES += [
     "RELEASE_CHECKLIST.md",
@@ -105,7 +112,7 @@ def check_structure() -> List[Issue]:
 
 def check_json() -> List[Issue]:
     issues: List[Issue] = []
-    for sub in ("configs", "benchmarks", "data/schema", "data/synthetic"):
+    for sub in ("configs", "benchmarks", "data/schema", "data/synthetic", "schemas"):
         for path in sorted((ROOT / sub).glob("*.json")):
             try:
                 json.loads(path.read_text(encoding="utf-8"))
