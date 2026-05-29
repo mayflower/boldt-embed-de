@@ -47,7 +47,7 @@ _SCRIPTS = [
     "run_mteb_benchmark_template", "write_reports", "run_real_training",
     "run_real_bidirectional", "run_real_reranker", "run_eval_suite",
     "validate_data_schema", "validate_project", "export_sentence_transformers",
-    "train_causal", "train_bidirectional", "train_reranker",
+    "train_causal", "train_bidirectional", "train_reranker", "train_causal_germanquad",
 ]
 _DOCS = [
     "RESEARCH_NOTES_2026", "ARCHITECTURE_PLAN", "DATA_PLAN",

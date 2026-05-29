@@ -468,3 +468,175 @@ def rerank_scores_real(
                   return_tensors="pt").to(dev)
         logits = model(**enc).logits.squeeze(-1)
         return torch.sigmoid(logits).cpu().tolist()
+
+
+# =============================================================================
+# Full-scale (real-data) causal embedder training + GPU retrieval evaluation.
+# =============================================================================
+def _embed_for_train(model, tok, texts, pooling, max_len, dev):
+    import torch.nn.functional as F
+
+    prepared = [t + tok.eos_token for t in texts] if pooling == "eos" else list(texts)
+    batch = tok(prepared, padding=True, truncation=True, max_length=max_len,
+                return_tensors="pt").to(dev)
+    out = model(**batch).last_hidden_state
+    return F.normalize(_pool(pooling, out, batch["attention_mask"]), p=2, dim=1)
+
+
+def train_pairs_real(
+    config,
+    pairs,
+    *,
+    output_dir: str,
+    device_index: int = 0,
+    epochs: int = 2,
+    batch_size: int = 32,
+    lr: float = 2e-5,
+    max_len: int = 192,
+    pooling: str = "eos",
+    temperature: float = 0.05,
+    use_amp: bool = True,
+    seed: int = 0,
+    max_steps: Optional[int] = None,
+    log: Callable[[str], None] = print,
+) -> Dict[str, object]:
+    """Real MNRL fine-tune over (query, positive) pairs with in-batch negatives.
+
+    Minibatched, multi-epoch, bf16 autocast. This is a real training run on real data,
+    not a toy overfit. ``pairs`` is a list of (query, positive) tuples.
+    """
+    import random
+    import torch
+    from transformers import AutoModel, AutoTokenizer
+
+    dev = pick_device(None, device_index)
+    log(f"[full] device={dev} pairs={len(pairs)} epochs={epochs} bs={batch_size}")
+    tok = AutoTokenizer.from_pretrained(config.model_name_or_path, trust_remote_code=True)
+    if tok.pad_token is None:
+        tok.pad_token = tok.eos_token
+    tok.padding_side = "right"
+    model = AutoModel.from_pretrained(config.model_name_or_path, trust_remote_code=True,
+                                      torch_dtype=torch.float32).to(dev)
+    model.train()
+    opt = torch.optim.AdamW(model.parameters(), lr=lr)
+    n = len(pairs)
+    losses: List[float] = []
+    step = 0
+    t0 = time.time()
+    for epoch in range(epochs):
+        order = list(range(n))
+        random.Random(seed + epoch).shuffle(order)
+        for b in range(0, n, batch_size):
+            chunk = order[b: b + batch_size]
+            if len(chunk) < 2:
+                continue
+            q = [pairs[i][0] for i in chunk]
+            p = [pairs[i][1] for i in chunk]
+            opt.zero_grad()
+            if use_amp and dev.startswith("cuda"):
+                with torch.autocast("cuda", dtype=torch.bfloat16):
+                    qe = _embed_for_train(model, tok, q, pooling, max_len, dev)
+                    pe = _embed_for_train(model, tok, p, pooling, max_len, dev)
+                loss = info_nce(qe.float(), pe.float(), temperature=temperature)
+            else:
+                qe = _embed_for_train(model, tok, q, pooling, max_len, dev)
+                pe = _embed_for_train(model, tok, p, pooling, max_len, dev)
+                loss = info_nce(qe, pe, temperature=temperature)
+            loss.backward()
+            torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
+            opt.step()
+            losses.append(float(loss.item()))
+            step += 1
+            if step % 25 == 0:
+                log(f"[full] epoch {epoch + 1}/{epochs} step {step} loss={losses[-1]:.4f}")
+            if max_steps and step >= max_steps:
+                break
+        if max_steps and step >= max_steps:
+            break
+
+    out_path = Path(output_dir)
+    out_path.mkdir(parents=True, exist_ok=True)
+    model.eval()
+    model.save_pretrained(out_path)
+    tok.save_pretrained(out_path)
+    return {
+        "status": "trained",
+        "base_model": config.model_name_or_path,
+        "device": dev,
+        "gpu_name": torch.cuda.get_device_name(torch.device(dev)) if dev.startswith("cuda") else "cpu",
+        "hidden_size": int(model.config.hidden_size),
+        "num_pairs": n,
+        "epochs": epochs,
+        "batch_size": batch_size,
+        "lr": lr,
+        "pooling": pooling,
+        "steps": step,
+        "initial_loss": losses[0] if losses else None,
+        "final_loss": losses[-1] if losses else None,
+        "mean_last_50_loss": (sum(losses[-50:]) / len(losses[-50:])) if losses else None,
+        "wall_time_sec": round(time.time() - t0, 1),
+        "checkpoint": str(out_path),
+    }
+
+
+def _encode_tensor(model, tok, texts, pooling, max_len, dev, batch_size=64):
+    from contextlib import nullcontext
+
+    import torch
+    import torch.nn.functional as F
+
+    vecs = []
+    add_eos = pooling == "eos"
+    ctx = torch.autocast("cuda", dtype=torch.bfloat16) if dev.startswith("cuda") else nullcontext()
+    with torch.no_grad():
+        for i in range(0, len(texts), batch_size):
+            chunk = texts[i: i + batch_size]
+            prepared = [t + tok.eos_token for t in chunk] if add_eos else list(chunk)
+            batch = tok(prepared, padding=True, truncation=True, max_length=max_len,
+                        return_tensors="pt").to(dev)
+            with ctx:
+                out = model(**batch).last_hidden_state
+            pooled = _pool(pooling, out, batch["attention_mask"]).float()
+            vecs.append(F.normalize(pooled, p=2, dim=1))
+    return torch.cat(vecs, 0)
+
+
+def retrieval_eval_real(
+    model_path: str,
+    corpus,
+    queries,
+    *,
+    pooling: str = "eos",
+    device_index: int = 0,
+    max_len: int = 192,
+    ks=(1, 10, 100),
+    log: Callable[[str], None] = print,
+) -> Dict[str, float]:
+    """Real retrieval eval: encode corpus + queries on GPU, full cosine, ranking metrics.
+
+    corpus: [{"id","text"}]; queries: [{"query","positive_ids"}].
+    """
+    import torch
+    from transformers import AutoModel, AutoTokenizer
+
+    from .metrics import aggregate, metrics_for_query
+
+    dev = pick_device(None, device_index)
+    tok = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True)
+    if tok.pad_token is None:
+        tok.pad_token = tok.eos_token
+    tok.padding_side = "right"
+    model = AutoModel.from_pretrained(model_path, trust_remote_code=True,
+                                      torch_dtype=torch.float32).to(dev).eval()
+    corpus_ids = [c["id"] for c in corpus]
+    C = _encode_tensor(model, tok, [c["text"] for c in corpus], pooling, max_len, dev)
+    Q = _encode_tensor(model, tok, [q["query"] for q in queries], pooling, max_len, dev)
+    log(f"[eval] corpus={len(corpus_ids)} queries={len(queries)}")
+    sims = Q @ C.t()
+    topn = min(max(ks), len(corpus_ids))
+    _, topi = torch.topk(sims, topn, dim=1)
+    rows = []
+    for i, q in enumerate(queries):
+        ranked = [corpus_ids[j] for j in topi[i].tolist()]
+        rows.append(metrics_for_query(ranked, set(q["positive_ids"]), ks))
+    return aggregate(rows)
