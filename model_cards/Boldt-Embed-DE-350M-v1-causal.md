@@ -74,9 +74,15 @@ Saved: `outputs/real-training/disjoint-de-report.json` (`scripts/train_disjoint_
 **baseline** (multilingual-e5-base, same harness, `outputs/real-training/baseline-gerdalir-report.json`)
 scores **0.153** — so GerDaLIR is hard *and* our Wikipedia-only model is **~5.6× below a strong
 off-the-shelf model**. The in-domain GermanQuAD 0.879 is *not* representative of cross-domain
-ability. Closing the gap needs: (1) **domain-diverse training data**, (2) **hard negatives**
-(an ANCE-style run is in `scripts/train_hardneg_de.py`), (3) more **scale/epochs**, and (4) the
-baseline comparison (now done: e5-base = 0.153).
+ability. Closing the gap needs: (1) **domain-diverse training data**, (2) more **scale/epochs**, (3) the
+baseline comparison (done: e5-base = 0.153).
+
+**Hard-negative experiment (honest negative result, `hardneg-de-report.json`):** an ANCE-style
+run (warmup → GPU-mine → continue-train) reached **0.0498** on GerDaLIR (warmup) but the hard
+negatives **slightly hurt** cross-domain (0.0498→0.0459) while the model hit **~0.97** on
+held-out same-domain Wikipedia (DT-test). Conclusion: the bottleneck is **domain coverage**, not
+hard negatives — and 0.0498 is still ~3× below e5. Legal/general quality needs domain-diverse
+(incl. legal-adjacent) data, which we exclude to keep GerDaLIR a clean held-out benchmark.
 
 ### Broader public benchmark (MMTEB) — not run
 Full MMTEB German + GermanDPR + baseline comparison remains pending. Numbers are reported only

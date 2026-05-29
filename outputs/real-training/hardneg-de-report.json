@@ -1,0 +1,139 @@
+{
+  "status": "ok",
+  "setup": "warmup(in-batch) -> GPU hard-neg mining -> continue w/ hard negs; train=DT-de-dpr (Wikipedia); eval=DT-test (same-domain) + GerDaLIR (cross-domain legal)",
+  "train_pairs": 150000,
+  "mining": "embedding top-1 (excl positive), warmup model",
+  "run_metadata": {
+    "command": "scripts/train_hardneg_de.py",
+    "commit": "3465d34a4c77550f856b515787b00ce8834b4fe8",
+    "date": "2026-05-29",
+    "hardware": "Linux-6.11.0-1013-gcp-x86_64-with-glibc2.39",
+    "gpu": "NVIDIA RTX A6000",
+    "torch": "2.6.0+cu124"
+  },
+  "warmup_training": {
+    "status": "trained",
+    "base_model": "Boldt/Boldt-DC-350M",
+    "device": "cuda:0",
+    "gpu_name": "NVIDIA RTX A6000",
+    "hidden_size": 1024,
+    "num_pairs": 150000,
+    "epochs": 1,
+    "batch_size": 48,
+    "lr": 2e-05,
+    "pooling": "eos",
+    "steps": 3125,
+    "initial_loss": 22.391817092895508,
+    "final_loss": 0.11920725554227829,
+    "mean_last_50_loss": 0.07478968610055745,
+    "wall_time_sec": 2756.8,
+    "checkpoint": "/bigdata/johann/src/boldtembed/boldt-embed-de/outputs/checkpoints/causal-hn-warmup"
+  },
+  "hardneg_training": {
+    "status": "trained",
+    "init_from": "/bigdata/johann/src/boldtembed/boldt-embed-de/outputs/checkpoints/causal-hn-warmup",
+    "num_triples": 150000,
+    "with_hard_negatives": true,
+    "epochs": 1,
+    "batch_size": 48,
+    "steps": 3125,
+    "initial_loss": 0.9340023994445801,
+    "final_loss": 0.4633018672466278,
+    "wall_time_sec": 4709.5,
+    "gpu_name": "NVIDIA RTX A6000",
+    "hidden_size": 1024,
+    "checkpoint": "/bigdata/johann/src/boldtembed/boldt-embed-de/outputs/checkpoints/causal-hn-final"
+  },
+  "eval": {
+    "base": {
+      "gerdalir": {
+        "ndcg@1": 0.0008173941474579042,
+        "mrr@1": 0.0008173941474579042,
+        "recall@1": 0.0006811617895482535,
+        "map@1": 0.0008173941474579042,
+        "ndcg@10": 0.0015493983659022454,
+        "mrr@10": 0.0013334228574542453,
+        "recall@10": 0.002751893629774944,
+        "map@10": 0.0010984382581979443,
+        "ndcg@100": 0.004402840908197663,
+        "mrr@100": 0.0017846621150798955,
+        "recall@100": 0.01772655441120375,
+        "map@100": 0.001477321323087486
+      },
+      "dt_test": {
+        "ndcg@1": 0.0016,
+        "mrr@1": 0.0016,
+        "recall@1": 0.0016,
+        "map@1": 0.0016,
+        "ndcg@10": 0.0037952072661628605,
+        "mrr@10": 0.0029938095238095236,
+        "recall@10": 0.0064,
+        "map@10": 0.0029938095238095236,
+        "ndcg@100": 0.009007551566989574,
+        "mrr@100": 0.003762021737060253,
+        "recall@100": 0.0342,
+        "map@100": 0.003762021737060253
+      }
+    },
+    "warmup": {
+      "gerdalir": {
+        "ndcg@1": 0.028854013405264018,
+        "mrr@1": 0.028854013405264018,
+        "recall@1": 0.02599858318347774,
+        "map@1": 0.028854013405264018,
+        "ndcg@10": 0.049761727667799335,
+        "mrr@10": 0.04419001429791032,
+        "recall@10": 0.07691815159936788,
+        "map@10": 0.039883287792802265,
+        "ndcg@100": 0.07482060541761981,
+        "mrr@100": 0.04870365222370912,
+        "recall@100": 0.1998882894665141,
+        "map@100": 0.04414405850241759
+      },
+      "dt_test": {
+        "ndcg@1": 0.9346,
+        "mrr@1": 0.9346,
+        "recall@1": 0.9346,
+        "map@1": 0.9346,
+        "ndcg@10": 0.9648763988988316,
+        "mrr@10": 0.9564155555555555,
+        "recall@10": 0.9904,
+        "map@10": 0.9564155555555555,
+        "ndcg@100": 0.9666459767961917,
+        "mrr@100": 0.9568248514806621,
+        "recall@100": 0.9982,
+        "map@100": 0.9568248514806621
+      }
+    },
+    "final": {
+      "gerdalir": {
+        "ndcg@1": 0.02909923164950139,
+        "mrr@1": 0.02909923164950139,
+        "recall@1": 0.026149801100757455,
+        "map@1": 0.02909923164950139,
+        "ndcg@10": 0.04592166685171019,
+        "mrr@10": 0.041392061156651644,
+        "recall@10": 0.06875374638984251,
+        "map@10": 0.037594405780403815,
+        "ndcg@100": 0.06477702348501098,
+        "mrr@100": 0.04473022687688073,
+        "recall@100": 0.1625892321944308,
+        "map@100": 0.04067711242971211
+      },
+      "dt_test": {
+        "ndcg@1": 0.949,
+        "mrr@1": 0.949,
+        "recall@1": 0.949,
+        "map@1": 0.949,
+        "ndcg@10": 0.969901095864691,
+        "mrr@10": 0.963540238095238,
+        "recall@10": 0.9896,
+        "map@10": 0.963540238095238,
+        "ndcg@100": 0.9718733406335074,
+        "mrr@100": 0.9639613518820815,
+        "recall@100": 0.9986,
+        "map@100": 0.9639613518820815
+      }
+    }
+  }
+}

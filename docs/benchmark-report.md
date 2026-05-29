@@ -63,8 +63,23 @@ training generalizes weakly to legal retrieval.
 **Baseline (same harness, `outputs/real-training/baseline-gerdalir-report.json`):**
 `intfloat/multilingual-e5-base` scores nDCG@10 = **0.153** / Recall@100 = 0.404 on GerDaLIR.
 So GerDaLIR is hard (a strong model only reaches 0.15) **and** our 0.027 is ~5.6× below it —
-a real gap, not just task difficulty. An ANCE-style hard-negative run (`scripts/train_hardneg_de.py`)
-targets this.
+a real gap, not just task difficulty.
+
+### 6a-ter. Hard-negative (ANCE) run — honest negative result (`outputs/real-training/hardneg-de-report.json`)
+warmup (in-batch, 1 ep, bs=48) → GPU-mine hard negatives → continue-train (1 ep), evaluated on **both** held-out sets:
+
+| Stage | GerDaLIR (cross-domain legal) | DT-test (same-domain Wikipedia) |
+|---|---:|---:|
+| base | 0.0015 | 0.0038 |
+| warmup (in-batch) | **0.0498** | 0.965 |
+| + hard negatives | 0.0459 | **0.970** |
+
+**Findings (straight):** (1) hard negatives did **NOT** help cross-domain — they slightly *hurt*
+GerDaLIR (0.0498→0.0459) while marginally helping same-domain DT-test; the Wikipedia-mined
+negatives sharpen non-transferable features. (2) **Severe domain overfit:** ~0.97 on held-out
+Wikipedia vs ~0.046 on legal — the bottleneck is **domain coverage**, not hard negatives; best
+GerDaLIR (0.0498) is still ~3× below e5 (0.153). Improving legal/general retrieval needs
+domain-diverse (incl. legal-adjacent) training data, which we exclude to keep GerDaLIR clean.
 
 ### 6b. Bidirectional (LLM2Vec) — training signal (`bidirectional-report.json`)
 | Phase | initial loss | final loss |
