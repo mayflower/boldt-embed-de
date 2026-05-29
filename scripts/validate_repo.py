@@ -43,7 +43,7 @@ _SRC_MODULES = [
 _SCRIPTS = [
     "validate_repo", "run_smoke_tests", "run_local_benchmark",
     "run_mteb_benchmark_template", "write_reports", "run_real_training",
-    "validate_data_schema",
+    "validate_data_schema", "export_sentence_transformers",
     "train_causal", "train_bidirectional", "train_reranker",
 ]
 _DOCS = [
@@ -170,10 +170,15 @@ def check_model_cards() -> List[Issue]:
     return issues
 
 
+_SCAN_SKIP_DIRS = {".git", "outputs", "node_modules", ".venv", "__pycache__"}
+
+
 def check_placeholders() -> List[Issue]:
+    """Scan authored .md for unrendered placeholders. Generated artifacts under outputs/
+    (e.g. SentenceTransformers' auto model card, which contains Jinja {{ }}) are skipped."""
     issues: List[Issue] = []
     for path in ROOT.rglob("*.md"):
-        if ".git" in path.parts:
+        if _SCAN_SKIP_DIRS.intersection(path.parts):
             continue
         text = path.read_text(encoding="utf-8")
         if "{{" in text or "}}" in text:

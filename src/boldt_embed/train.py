@@ -97,7 +97,9 @@ def train_causal_real(
     has_neg = all(n is not None for n in negatives)
 
     def embed(texts: List[str]):
-        batch = tok(texts, padding=True, truncation=True, max_length=max_len,
+        # Append EOS for last-token pooling (E5-style): the pooled token is a true EOS.
+        prepared = [t + tok.eos_token for t in texts] if pooling == "eos" else list(texts)
+        batch = tok(prepared, padding=True, truncation=True, max_length=max_len,
                     return_tensors="pt").to(dev)
         out = model(**batch).last_hidden_state
         pooled = _pool(pooling, out, batch["attention_mask"])
@@ -156,6 +158,7 @@ def encode_texts(
     device_index: int = 0,
     max_len: int = 96,
     batch_size: int = 16,
+    append_eos: bool = True,
 ):
     """Encode texts with a (trained or base) model. Returns a list of python float vectors."""
     import torch
@@ -169,10 +172,12 @@ def encode_texts(
     tok.padding_side = "right"
     model = AutoModel.from_pretrained(model_path, trust_remote_code=True,
                                       torch_dtype=torch.float32).to(dev).eval()
+    add_eos = append_eos and pooling == "eos"
     vectors: List[List[float]] = []
     with torch.no_grad():
         for i in range(0, len(texts), batch_size):
-            chunk = list(texts[i : i + batch_size])
+            chunk = [t + tok.eos_token for t in texts[i : i + batch_size]] if add_eos \
+                else list(texts[i : i + batch_size])
             batch = tok(chunk, padding=True, truncation=True, max_length=max_len,
                         return_tensors="pt").to(dev)
             out = model(**batch).last_hidden_state
