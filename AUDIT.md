@@ -5,11 +5,21 @@ has been executed — see "Honest scope" below). This audit red-teams licensing,
 validation honesty, reproducibility, and overclaims.
 
 ## Honest scope
-This environment has **no GPU, no model weights, and no licensed German training corpora**,
-so the deliverable is a **validated engineering scaffold**: runnable, importable, tested
-code for all three tracks; deterministic stdlib validation gates; config dry-runs; an eval
-harness; and release artifacts. **No model was trained and no real benchmark was run.** Every
-claim below is scoped to that reality.
+**Correction (2026-05-29):** an earlier version of this audit and the project's scoping
+question stated "no GPU available." That was **wrong and unverified** — this box has a
+Tesla P40 (24GB) and an **NVIDIA RTX A6000 (48GB)**. `nvidia-smi` was not run before scoping,
+which is a process failure now fixed.
+
+The deliverable has two layers: (1) a validated **stdlib scaffold** (runnable, tested code
+for all three tracks; deterministic gates; eval harness; release artifacts) and (2) a **real
+GPU run**: `scripts/run_real_training.py` loaded the base weights on the A6000, trained the
+causal embedder (real forward/pool/InfoNCE/backward), saved a checkpoint, and evaluated
+base-vs-trained on the toy benchmark (`outputs/real-training/real-training-report.json`).
+
+**Honest scale of the real run:** 7 toy German triples, 15 epochs. The 435M model trivially
+separates them (training loss → 0), so this demonstrates the pipeline and a real before/after
+improvement (toy ndcg@10 0.774 → 0.94 on 8 held-out queries) — it is **not** a production
+model and **not** a public-benchmark claim. Real corpora + a real MTEB run remain outstanding.
 
 ## 1. Licensing (ADR-001, ADR-004)
 - **Code:** Apache-2.0 (`LICENSE`). ✅
@@ -47,11 +57,16 @@ claim below is scoped to that reality.
 - 1024-d output is explicitly flagged **MUST-VERIFY** against the base hidden size. ✅
 
 ## 6. Known gaps / risks
-1. No real training, weights, or MTEB numbers (out of scope here). Highest-impact follow-up.
-2. Base architecture internals unverified (hidden size, vocab, context, param count). ADR-003.
-3. Bidirectional attention enablement is best-effort; production should use `llm2vec`.
+1. The real run is **tiny** (7 triples): proves the pipeline, not model quality. A real run
+   needs licensed German corpora at scale + a real MTEB evaluation. Highest-impact follow-up.
+2. Base architecture **now verified** (LlamaForCausalLM, hidden 1024, 24 layers, vocab 32000,
+   ctx 2048, ~435M params) — resolves the prior ADR-003 MUST-VERIFY. 1024-d needs no projection.
+3. Bidirectional + reranker tracks are **not yet trained** (only the causal track ran);
+   bidirectional attention enablement is best-effort — production should use `llm2vec`.
 4. `HashingEncoder` is a deterministic stand-in, not a semantic model.
 5. Real German corpora and their licenses are not yet selected (DATA_PLAN is policy + toy data).
+6. Process failure (now fixed): hardware was not probed before scoping. Lesson: run
+   `nvidia-smi` / check the env before asserting constraints.
 
 ## 7. Reproduce this audit
 ```bash

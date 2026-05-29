@@ -12,9 +12,11 @@ tags: [german, embeddings, retrieval, matryoshka, causal]
 German-first text embedding model: a **causal decoder** embedder built on
 `Boldt/Boldt-DC-350M` with **EOS/last-token pooling** and Matryoshka-truncatable vectors.
 
-> **Status: untrained scaffold.** Architecture, instruction format, pooling, and the
-> evaluation harness are implemented and validated, but the contrastive training run has
-> not been executed in this repository. No quality numbers are claimed below.
+> **Status: pipeline proven on GPU; not production-trained.** A *real* training run was
+> executed on an RTX A6000 (2026-05-29) — see Evaluation — but only on 7 toy triples. It
+> demonstrates the end-to-end GPU pipeline (real forward/pool/contrastive/backward + a real
+> checkpoint), **not** a production-quality model. Production training on licensed German
+> corpora at scale is still outstanding.
 
 ## Intended use
 - Asymmetric German retrieval (query → document), semantic similarity, clustering.
@@ -41,16 +43,28 @@ d = model.encode(docs, normalize_embeddings=True)
 - Data: license-clean German pairs/triples + synthetic (see DATA_PLAN, ADR-004).
 
 ## Evaluation
-**Pending.** To be populated from a saved MTEB run (`scripts/run_mteb_benchmark_template.py`)
-with full run metadata, per ADR-005 and `docs/BENCHMARK_PLAN.md`. The repo's local benchmark
-validates plumbing only and is **not** a quality claim. No benchmark numbers are reported here
-until a real run exists under `outputs/`.
+**Real tiny run (NOT a public-benchmark claim).** Executed on an NVIDIA RTX A6000 on
+2026-05-29 (`scripts/run_real_training.py`; saved to `outputs/real-training/real-training-report.json`).
+Trained 15 epochs on 7 toy German triples; evaluated on the 8-query toy retrieval benchmark
+with real embeddings (last-token pooling, query instruction):
+
+| Model | nDCG@10 | MRR@10 | Recall@1 |
+|---|---:|---:|---:|
+| Base `Boldt-DC-350M` (untrained) | 0.774 | 0.698 | 0.50 |
+| + contrastive (this tiny run) | 0.938 | 0.917 | 0.875 |
+
+Caveat: 7 training examples → training loss reaches 0 (the 435M model trivially separates
+them); the 8-query eval set is tiny. This shows the pipeline trains and improves a *real*
+model, **not** production quality.
+
+**Public-benchmark evaluation (MMTEB / GermanDPR) remains pending** — to be run with full run
+metadata per ADR-005 once trained on real corpora. Numbers are reported only from saved runs.
 
 ## Limitations
-- 350M-class, German-first: not a "best multilingual" model.
-- **No long-context claim** (8k/32k) without a trained+evaluated context-extension phase.
-- Native 1024-d output assumes the base hidden size ≥ 1024 — **MUST-VERIFY** against the base
-  `config.json` (ADR-003); a projection head may be required.
+- ~435M-param German-first model (LlamaForCausalLM, hidden 1024, 24 layers): not a "best
+  multilingual" model.
+- **Max context 2048 tokens** (verified) — no long-context (8k/32k) claim.
+- Native 1024-d output confirmed (base hidden_size = 1024); no projection head needed.
 - Last-token pooling can under-weight early-sequence content vs. bidirectional pooling.
 - Not instruction/chat tuned; the "instruction" is a representation prompt.
 

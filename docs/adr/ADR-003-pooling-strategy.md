@@ -1,7 +1,8 @@
 # ADR-003 — Pooling strategy and output dimensions
 
 ## Status
-Accepted (2026-05-28). Hidden-size confirmation is a MUST-VERIFY blocker for the 1024-d claim.
+Accepted (2026-05-28); hidden-size **VERIFIED 2026-05-29**: base hidden_size = 1024, so the
+native 1024-d output is correct and **no projection head is required**.
 
 ## Context
 Pooling converts token hidden states into one vector. Causal models favor last-token/EOS
@@ -18,7 +19,6 @@ Matryoshka-truncatable embeddings, which requires consistent normalization.
 ## Consequences
 - Pooling is implemented as pure, mask-aware functions (`pooling.py`) so it is unit-testable
   without weights, and reused by both model wrappers.
-- **MUST-VERIFY:** the native 1024-d output assumes the base hidden size ≥ 1024. If the base
-  hidden size differs, add a learned projection head to 1024 (and document it). The 1024
-  figure is not final until `config.json` is read (ADR-001).
+- **VERIFIED (2026-05-29):** base hidden size is exactly 1024 (LlamaForCausalLM, 24 layers),
+  so the native 1024-d output is used directly — no projection head.
 - Matryoshka users must re-normalize truncated vectors; this is stated in the model cards.

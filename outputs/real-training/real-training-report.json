@@ -1,0 +1,197 @@
+{
+  "status": "ok",
+  "scale_disclaimer": "Tiny REAL run on the toy German triples to prove the GPU training + eval pipeline. NOT a production model and NOT a public-benchmark claim.",
+  "run_metadata": {
+    "command": "scripts/run_real_training.py",
+    "commit": "6e36fe58744ef8882fee2cebf7f232a3f495fab2",
+    "date": "2026-05-29",
+    "hardware": "Linux-6.11.0-1013-gcp-x86_64-with-glibc2.39",
+    "gpu": "NVIDIA RTX A6000",
+    "torch": "2.6.0+cu124"
+  },
+  "training": {
+    "status": "trained",
+    "base_model": "Boldt/Boldt-DC-350M",
+    "device": "cuda:0",
+    "gpu_name": "NVIDIA RTX A6000",
+    "hidden_size": 1024,
+    "param_count": 435471360,
+    "pooling": "eos",
+    "epochs": 15,
+    "lr": 2e-05,
+    "temperature": 0.03,
+    "num_triples": 7,
+    "used_hard_negatives": true,
+    "initial_loss": 1.163765788078308,
+    "final_loss": 3.150519205519231e-06,
+    "loss_curve": [
+      1.163765788078308,
+      0.628511905670166,
+      0.2606467306613922,
+      0.017622951418161392,
+      0.00034883039188571274,
+      4.007024472230114e-05,
+      1.4645564988313708e-05,
+      9.366374797536992e-06,
+      7.339839157793904e-06,
+      5.8752871154865716e-06,
+      8.259411515609827e-06,
+      3.1264022254617885e-05,
+      9.349237188871484e-06,
+      3.5762673178396653e-06,
+      3.150519205519231e-06
+    ],
+    "wall_time_sec": 6.31,
+    "checkpoint": "/bigdata/johann/src/boldtembed/boldt-embed-de/outputs/checkpoints/causal-toy"
+  },
+  "eval_base_model": {
+    "ndcg@1": 0.5,
+    "mrr@1": 0.5,
+    "recall@1": 0.5,
+    "map@1": 0.5,
+    "ndcg@3": 0.7202324383928644,
+    "mrr@3": 0.6666666666666666,
+    "recall@3": 0.875,
+    "map@3": 0.6666666666666666,
+    "ndcg@5": 0.7740670081520385,
+    "mrr@5": 0.6979166666666666,
+    "recall@5": 1.0,
+    "map@5": 0.6979166666666666,
+    "ndcg@10": 0.7740670081520385,
+    "mrr@10": 0.6979166666666666,
+    "recall@10": 1.0,
+    "map@10": 0.6979166666666666
+  },
+  "eval_trained_model": {
+    "ndcg@1": 0.875,
+    "mrr@1": 0.875,
+    "recall@1": 0.875,
+    "map@1": 0.875,
+    "ndcg@3": 0.9375,
+    "mrr@3": 0.9166666666666666,
+    "recall@3": 1.0,
+    "map@3": 0.9166666666666666,
+    "ndcg@5": 0.9375,
+    "mrr@5": 0.9166666666666666,
+    "recall@5": 1.0,
+    "map@5": 0.9166666666666666,
+    "ndcg@10": 0.9375,
+    "mrr@10": 0.9166666666666666,
+    "recall@10": 1.0,
+    "map@10": 0.9166666666666666
+  },
+  "eval_trained_per_query": [
+    {
+      "query_id": "q1",
+      "top5": [
+        "d1",
+        "d9",
+        "d4",
+        "d7",
+        "d3"
+      ],
+      "positive_doc_ids": [
+        "d1"
+      ],
+      "ndcg@10": 1.0
+    },
+    {
+      "query_id": "q2",
+      "top5": [
+        "d2",
+        "d9",
+        "d6",
+        "d10",
+        "d7"
+      ],
+      "positive_doc_ids": [
+        "d2"
+      ],
+      "ndcg@10": 1.0
+    },
+    {
+      "query_id": "q3",
+      "top5": [
+        "d3",
+        "d8",
+        "d1",
+        "d4",
+        "d5"
+      ],
+      "positive_doc_ids": [
+        "d3"
+      ],
+      "ndcg@10": 1.0
+    },
+    {
+      "query_id": "q4",
+      "top5": [
+        "d5",
+        "d2",
+        "d6",
+        "d7",
+        "d10"
+      ],
+      "positive_doc_ids": [
+        "d5"
+      ],
+      "ndcg@10": 1.0
+    },
+    {
+      "query_id": "q5",
+      "top5": [
+        "d8",
+        "d4",
+        "d3",
+        "d5",
+        "d1"
+      ],
+      "positive_doc_ids": [
+        "d8"
+      ],
+      "ndcg@10": 1.0
+    },
+    {
+      "query_id": "q6",
+      "top5": [
+        "d6",
+        "d9",
+        "d2",
+        "d3",
+        "d10"
+      ],
+      "positive_doc_ids": [
+        "d6"
+      ],
+      "ndcg@10": 1.0
+    },
+    {
+      "query_id": "q7",
+      "top5": [
+        "d1",
+        "d9",
+        "d7",
+        "d3",
+        "d5"
+      ],
+      "positive_doc_ids": [
+        "d7"
+      ],
+      "ndcg@10": 0.5
+    },
+    {
+      "query_id": "q8",
+      "top5": [
+        "d9",
+        "d6",
+        "d3",
+        "d1",
+        "d10"
+      ],
+      "positive_doc_ids": [
+        "d9"
+      ],
+      "ndcg@10": 1.0
+    }
+  ]
+}

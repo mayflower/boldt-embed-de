@@ -23,20 +23,18 @@ Source: Hugging Face model card `Boldt/Boldt-DC-350M`, fetched 2026-05-28.
 - **Type:** *base* language model, explicitly **not** instruction-tuned ("not optimized
   for chat or instruction following; use standard text completion"). `[VERIFIED]`
 - **Precision:** BF16. **Associated paper:** "Repetition over Diversity" (arXiv 2604.28075). `[VERIFIED]`
-- **Architecture internals** (decoder-only? layer count, hidden size, vocab size, context
-  length, RoPE/positional scheme): **not stated on the card.** `[MUST-VERIFY]` Inspect
-  `config.json` / `tokenizer_config.json` in the model repo before finalizing pooling and
-  output dimensions.
+- **Architecture internals — RESOLVED `[VERIFIED 2026-05-29]`** by loading the weights on an
+  RTX A6000: **LlamaForCausalLM**, hidden_size **1024**, **24** layers, vocab_size **32000**,
+  max_position_embeddings **2048**, **~435M** total parameters (435,471,360). `AutoModel`
+  returns `last_hidden_state` suitable for pooling.
 
-### Open discrepancies / risks on the base model
-- **Name vs. size:** the repo name says "350M" but the HF size badge reads "0.5B".
-  `[MUST-VERIFY]` Confirm true parameter count; it affects VRAM, batch size, and the
-  honesty of the model name we publish.
-- **Hidden size vs. our 1024 embedding dim:** `configs/*.json` assume a 1024-d output and
-  Matryoshka dims `[1024,768,512,256,128,64]`. This only works natively if the base hidden
-  size ≥ 1024; otherwise we need a learned projection head. `[MUST-VERIFY]` against `config.json`.
-- **Context length:** unknown. Do **not** advertise long-context (e.g. 8k/32k) retrieval
-  until a context-extension phase is trained and evaluated (ADR-005 non-goal).
+### Resolved discrepancies (were open on 2026-05-28)
+- **Name vs. size — RESOLVED:** ~435M total params. "350M" likely counts non-embedding
+  params; the HF "0.5B" badge rounds 435M. Publish the honest figure (~435M total).
+- **Hidden size vs. 1024 embedding dim — RESOLVED:** hidden_size is exactly **1024**, so the
+  1024-d output and Matryoshka dims work **natively, no projection head required**.
+- **Context length — RESOLVED:** **2048** tokens. Confirms the non-goal: **no** long-context
+  (8k/32k) retrieval claim without a trained+evaluated context-extension phase.
 
 ---
 
@@ -122,11 +120,11 @@ LLM2Vec is the canonical recipe to convert a decoder-only LLM into a strong enco
 - ADR-005 benchmark protocol — MMTEB + German tasks, held-out only.
 
 ## 9. Open questions / MUST-VERIFY before training or release
-1. Base `config.json`: layers, hidden size, vocab, context length, positional scheme.
-2. True parameter count (350M vs 0.5B) and the honest published model name.
-3. Whether hidden size supports a native 1024-d embedding or a projection head is required.
-4. Tokenizer behavior on German compounds and `§`/umlauts (fertility, OOV).
-5. License terms for any *training data* we add (separate from base-weight license).
+1. ✅ RESOLVED 2026-05-29: Llama arch, 24 layers, hidden 1024, vocab 32000, ctx 2048.
+2. ✅ RESOLVED: ~435M total params (publish ~435M, not 350M/0.5B without context).
+3. ✅ RESOLVED: hidden size is 1024 → native 1024-d embedding, no projection head.
+4. Tokenizer behavior on German compounds and `§`/umlauts (fertility, OOV) — still to profile.
+5. License terms for any *real training data* we add (separate from base-weight license) — open.
 
 ## Sources
 - Boldt/Boldt-DC-350M model card — https://huggingface.co/Boldt/Boldt-DC-350M (fetched 2026-05-28)

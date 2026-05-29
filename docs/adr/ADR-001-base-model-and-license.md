@@ -1,7 +1,8 @@
 # ADR-001 — Base model and license
 
 ## Status
-Accepted (2026-05-28). One MUST-VERIFY item remains open (parameter count / naming).
+Accepted (2026-05-28); arch/size **VERIFIED 2026-05-29** by loading on GPU: LlamaForCausalLM,
+hidden 1024, 24 layers, vocab 32000, ctx 2048, **~435M total params** (publish ~435M honestly).
 
 ## Context
 All three variants build on `Boldt/Boldt-DC-350M`. License and provenance gate any release.

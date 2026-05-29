@@ -36,11 +36,11 @@ REQUIRED_DIRS = [
 _SRC_MODULES = [
     "__init__", "textutil", "config", "instructions", "pooling", "matryoshka",
     "losses", "merging", "metrics", "data", "hard_negatives", "eval_harness",
-    "model_causal", "model_bidirectional", "reranker", "cli",
+    "model_causal", "model_bidirectional", "reranker", "cli", "train",
 ]
 _SCRIPTS = [
     "validate_repo", "run_smoke_tests", "run_local_benchmark",
-    "run_mteb_benchmark_template", "write_reports",
+    "run_mteb_benchmark_template", "write_reports", "run_real_training",
     "train_causal", "train_bidirectional", "train_reranker",
 ]
 _DOCS = [

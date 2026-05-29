@@ -10,16 +10,25 @@ A German-first embedding model **family** based on [`Boldt/Boldt-DC-350M`](https
 
 ## Status (honest)
 
-This repository is an **engineering scaffold**. The importable core, unit tests, smoke
-tests, and the local toy benchmark run on the **Python standard library only** — no
-GPUs, no model weights, no third-party wheels required. The training and real-benchmark
-code paths are implemented as **runnable dry-runs** (config parsing, input/shape wiring,
-tiny loops) and become real training once `torch`/`transformers` and licensed German
-data are available.
+Two layers:
 
-**No benchmark number in this repo is a claim about final model quality** unless it was
-produced by a saved command recorded under `outputs/` with full run metadata. The local
-benchmark validates *plumbing*, not model quality.
+1. **Stdlib scaffold** — the importable core, unit tests, smoke tests, and the local toy
+   benchmark run on the **Python standard library only** (no GPU/weights/wheels needed).
+2. **Real GPU path** — `scripts/run_real_training.py` performs an *actual* training run
+   (real forward/pool/contrastive/backward on the base weights) and a real before/after
+   evaluation. It was executed on an **NVIDIA RTX A6000** on 2026-05-29; see
+   `outputs/real-training/real-training-report.json`.
+
+**Verified base-model facts** (loaded on GPU 2026-05-29): `Boldt/Boldt-DC-350M` is a
+**LlamaForCausalLM**, hidden_size **1024**, 24 layers, vocab 32000, max_position **2048**,
+**~435M** parameters. So the 1024-d output needs no projection head, and there is no
+long-context capability beyond 2048.
+
+**Honest scale:** the executed run is a *tiny* real run on 7 toy German triples — it proves
+the GPU pipeline trains and improves a real model (toy-eval ndcg@10 0.774 → 0.94), it is
+**not** a production model and **not** a public-benchmark claim. No number here is a quality
+claim unless produced by a saved command under `outputs/` with run metadata; the local
+hashing benchmark validates *plumbing* only.
 
 ## Install
 
@@ -42,9 +51,15 @@ make all        # everything above + write reports to outputs/
 ## Real training / evaluation (require extras + hardware + data)
 
 ```bash
+# Dry-runs (no weights): validate config + wiring
 python scripts/train_causal.py        --config configs/training_causal.json --dry-run
 python scripts/train_bidirectional.py --config configs/training_bidirectional.json --dry-run
 python scripts/train_reranker.py      --config configs/training_reranker.json --dry-run
+
+# REAL training + before/after eval on GPU (downloads base weights)
+python scripts/run_real_training.py --device-index 0 --epochs 15
+
+# REAL public-benchmark eval of a trained model
 python scripts/run_mteb_benchmark_template.py --model <path> --config benchmarks/mteb_german_tasks.json
 ```
 
