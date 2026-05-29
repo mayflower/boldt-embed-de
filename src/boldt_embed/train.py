@@ -149,6 +149,164 @@ def train_causal_real(
     }
 
 
+def enable_bidirectional(model):
+    """LLM2Vec step 1: replace the causal mask with a padding-only (bidirectional) mask.
+
+    Patches the inner decoder's ``_update_causal_mask`` so every position attends to every
+    non-pad position (no causal triangle). Requires the model be loaded with
+    ``attn_implementation='eager'``. Returns the same model for chaining.
+    """
+    import torch
+
+    base = model.model if hasattr(model, "model") else model
+
+    def _bidirectional_mask(self, attention_mask, input_tensor, *args, **kwargs):
+        dtype = input_tensor.dtype
+        b, t = input_tensor.shape[0], input_tensor.shape[1]
+        if attention_mask is None:
+            return None  # no padding -> full bidirectional attention
+        min_val = torch.finfo(dtype).min
+        keep = attention_mask[:, None, None, :].to(dtype)  # [B,1,1,T]
+        additive = (1.0 - keep) * min_val                  # 0 where keep, min where pad
+        return additive.expand(b, 1, t, t).contiguous()    # [B,1,T,T], no causal triangle
+
+    if hasattr(base, "_update_causal_mask"):
+        base._update_causal_mask = _bidirectional_mask.__get__(base, base.__class__)
+    if hasattr(base, "config"):
+        base.config.is_causal = False
+        if hasattr(base.config, "is_decoder"):
+            base.config.is_decoder = False
+    return model
+
+
+def mask_tokens(input_ids, attention_mask, mask_prob, vocab_size, special_ids):
+    """MNTP masking: return (masked_input, labels, masked_bool).
+
+    labels = -100 except at masked positions (where it holds the original id). Llama has no
+    [MASK] token, so masked positions are replaced with random ids (a denoising MNTP variant).
+    Special/pad positions are never masked.
+    """
+    import torch
+
+    labels = input_ids.clone()
+    probs = torch.full(input_ids.shape, float(mask_prob))
+    special = (attention_mask == 0)
+    for sid in special_ids:
+        if sid is not None:
+            special = special | (input_ids == sid)
+    probs.masked_fill_(special, 0.0)
+    masked = torch.bernoulli(probs).bool()
+    labels[~masked] = -100
+    rand = torch.randint(0, int(vocab_size), input_ids.shape, dtype=input_ids.dtype)
+    masked_input = input_ids.clone()
+    masked_input[masked] = rand[masked]
+    return masked_input, labels, masked
+
+
+def train_bidirectional_real(
+    config,
+    triples,
+    mntp_texts,
+    *,
+    output_dir: str,
+    device_index: int = 0,
+    mntp_steps: int = 10,
+    contrastive_steps: int = 10,
+    mask_prob: float = 0.2,
+    lr: float = 2e-5,
+    max_len: int = 64,
+    temperature: float = 0.03,
+    log: Callable[[str], None] = print,
+) -> Dict[str, object]:
+    import torch
+    import torch.nn.functional as F
+    from transformers import AutoModelForCausalLM, AutoTokenizer
+
+    dev = pick_device(None, device_index)
+    log(f"[bi] device={dev}")
+    tok = AutoTokenizer.from_pretrained(config.model_name_or_path, trust_remote_code=True)
+    if tok.pad_token is None:
+        tok.pad_token = tok.eos_token
+    tok.padding_side = "right"
+    model = AutoModelForCausalLM.from_pretrained(
+        config.model_name_or_path, trust_remote_code=True,
+        torch_dtype=torch.float32, attn_implementation="eager",
+    ).to(dev)
+    enable_bidirectional(model)
+    hidden = int(model.config.hidden_size)
+    special_ids = [tok.pad_token_id, tok.bos_token_id, tok.eos_token_id]
+    opt = torch.optim.AdamW(model.parameters(), lr=lr)
+    model.train()
+
+    enc = tok(list(mntp_texts), padding=True, truncation=True, max_length=max_len,
+              return_tensors="pt").to(dev)
+    mntp_losses = []
+    for step in range(mntp_steps):
+        opt.zero_grad()
+        masked_input, labels, _ = mask_tokens(
+            enc["input_ids"].cpu(), enc["attention_mask"].cpu(), mask_prob,
+            model.config.vocab_size, special_ids)
+        masked_input = masked_input.to(dev)
+        labels = labels.to(dev)
+        logits = model(input_ids=masked_input, attention_mask=enc["attention_mask"]).logits
+        loss = F.cross_entropy(logits.view(-1, logits.size(-1)), labels.view(-1), ignore_index=-100)
+        loss.backward()
+        torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
+        opt.step()
+        mntp_losses.append(float(loss.item()))
+        log(f"[bi-mntp] step {step + 1}/{mntp_steps} loss={mntp_losses[-1]:.4f}")
+
+    base = model.model if hasattr(model, "model") else model
+
+    def embed(texts):
+        b = tok(list(texts), padding=True, truncation=True, max_length=max_len,
+                return_tensors="pt").to(dev)
+        h = base(input_ids=b["input_ids"], attention_mask=b["attention_mask"]).last_hidden_state
+        return F.normalize(_mean_pool(h, b["attention_mask"]), p=2, dim=1)
+
+    queries = [t["query"] for t in triples]
+    positives = [t["positive"] for t in triples]
+    negatives = [(t.get("negatives") or [None])[0] for t in triples]
+    has_neg = all(n is not None for n in negatives)
+    con_losses = []
+    for step in range(contrastive_steps):
+        opt.zero_grad()
+        q = embed(queries)
+        p = embed(positives)
+        hard = embed(negatives).unsqueeze(1) if has_neg else None
+        loss = info_nce(q, p, hard=hard, temperature=temperature)
+        loss.backward()
+        torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
+        opt.step()
+        con_losses.append(float(loss.item()))
+        log(f"[bi-con] step {step + 1}/{contrastive_steps} loss={con_losses[-1]:.4f}")
+
+    out_path = Path(output_dir)
+    out_path.mkdir(parents=True, exist_ok=True)
+    model.eval()
+    model.save_pretrained(out_path)
+    tok.save_pretrained(out_path)
+    return {
+        "status": "trained",
+        "variant": "bidirectional",
+        "base_model": config.model_name_or_path,
+        "device": dev,
+        "gpu_name": torch.cuda.get_device_name(torch.device(dev)) if dev.startswith("cuda") else "cpu",
+        "hidden_size": hidden,
+        "adaptation": "bidirectional_attention + MNTP + contrastive",
+        "mntp_steps": mntp_steps,
+        "contrastive_steps": contrastive_steps,
+        "mask_prob": mask_prob,
+        "mntp_loss_curve": mntp_losses,
+        "contrastive_loss_curve": con_losses,
+        "mntp_initial_loss": mntp_losses[0] if mntp_losses else None,
+        "mntp_final_loss": mntp_losses[-1] if mntp_losses else None,
+        "contrastive_initial_loss": con_losses[0] if con_losses else None,
+        "contrastive_final_loss": con_losses[-1] if con_losses else None,
+        "checkpoint": str(out_path),
+    }
+
+
 def encode_texts(
     model_path: str,
     texts: Sequence[str],

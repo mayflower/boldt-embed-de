@@ -1,0 +1,52 @@
+{
+  "status": "trained",
+  "variant": "bidirectional",
+  "base_model": "Boldt/Boldt-DC-350M",
+  "device": "cuda:0",
+  "gpu_name": "NVIDIA RTX A6000",
+  "hidden_size": 1024,
+  "adaptation": "bidirectional_attention + MNTP + contrastive",
+  "mntp_steps": 10,
+  "contrastive_steps": 12,
+  "mask_prob": 0.2,
+  "mntp_loss_curve": [
+    9.307345390319824,
+    8.167865753173828,
+    9.067477226257324,
+    7.927415370941162,
+    7.624635219573975,
+    6.924655914306641,
+    6.401970863342285,
+    5.520660877227783,
+    5.521146297454834,
+    5.451580047607422
+  ],
+  "contrastive_loss_curve": [
+    3.043398141860962,
+    1.833539605140686,
+    1.0082404613494873,
+    0.39847806096076965,
+    0.22471867501735687,
+    0.0492190383374691,
+    0.004661134909838438,
+    0.0006109103560447693,
+    0.0002526874013710767,
+    0.00010000965994549915,
+    6.104934436734766e-05,
+    4.8550220526522025e-05
+  ],
+  "mntp_initial_loss": 9.307345390319824,
+  "mntp_final_loss": 5.451580047607422,
+  "contrastive_initial_loss": 3.043398141860962,
+  "contrastive_final_loss": 4.8550220526522025e-05,
+  "checkpoint": "/bigdata/johann/src/boldtembed/boldt-embed-de/outputs/checkpoints/bi-toy",
+  "scale_disclaimer": "Tiny REAL LLM2Vec run (bidirectional attention verified, MNTP + contrastive) to prove the pipeline. NOT a production model.",
+  "run_metadata": {
+    "command": "scripts/run_real_bidirectional.py",
+    "commit": "bb4b958ec6135454b57ad5a6ddac2764521a795c",
+    "date": "2026-05-29",
+    "hardware": "Linux-6.11.0-1013-gcp-x86_64-with-glibc2.39",
+    "gpu": "NVIDIA RTX A6000",
+    "torch": "2.6.0+cu124"
+  }
+}

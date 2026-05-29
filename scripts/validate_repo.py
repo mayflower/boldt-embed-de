@@ -43,6 +43,7 @@ _SRC_MODULES = [
 _SCRIPTS = [
     "validate_repo", "run_smoke_tests", "run_local_benchmark",
     "run_mteb_benchmark_template", "write_reports", "run_real_training",
+    "run_real_bidirectional",
     "validate_data_schema", "export_sentence_transformers",
     "train_causal", "train_bidirectional", "train_reranker",
 ]
