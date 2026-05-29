@@ -31,6 +31,8 @@ REQUIRED_DIRS = [
     "data/synthetic",
     "schemas",
     "docs/data",
+    "docs/research",
+    "docs/audit",
     "model_cards",
     "outputs",
 ]
@@ -83,9 +85,13 @@ REQUIRED_FILES += [f"docs/adr/{a}.md" for a in _ADRS]
 REQUIRED_FILES += [
     "RELEASE_CHECKLIST.md",
     "AUDIT.md",
+    "docs/audit/final-audit.md",
+    "docs/benchmark-report.md",
+    "docs/final-review.md",
     "model_cards/Boldt-Embed-DE-350M-v1-causal.md",
     "model_cards/Boldt-Embed-DE-350M-v1-bi.md",
     "model_cards/Boldt-Reranker-DE-350M-v1.md",
+    "model_cards/DATASET_CARD.md",
 ]
 
 ADR_SECTIONS = (

@@ -1,5 +1,79 @@
-....................................................................................
+[transformers] `torch_dtype` is deprecated! Use `dtype` instead!
+
+Loading weights:   0%|          | 0/219 [00:00<?, ?it/s]
+Loading weights:  52%|█████▏    | 113/219 [00:00<00:00, 1090.97it/s]
+Loading weights: 100%|██████████| 219/219 [00:00<00:00, 1136.01it/s]
+
+Writing model shards:   0%|          | 0/1 [00:00<?, ?it/s]
+Writing model shards: 100%|██████████| 1/1 [00:02<00:00,  2.23s/it]
+Writing model shards: 100%|██████████| 1/1 [00:02<00:00,  2.23s/it]
+
+Loading weights:   0%|          | 0/219 [00:00<?, ?it/s]
+Loading weights: 100%|██████████| 219/219 [00:00<00:00, 5766.25it/s]
+...
+Loading weights:   0%|          | 0/218 [00:00<?, ?it/s]
+Loading weights: 100%|██████████| 218/218 [00:00<00:00, 5999.69it/s]
+[transformers] [1mLlamaModel LOAD REPORT[0m from: /tmp/claude-1017/boldt-bi-c5p0i4nz
+Key            | Status     |  | 
+---------------+------------+--+-
+lm_head.weight | UNEXPECTED |  | 
+
+Notes:
+- UNEXPECTED:	can be ignored when loading from different task/architecture; not ok if you expect identical arch.
+.........................................................................................................
+Loading weights:   0%|          | 0/218 [00:00<?, ?it/s]
+Loading weights:  58%|█████▊    | 127/218 [00:00<00:00, 1244.10it/s]
+Loading weights: 100%|██████████| 218/218 [00:00<00:00, 1312.96it/s]
+[transformers] [1mLlamaForSequenceClassification LOAD REPORT[0m from: Boldt/Boldt-DC-350M
+Key            | Status     | 
+---------------+------------+-
+lm_head.weight | UNEXPECTED | 
+score.weight   | MISSING    | 
+
+Notes:
+- UNEXPECTED:	can be ignored when loading from different task/architecture; not ok if you expect identical arch.
+- MISSING:	those params were newly initialized because missing from the checkpoint. Consider training on your downstream task.
+
+Writing model shards:   0%|          | 0/1 [00:00<?, ?it/s]
+Writing model shards: 100%|██████████| 1/1 [00:01<00:00,  1.44s/it]
+Writing model shards: 100%|██████████| 1/1 [00:01<00:00,  1.44s/it]
+..
+Loading weights:   0%|          | 0/219 [00:00<?, ?it/s]
+Loading weights: 100%|██████████| 219/219 [00:00<00:00, 5179.09it/s]
+...
+Loading weights:   0%|          | 0/218 [00:00<?, ?it/s]
+Loading weights:  56%|█████▌    | 121/218 [00:00<00:00, 1201.53it/s]
+Loading weights: 100%|██████████| 218/218 [00:00<00:00, 1270.43it/s]
+[transformers] [1mLlamaModel LOAD REPORT[0m from: Boldt/Boldt-DC-350M
+Key            | Status     |  | 
+---------------+------------+--+-
+lm_head.weight | UNEXPECTED |  | 
+
+Notes:
+- UNEXPECTED:	can be ignored when loading from different task/architecture; not ok if you expect identical arch.
+
+Writing model shards:   0%|          | 0/1 [00:00<?, ?it/s]
+Writing model shards: 100%|██████████| 1/1 [00:01<00:00,  1.64s/it]
+Writing model shards: 100%|██████████| 1/1 [00:01<00:00,  1.64s/it]
+..
+Loading weights:   0%|          | 0/218 [00:00<?, ?it/s]
+Loading weights: 100%|██████████| 218/218 [00:00<00:00, 5716.60it/s]
+./bigdata/johann/src/boldtembed/boldt-embed-de/scripts/export_sentence_transformers.py:18: DeprecationWarning: Importing from 'sentence_transformers.models' is deprecated and will be removed in a future version. Please use 'sentence_transformers.sentence_transformer.modules' instead.
+  from sentence_transformers import SentenceTransformer, models
+
+Loading weights:   0%|          | 0/218 [00:00<?, ?it/s]
+Loading weights: 100%|██████████| 218/218 [00:00<00:00, 6575.85it/s]
+/bigdata/johann/src/boldtembed/boldt-embed-de/scripts/export_sentence_transformers.py:22: FutureWarning: The `get_word_embedding_dimension` method has been renamed to `get_embedding_dimension`.
+  pool = models.Pooling(word.get_word_embedding_dimension(), pooling_mode=mode)
+
+Writing model shards:   0%|          | 0/1 [00:00<?, ?it/s]
+Writing model shards: 100%|██████████| 1/1 [00:01<00:00,  1.93s/it]
+Writing model shards: 100%|██████████| 1/1 [00:01<00:00,  1.93s/it]
+
+Loading weights:   0%|          | 0/218 [00:00<?, ?it/s]
+Loading weights: 100%|██████████| 218/218 [00:00<00:00, 5113.00it/s]
+.
 ----------------------------------------------------------------------
-Ran 84 tests in 0.030s
+Ran 117 tests in 24.137s
 
 OK
