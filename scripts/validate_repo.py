@@ -48,7 +48,7 @@ _SCRIPTS = [
     "run_real_bidirectional", "run_real_reranker", "run_eval_suite",
     "validate_data_schema", "validate_project", "export_sentence_transformers",
     "train_causal", "train_bidirectional", "train_reranker", "train_causal_germanquad",
-    "train_disjoint_de", "train_hardneg_de", "eval_baseline",
+    "train_disjoint_de", "train_hardneg_de", "train_reranker_de", "eval_baseline",
 ]
 _DOCS = [
     "RESEARCH_NOTES_2026", "ARCHITECTURE_PLAN", "DATA_PLAN",

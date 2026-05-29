@@ -769,3 +769,110 @@ def train_triples_real(
 def _nullctx():
     from contextlib import nullcontext
     return nullcontext()
+
+
+def train_reranker_scaled(
+    config,
+    examples,
+    *,
+    output_dir: str,
+    device_index: int = 0,
+    epochs: int = 1,
+    batch_size: int = 32,
+    lr: float = 2e-5,
+    max_len: int = 256,
+    grad_checkpoint: bool = True,
+    seed: int = 0,
+    log: Callable[[str], None] = print,
+) -> Dict[str, object]:
+    """Minibatched cross-encoder reranker training (BCE) at scale.
+
+    ``examples`` = list of (query, document, label in {0,1}). Unlike the toy
+    train_reranker_real (which batches everything at once), this minibatches +
+    grad-checkpoints so it scales to tens of thousands of pairs.
+    """
+    import random
+    import time as _time
+
+    import torch
+    import torch.nn.functional as F
+    from transformers import AutoModelForSequenceClassification, AutoTokenizer
+
+    dev = pick_device(None, device_index)
+    log(f"[rr-scaled] device={dev} examples={len(examples)} bs={batch_size}")
+    tok = AutoTokenizer.from_pretrained(config.model_name_or_path, trust_remote_code=True)
+    if tok.pad_token is None:
+        tok.pad_token = tok.eos_token
+    tok.padding_side = "right"
+    model = AutoModelForSequenceClassification.from_pretrained(
+        config.model_name_or_path, num_labels=1, trust_remote_code=True,
+        torch_dtype=torch.float32).to(dev)
+    model.config.pad_token_id = tok.pad_token_id
+    model.train()
+    if grad_checkpoint:
+        model.config.use_cache = False
+        model.gradient_checkpointing_enable()
+    opt = torch.optim.AdamW(model.parameters(), lr=lr)
+    n = len(examples)
+    losses = []
+    step = 0
+    t0 = _time.time()
+    for epoch in range(epochs):
+        order = list(range(n))
+        random.Random(seed + epoch).shuffle(order)
+        for b in range(0, n, batch_size):
+            chunk = order[b:b + batch_size]
+            texts = [config.input_template.replace("{query}", examples[i][0]).replace(
+                "{document}", examples[i][1]) for i in chunk]
+            y = torch.tensor([float(examples[i][2]) for i in chunk], device=dev)
+            opt.zero_grad()
+            with torch.autocast("cuda", dtype=torch.bfloat16) if dev.startswith("cuda") else _nullctx():
+                logits = model(**tok(texts, padding=True, truncation=True, max_length=max_len,
+                                     return_tensors="pt").to(dev)).logits.squeeze(-1)
+                loss = F.binary_cross_entropy_with_logits(logits.float(), y)
+            loss.backward()
+            torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
+            opt.step()
+            losses.append(float(loss.item()))
+            step += 1
+            if step % 50 == 0:
+                log(f"[rr-scaled] epoch {epoch + 1}/{epochs} step {step} loss={losses[-1]:.4f}")
+    out_path = Path(output_dir)
+    out_path.mkdir(parents=True, exist_ok=True)
+    model.eval()
+    model.save_pretrained(out_path)
+    tok.save_pretrained(out_path)
+    return {
+        "status": "trained", "num_examples": n,
+        "num_positive": int(sum(1 for e in examples if e[2] >= 0.5)),
+        "num_negative": int(sum(1 for e in examples if e[2] < 0.5)),
+        "epochs": epochs, "batch_size": batch_size, "steps": step,
+        "initial_loss": losses[0] if losses else None, "final_loss": losses[-1] if losses else None,
+        "wall_time_sec": round(_time.time() - t0, 1),
+        "gpu_name": torch.cuda.get_device_name(torch.device(dev)) if dev.startswith("cuda") else "cpu",
+        "checkpoint": str(out_path),
+    }
+
+
+def rerank_scores_batch(model_path, pairs, *, template, device_index=0, max_len=256, batch_size=64):
+    """Score many (query, document) pairs with a trained reranker -> list[float] (sigmoid)."""
+    import torch
+    from transformers import AutoModelForSequenceClassification, AutoTokenizer
+
+    dev = pick_device(None, device_index)
+    tok = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True)
+    if tok.pad_token is None:
+        tok.pad_token = tok.eos_token
+    tok.padding_side = "right"
+    model = AutoModelForSequenceClassification.from_pretrained(
+        model_path, num_labels=1, trust_remote_code=True, torch_dtype=torch.float32).to(dev).eval()
+    model.config.pad_token_id = tok.pad_token_id
+    out = []
+    with torch.no_grad():
+        for i in range(0, len(pairs), batch_size):
+            chunk = pairs[i:i + batch_size]
+            texts = [template.replace("{query}", q).replace("{document}", d) for q, d in chunk]
+            logits = model(**tok(texts, padding=True, truncation=True, max_length=max_len,
+                                 return_tensors="pt").to(dev)).logits.squeeze(-1)
+            out.extend(torch.sigmoid(logits).cpu().tolist())
+    return out
