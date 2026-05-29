@@ -1,0 +1,34 @@
+{
+  "status": "ok",
+  "miner_model": "/bigdata/johann/src/boldtembed/boldt-embed-de/outputs/checkpoints/causal-hn-final",
+  "setup": "train=DT-de-dpr pos + embedder-mined hard negs; eval=rerank e5 top-50 on GerDaLIR",
+  "run_metadata": {
+    "command": "scripts/train_reranker_de.py",
+    "commit": "9d597142aadb3b4337750ee23b911d4e2ae493d8",
+    "date": "2026-05-29",
+    "hardware": "Linux-6.11.0-1013-gcp-x86_64-with-glibc2.39",
+    "gpu": null,
+    "torch": "2.6.0+cu124"
+  },
+  "training": {
+    "status": "reused",
+    "checkpoint": "/bigdata/johann/src/boldtembed/boldt-embed-de/outputs/checkpoints/reranker-de",
+    "miner_model": "/bigdata/johann/src/boldtembed/boldt-embed-de/outputs/checkpoints/causal-hn-final"
+  },
+  "reranking_eval": {
+    "first_stage_e5": {
+      "ndcg@10": 0.1406436249370847,
+      "mrr@10": 0.13019365079365078,
+      "recall@10": 0.20191666666666666,
+      "map@10": 0.11647261904761905
+    },
+    "e5_plus_reranker": {
+      "ndcg@10": 0.06148839782626407,
+      "mrr@10": 0.05695634920634921,
+      "recall@10": 0.095,
+      "map@10": 0.04814087301587301
+    },
+    "n_queries": 1000,
+    "top_k": 50
+  }
+}

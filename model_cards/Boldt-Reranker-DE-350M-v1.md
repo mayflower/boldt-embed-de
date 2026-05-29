@@ -12,9 +12,12 @@ German **cross-encoder reranker** on `Boldt/Boldt-DC-350M`. Encodes (query, docu
 together and emits a relevance score (or `Ja`/`Nein` logit). Used for production reranking,
 hard-negative mining, and as a distillation teacher for the bi-encoders.
 
-> **Status: untrained scaffold.** The cross-encoder input format, mining, and distillation
-> helpers are implemented and validated; training has not been run here. No quality numbers
-> are claimed below.
+> **Status: trained at real scale; useful only in-domain so far.** Trained on **80k examples**
+> (40k DT-de-dpr positives + 40k embedder-mined hard negatives), 2 epochs, on an A6000
+> (`scripts/train_reranker_de.py`, `outputs/real-training/reranker-de-report.json`). It is **no
+> longer the 7-pair toy**. But on **out-of-domain legal** reranking it **degrades** the first
+> stage (see Evaluation) because it was trained only on German Wikipedia. An earlier 7-pair toy
+> run is superseded.
 
 ## Intended use
 - Re-rank a candidate list retrieved by a first-stage embedder for German queries.
@@ -39,8 +42,19 @@ ranked = rr.rerank(query, docs)   # [(index, score), ...] best-first
 - Dry-run: `make dry-run-reranker`.
 
 ## Evaluation
-**Pending.** Report reranking gains (nDCG@10 before/after rerank) on the German suite with
-run metadata (ADR-005). No numbers until a saved run exists under `outputs/`.
+Real-scale run (`outputs/real-training/reranker-de-report.json`). Reranking an
+`intfloat/multilingual-e5-base` top-50 first stage on **held-out legal GerDaLIR** (1,000 queries):
+
+| Ranking | nDCG@10 |
+|---|---:|
+| e5 first stage | 0.141 |
+| e5 + this reranker | **0.061** |
+
+**Honest result:** the reranker **degrades** the legal ranking (0.141 → 0.061). It was trained
+only on German **Wikipedia** (DT-de-dpr) and does not transfer to legal — a domain-mismatch
+result, consistent with the embedder. A fair **in-domain** reranking eval (Wikipedia first stage)
+was not run; it would likely show lift, but is not claimed without a saved run. A useful general
+reranker needs domain-diverse training pairs (incl. legal-adjacent).
 
 ## Limitations
 - Higher latency than the bi-encoders (full cross-attention per pair) — use as a re-ranking

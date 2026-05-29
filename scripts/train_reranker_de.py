@@ -101,7 +101,8 @@ def rerank_eval(reranker_path, cfg, corpus, queries, device_index, n_queries=100
         base_rows.append(metrics_for_query(cand, set(q["positive_ids"]), (10,)))
         layout.append((i, cand))
         for cid in cand:
-            pairs.append((format_query(cfg.query_instruction, q["text"]), ctext[cid]))
+            # reranker input_template already injects {query}; pass the raw query text
+            pairs.append((q["text"], ctext[cid]))
     log(f"[rr-eval] scoring {len(pairs)} (query,doc) pairs with cross-encoder")
     scores = T.rerank_scores_batch(reranker_path, pairs, template=cfg.input_template,
                                    device_index=device_index, max_len=256)
@@ -124,6 +125,7 @@ def main() -> int:
     ap.add_argument("--batch-size", type=int, default=32)
     ap.add_argument("--miner-model", default=str(ROOT / "outputs" / "checkpoints" / "causal-hn-final"))
     ap.add_argument("--out", default=str(ROOT / "outputs" / "checkpoints" / "reranker-de"))
+    ap.add_argument("--skip-train", action="store_true", help="eval an already-trained checkpoint at --out")
     args = ap.parse_args()
 
     try:
@@ -134,10 +136,14 @@ def main() -> int:
 
     cfg = load_reranker_config(args.config)
     miner = args.miner_model if pathlib.Path(args.miner_model).exists() else cfg.model_name_or_path
-    examples = build_reranker_examples(args.pairs, miner, args.device_index, print)
-    print(f"=== Train reranker on {len(examples)} examples ===")
-    tr = T.train_reranker_scaled(cfg, examples, output_dir=args.out, device_index=args.device_index,
-                                 epochs=args.epochs, batch_size=args.batch_size)
+    if args.skip_train:
+        tr = {"status": "reused", "checkpoint": args.out, "miner_model": miner}
+        print(f"=== Skipping training; evaluating existing checkpoint at {args.out} ===")
+    else:
+        examples = build_reranker_examples(args.pairs, miner, args.device_index, print)
+        print(f"=== Train reranker on {len(examples)} examples ===")
+        tr = T.train_reranker_scaled(cfg, examples, output_dir=args.out, device_index=args.device_index,
+                                     epochs=args.epochs, batch_size=args.batch_size)
     print("=== Reranking eval on GerDaLIR (e5 first stage vs +reranker) ===")
     corpus, queries = load_gerdalir()
     ev = rerank_eval(args.out, cfg, corpus, queries, args.device_index)
@@ -154,7 +160,7 @@ def main() -> int:
     print("=== SUMMARY (GerDaLIR rerank nDCG@10) ===")
     print(json.dumps({"e5_first_stage": ev["first_stage_e5"]["ndcg@10"],
                       "e5_plus_reranker": ev["e5_plus_reranker"]["ndcg@10"],
-                      "examples": tr["num_examples"]}, indent=2))
+                      "examples": tr.get("num_examples", "reused")}, indent=2))
     print("saved:", out)
     return 0
 

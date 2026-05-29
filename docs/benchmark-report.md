@@ -88,12 +88,18 @@ domain-diverse (incl. legal-adjacent) training data, which we exclude to keep Ge
 | Contrastive | 3.04 | ~0.00 |
 Bidirectional attention verified: token-0 hidden Δ = 0.0 (causal) vs 7.35 (bidirectional).
 
-### 6c. Reranker — reranking eval (`reranker-eval-report.json`)
-| Ranking | nDCG@10 | MRR@10 |
-|---|---:|---:|
-| id-order baseline | 0.478 | 0.322 |
-| + reranker (tiny, trained on 7 triples) | 0.477 | 0.322 |
-Train pairwise accuracy (pos > hard-neg) = **1.0** (overfits its pairs; no generalization to unseen queries).
+### 6c. Reranker — REAL-scale run (`reranker-de-report.json`)
+Trained on **80k examples** (40k DT-de-dpr positives + 40k embedder-mined hard negatives),
+2 epochs, A6000. Reranking eval: e5-base top-50 first stage on held-out GerDaLIR (1,000 queries).
+| Ranking | nDCG@10 |
+|---|---:|
+| e5 first stage | 0.141 |
+| e5 + this reranker | **0.061** |
+
+**Honest result:** the real-scale reranker (no longer the 7-pair toy) **degrades** out-of-domain
+legal reranking (0.141 → 0.061) — trained only on Wikipedia, it doesn't transfer to legal. Same
+domain-mismatch story as the embedder. An in-domain reranking eval was not run.
+(The earlier 7-triple toy reranker — `reranker-eval-report.json`, no lift — is superseded.)
 
 ### 6d. Eval suite — HashingEncoder STAND-IN (plumbing, `outputs/benchmarks/eval-suite-report.json`)
 | Task | Metric | Value |
