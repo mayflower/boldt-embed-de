@@ -28,3 +28,13 @@ Verified from the HF model card on 2026-05-28:
 - We must read `config.json`/`tokenizer_config.json` from the base repo before finalizing
   pooling and output dims (ADR-003) — tracked as a MUST-VERIFY in the research notes.
 - Model cards must cite the base model, its license, and the verification date.
+
+## Alternatives
+- **Train a German embedder from scratch:** far costlier and weaker than adapting a strong
+  German base. Rejected.
+- **Use a multilingual base (e5/bge/Qwen):** not German-first; different licensing/quality
+  tradeoffs. Kept only as evaluation baselines, not as our base.
+
+## Test/benchmark criteria
+- Base config loaded on GPU and arch/size/license verified (done 2026-05-29).
+- Release checklist gates the *data* and *derivative-weights* license before any publish.

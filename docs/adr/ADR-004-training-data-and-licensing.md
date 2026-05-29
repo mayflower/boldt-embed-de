@@ -23,3 +23,11 @@ leakage** (training on text that overlaps evaluation corpora).
 - Every dataset must pass a `data.py` schema + license + leakage check before training.
 - Adds a dedup/leakage step to the pipeline, but makes published benchmark numbers defensible.
 - Synthetic generation is reproducible and auditable (see synthetic-pair specs).
+
+## Alternatives
+- **Use licensed commercial corpora:** higher quality but blocks a clean open release. Deferred.
+- **Skip leakage checks for speed:** produces dishonest benchmark numbers. Rejected.
+
+## Test/benchmark criteria
+- Unit: `check_licenses` + `find_leakage` (`tests/test_data.py`).
+- Gate: zero disallowed licenses and zero un-waived leakage hits before training.

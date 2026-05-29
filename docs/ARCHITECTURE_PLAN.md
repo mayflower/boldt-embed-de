@@ -35,6 +35,9 @@ verified 2026-05-28 — see `RESEARCH_NOTES_2026.md` and ADR-001).
 - [ADR-004](adr/ADR-004-training-data-and-licensing.md) — training data & licensing
 - [ADR-005](adr/ADR-005-benchmark-protocol.md) — benchmark protocol
 - [ADR-006](adr/ADR-006-release-and-model-card.md) — release & model card
+- [ADR-007](adr/ADR-007-matryoshka-dimensions.md) — Matryoshka dimensions
+- [ADR-008](adr/ADR-008-reranker-architecture.md) — reranker architecture
+- [ADR-009](adr/ADR-009-training-evaluation-split.md) — training/evaluation split
 
 ## Non-goals for v1
 - No long-context (8k/32k) retrieval claim without a trained+evaluated context-extension phase.

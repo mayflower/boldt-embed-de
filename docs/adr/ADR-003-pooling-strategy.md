@@ -21,4 +21,13 @@ Matryoshka-truncatable embeddings, which requires consistent normalization.
   without weights, and reused by both model wrappers.
 - **VERIFIED (2026-05-29):** base hidden size is exactly 1024 (LlamaForCausalLM, 24 layers),
   so the native 1024-d output is used directly — no projection head.
+
+## Alternatives
+- **Mean pooling for the causal track:** dilutes the last-token signal the causal LM is
+  trained to produce; kept only inside the bidirectional pooling ablation.
+- **CLS pooling:** the base has no trained CLS token. Rejected.
+
+## Test/benchmark criteria
+- Unit: pooling shape / mask / normalization (`tests/test_pooling.py`).
+- Bench: bidirectional pooling ablation chosen by dev-set nDCG@10.
 - Matryoshka users must re-normalize truncated vectors; this is stated in the model cards.

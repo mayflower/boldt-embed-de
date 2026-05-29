@@ -51,6 +51,8 @@ _ADRS = [
     "ADR-001-base-model-and-license", "ADR-002-causal-vs-bidirectional",
     "ADR-003-pooling-strategy", "ADR-004-training-data-and-licensing",
     "ADR-005-benchmark-protocol", "ADR-006-release-and-model-card",
+    "ADR-007-matryoshka-dimensions", "ADR-008-reranker-architecture",
+    "ADR-009-training-evaluation-split",
 ]
 
 REQUIRED_FILES = [
@@ -65,6 +67,7 @@ REQUIRED_FILES = [
 REQUIRED_FILES += [f"src/boldt_embed/{m}.py" for m in _SRC_MODULES]
 REQUIRED_FILES += [f"scripts/{s}.py" for s in _SCRIPTS]
 REQUIRED_FILES += [f"docs/{d}.md" for d in _DOCS]
+REQUIRED_FILES += ["docs/research/llm2embed-2026.md"]
 REQUIRED_FILES += [f"docs/adr/{a}.md" for a in _ADRS]
 REQUIRED_FILES += [
     "RELEASE_CHECKLIST.md",
@@ -74,7 +77,10 @@ REQUIRED_FILES += [
     "model_cards/Boldt-Reranker-DE-350M-v1.md",
 ]
 
-ADR_SECTIONS = ("## Status", "## Context", "## Decision", "## Consequences")
+ADR_SECTIONS = (
+    "## Status", "## Context", "## Decision", "## Alternatives",
+    "## Consequences", "## Test/benchmark criteria",
+)
 MODEL_CARD_SECTIONS = (
     "## Intended use",
     "## Limitations",

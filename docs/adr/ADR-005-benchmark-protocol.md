@@ -23,3 +23,12 @@ public leaderboards. We also need to evaluate Matryoshka prefixes and German str
 - The local toy benchmark validates plumbing only and is explicitly **not** a model-quality claim.
 - Real MTEB runs require the trained model + `eval` extras; kept as a runnable scaffold here.
 - A number without saved metadata is treated as **not reported**.
+
+## Alternatives
+- **Train-time MTEB as the only eval:** overfits the leaderboard. Rejected (held-out only).
+- **Single metric (nDCG only):** hides MRR/recall/MAP tradeoffs. Rejected — report the set.
+
+## Test/benchmark criteria
+- Every reported number carries metadata (command, commit, model, dataset, split, metric,
+  hardware, output_path) or it is treated as not-reported.
+- Local plumbing (metrics + Matryoshka) is unit-tested (`tests/test_metrics.py`, `test_eval_harness.py`).

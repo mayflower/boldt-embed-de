@@ -21,3 +21,11 @@ merging complexity. The base model is a causal decoder; either route is feasible
 - The bidirectional track owns extra moving parts: the MNTP adaptation phase and optional
   checkpoint merging — isolated in `model_bidirectional.py` and its trainer.
 - The shared interface lets the evaluation harness score both tracks identically.
+
+## Alternatives
+- **Causal-only:** cheapest, but lower encoder ceiling. Kept as the safe baseline.
+- **Bidirectional-only:** skips the cheap baseline and bets on the riskier MNTP path. Rejected.
+
+## Test/benchmark criteria
+- Decision metric: German MMTEB nDCG@10 / MRR@10 on held-out data. Pick the higher track;
+  fall back to causal on a tie (lower risk/latency).

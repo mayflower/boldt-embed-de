@@ -19,3 +19,11 @@ must not overclaim (no long-context, no "best multilingual" claims from a 350M G
 - Model cards cannot be completed until evaluation produces saved, metadata-tagged results.
 - Limitations and non-goals (ADR-005) are surfaced prominently to avoid misuse.
 - Release blocked until ADR-001 weight/size questions and ADR-004 data licenses are resolved.
+
+## Alternatives
+- **Release weights immediately:** blocked by data-license + naming items. Rejected.
+- **Ship without model cards:** fails the honesty/reproducibility bar. Rejected.
+
+## Test/benchmark criteria
+- `validate_repo` enforces the model-card required sections.
+- Release checklist + final audit (`docs/audit/final-audit.md`) must pass before publish.
