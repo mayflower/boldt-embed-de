@@ -645,3 +645,127 @@ def retrieval_eval_real(
         ranked = [corpus_ids[j] for j in topi[i].tolist()]
         rows.append(metrics_for_query(ranked, set(q["positive_ids"]), ks))
     return aggregate(rows)
+
+
+def mine_hard_negatives_gpu(model_path, query_texts, corpus_texts, query_pos_idx, *,
+                            k=1, pooling="eos", device_index=0, max_len=192,
+                            query_batch=2048, log=print):
+    """Embedding-based (ANCE-style) hard-negative mining on GPU.
+
+    Encodes corpus + queries with the given model, and for each query returns the index of
+    its top scoring corpus passage that is NOT its positive. Returns list[int] (one per query).
+    """
+    import torch
+    from transformers import AutoModel, AutoTokenizer
+
+    dev = pick_device(None, device_index)
+    tok = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True)
+    if tok.pad_token is None:
+        tok.pad_token = tok.eos_token
+    tok.padding_side = "right"
+    model = AutoModel.from_pretrained(model_path, trust_remote_code=True,
+                                      torch_dtype=torch.float32).to(dev).eval()
+    log(f"[mine] encoding corpus={len(corpus_texts)} queries={len(query_texts)}")
+    C = _encode_tensor(model, tok, corpus_texts, pooling, max_len, dev, batch_size=128)
+    hardneg_idx = []
+    for start in range(0, len(query_texts), query_batch):
+        qchunk = query_texts[start:start + query_batch]
+        Q = _encode_tensor(model, tok, qchunk, pooling, max_len, dev, batch_size=128)
+        sims = Q @ C.t()  # [b, N]
+        top = torch.topk(sims, k + 1, dim=1).indices.tolist()
+        for j, cand in enumerate(top):
+            pos = query_pos_idx[start + j]
+            choice = next((c for c in cand if c != pos), cand[0])
+            hardneg_idx.append(choice)
+    del C
+    return hardneg_idx
+
+
+def train_triples_real(
+    config,
+    triples,
+    *,
+    output_dir: str,
+    device_index: int = 0,
+    epochs: int = 1,
+    batch_size: int = 64,
+    lr: float = 2e-5,
+    max_len: int = 192,
+    pooling: str = "eos",
+    temperature: float = 0.05,
+    grad_checkpoint: bool = True,
+    seed: int = 0,
+    init_from: Optional[str] = None,
+    log: Callable[[str], None] = print,
+) -> Dict[str, object]:
+    """MNRL with explicit hard negatives. ``triples`` = list of (query, positive, hardneg|None).
+    Candidate pool per step = all in-batch positives + all in-batch hard negatives."""
+    import random
+    import time as _time
+
+    import torch
+    import torch.nn.functional as F
+    from transformers import AutoModel, AutoTokenizer
+
+    dev = pick_device(None, device_index)
+    src = init_from or config.model_name_or_path
+    log(f"[triples] device={dev} src={src} triples={len(triples)} bs={batch_size}")
+    tok = AutoTokenizer.from_pretrained(src, trust_remote_code=True)
+    if tok.pad_token is None:
+        tok.pad_token = tok.eos_token
+    tok.padding_side = "right"
+    model = AutoModel.from_pretrained(src, trust_remote_code=True,
+                                      torch_dtype=torch.float32).to(dev)
+    model.train()
+    if grad_checkpoint:
+        model.config.use_cache = False
+        model.gradient_checkpointing_enable()
+    opt = torch.optim.AdamW(model.parameters(), lr=lr)
+    n = len(triples)
+    losses = []
+    step = 0
+    t0 = _time.time()
+    for epoch in range(epochs):
+        order = list(range(n))
+        random.Random(seed + epoch).shuffle(order)
+        for b in range(0, n, batch_size):
+            chunk = order[b:b + batch_size]
+            if len(chunk) < 2:
+                continue
+            q = [triples[i][0] for i in chunk]
+            p = [triples[i][1] for i in chunk]
+            negs = [triples[i][2] for i in chunk if len(triples[i]) > 2 and triples[i][2]]
+            opt.zero_grad()
+            with torch.autocast("cuda", dtype=torch.bfloat16) if dev.startswith("cuda") else _nullctx():
+                qe = _embed_for_train(model, tok, q, pooling, max_len, dev)
+                pe = _embed_for_train(model, tok, p, pooling, max_len, dev)
+                ne = _embed_for_train(model, tok, negs, pooling, max_len, dev) if negs else None
+            cand = torch.cat([pe, ne], 0) if ne is not None else pe
+            logits = (qe.float() @ cand.float().t()) / temperature
+            labels = torch.arange(qe.size(0), device=dev)
+            loss = F.cross_entropy(logits, labels)
+            loss.backward()
+            torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
+            opt.step()
+            losses.append(float(loss.item()))
+            step += 1
+            if step % 25 == 0:
+                log(f"[triples] epoch {epoch + 1}/{epochs} step {step} loss={losses[-1]:.4f}")
+    out_path = Path(output_dir)
+    out_path.mkdir(parents=True, exist_ok=True)
+    model.eval()
+    model.save_pretrained(out_path)
+    tok.save_pretrained(out_path)
+    return {
+        "status": "trained", "init_from": src, "num_triples": n, "with_hard_negatives": True,
+        "epochs": epochs, "batch_size": batch_size, "steps": step,
+        "initial_loss": losses[0] if losses else None, "final_loss": losses[-1] if losses else None,
+        "wall_time_sec": round(_time.time() - t0, 1),
+        "gpu_name": torch.cuda.get_device_name(torch.device(dev)) if dev.startswith("cuda") else "cpu",
+        "hidden_size": int(model.config.hidden_size), "checkpoint": str(out_path),
+    }
+
+
+def _nullctx():
+    from contextlib import nullcontext
+    return nullcontext()

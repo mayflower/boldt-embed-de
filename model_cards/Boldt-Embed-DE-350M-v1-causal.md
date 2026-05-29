@@ -68,13 +68,15 @@ Saved: `outputs/real-training/disjoint-de-report.json` (`scripts/train_disjoint_
 |---|---:|---:|---:|---:|
 | Base `Boldt-DC-350M` (untrained) | 0.0015 | 0.0013 | 0.0028 | 0.018 |
 | + contrastive (Wikipedia, 150k) | **0.027** | 0.024 | 0.043 | 0.126 |
+| _baseline_ `intfloat/multilingual-e5-base` | _0.153_ | _0.140_ | _0.218_ | _0.404_ |
 
-**Honest interpretation:** ~17× over the useless base, but **absolute quality is low** — a model
-trained only on Wikipedia QA **generalizes weakly to legal retrieval**. The in-domain GermanQuAD
-0.879 is *not* representative of cross-domain ability. Closing this needs: (1) **domain-diverse
-training data** incl. legal/admin, (2) **hard negatives** (currently in-batch only), (3) more
-**scale/epochs** (vs 150k/1ep), and (4) **baseline comparisons** (multilingual-e5, mxbai-de) under
-this harness — none done yet.
+**Honest interpretation:** ~17× over the useless base, but **absolute quality is low**. The
+**baseline** (multilingual-e5-base, same harness, `outputs/real-training/baseline-gerdalir-report.json`)
+scores **0.153** — so GerDaLIR is hard *and* our Wikipedia-only model is **~5.6× below a strong
+off-the-shelf model**. The in-domain GermanQuAD 0.879 is *not* representative of cross-domain
+ability. Closing the gap needs: (1) **domain-diverse training data**, (2) **hard negatives**
+(an ANCE-style run is in `scripts/train_hardneg_de.py`), (3) more **scale/epochs**, and (4) the
+baseline comparison (now done: e5-base = 0.153).
 
 ### Broader public benchmark (MMTEB) — not run
 Full MMTEB German + GermanDPR + baseline comparison remains pending. Numbers are reported only

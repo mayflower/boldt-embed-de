@@ -1,0 +1,28 @@
+{
+  "status": "ok",
+  "baseline_model": "intfloat/multilingual-e5-base",
+  "benchmark": "mteb/GerDaLIRSmall (legal)",
+  "corpus": 9969,
+  "queries": 12234,
+  "aggregate": {
+    "ndcg@1": 0.10111165604054274,
+    "mrr@1": 0.10111165604054274,
+    "recall@1": 0.09011439625711327,
+    "map@1": 0.10111165604054274,
+    "ndcg@10": 0.1530158905028875,
+    "mrr@10": 0.1403068731170742,
+    "recall@10": 0.2178376810917272,
+    "map@10": 0.12884123297203645,
+    "ndcg@100": 0.19167983935052632,
+    "mrr@100": 0.14717534441425092,
+    "recall@100": 0.4041218072973835,
+    "map@100": 0.13593667229925113
+  },
+  "run_metadata": {
+    "command": "scripts/eval_baseline.py",
+    "commit": "eda8d77086d9175949c6ad49113881cb54155140",
+    "date": "2026-05-29",
+    "hardware": "Linux-6.11.0-1013-gcp-x86_64-with-glibc2.39",
+    "gpu": "NVIDIA RTX A6000"
+  }
+}

@@ -58,8 +58,13 @@ Train: 150k DT-de-dpr **Wikipedia** pairs · 1 epoch / 4,688 steps · A6000. Eva
 | + contrastive (Wikipedia, 150k) | **0.027** | 0.024 | 0.043 | 0.126 |
 
 This cross-domain number — not the in-domain 0.879 — is the honest indicator: Wikipedia-QA
-training generalizes weakly to legal retrieval. No baseline (mxbai-de / e5) run yet to
-contextualize how far 0.027 is from a strong model on GerDaLIR.
+training generalizes weakly to legal retrieval.
+
+**Baseline (same harness, `outputs/real-training/baseline-gerdalir-report.json`):**
+`intfloat/multilingual-e5-base` scores nDCG@10 = **0.153** / Recall@100 = 0.404 on GerDaLIR.
+So GerDaLIR is hard (a strong model only reaches 0.15) **and** our 0.027 is ~5.6× below it —
+a real gap, not just task difficulty. An ANCE-style hard-negative run (`scripts/train_hardneg_de.py`)
+targets this.
 
 ### 6b. Bidirectional (LLM2Vec) — training signal (`bidirectional-report.json`)
 | Phase | initial loss | final loss |
