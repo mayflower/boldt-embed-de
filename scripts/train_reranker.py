@@ -43,13 +43,21 @@ def dry_run(config_path: str) -> dict:
 
 
 def real_train(config_path: str) -> dict:  # pragma: no cover - requires extras + GPU
+    """Real cross-encoder training (train.train_reranker_real, BCE on pos/hard-neg pairs) on
+    the toy data. For a useful reranker, train on thousands of mined pairs — see
+    scripts/run_real_reranker.py and the data in docs/data/training-datasets-research-2026.md."""
     try:
         import torch  # noqa: F401
+        from boldt_embed import train as T
     except ImportError as exc:
         raise SystemExit("Real training needs: pip install -e '.[train]' (and a GPU).") from exc
-    raise SystemExit(
-        "Real cross-encoder training loop is intentionally not implemented in this scaffold."
-    )
+    cfg = load_reranker_config(config_path)
+    triples = data.load_jsonl(TOY_TRIPLES)
+    print("[note] training on TOY pairs; a usable reranker needs thousands of mined pairs")
+    report = T.train_reranker_real(cfg, triples,
+                                   output_dir=str(ROOT / "outputs" / "checkpoints" / "reranker-real"))
+    print(json.dumps({k: report[k] for k in ("final_loss", "train_pairwise_accuracy", "checkpoint")}, indent=2))
+    return report
 
 
 def main() -> int:

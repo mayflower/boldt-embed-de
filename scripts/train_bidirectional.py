@@ -32,16 +32,23 @@ def dry_run(config_path: str) -> dict:
 
 
 def real_train(config_path: str) -> dict:  # pragma: no cover - requires extras + GPU
+    """Real LLM2Vec training (train.train_bidirectional_real: bidirectional mask -> MNTP ->
+    contrastive) on the toy data. For an at-scale run, point mntp_texts/triples at a real
+    corpus (e.g. DT-de-dpr) — see scripts/run_real_bidirectional.py."""
     try:
         import torch  # noqa: F401
+        from boldt_embed import train as T
     except ImportError as exc:
-        raise SystemExit(
-            "Real training needs extras: pip install -e '.[train]' (and 'llm2vec', and a GPU)."
-        ) from exc
-    raise SystemExit(
-        "Real MNTP + contrastive loop is intentionally not implemented in this scaffold. "
-        "Wire LLM2Vec (bidirectional mask -> MNTP -> contrastive -> merge) here."
-    )
+        raise SystemExit("Real training needs: pip install -e '.[train]' (and a GPU).") from exc
+    cfg = load_bidirectional_config(config_path)
+    triples = data.load_jsonl(TOY_TRIPLES)
+    texts = [t["positive"] for t in triples]
+    print("[note] training on TOY data; for scale use scripts/run_real_bidirectional.py with a real corpus")
+    report = T.train_bidirectional_real(
+        cfg, triples, texts, output_dir=str(ROOT / "outputs" / "checkpoints" / "bi-real"),
+        mntp_steps=10, contrastive_steps=12)
+    print(json.dumps({k: report[k] for k in ("mntp_final_loss", "contrastive_final_loss", "checkpoint")}, indent=2))
+    return report
 
 
 def main() -> int:

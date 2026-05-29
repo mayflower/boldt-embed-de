@@ -24,11 +24,21 @@ Two layers:
 **~435M** parameters. So the 1024-d output needs no projection head, and there is no
 long-context capability beyond 2048.
 
-**Honest scale:** the executed run is a *tiny* real run on 7 toy German triples — it proves
-the GPU pipeline trains and improves a real model (toy-eval ndcg@10 0.774 → 0.94), it is
-**not** a production model and **not** a public-benchmark claim. No number here is a quality
-claim unless produced by a saved command under `outputs/` with run metadata; the local
-hashing benchmark validates *plumbing* only.
+**Honest scale & status (read this):** this is **not** a finished, release-ready German
+embedding family. What exists, concretely:
+- **Causal embedder:** a real GermanQuAD run (11,494 pairs) — in-domain test nDCG@10 0.879;
+  and an at-scale, **contamination-free** run (train on DT-de-dpr Wikipedia → eval on the
+  **held-out, disjoint legal** GerDaLIR benchmark) via `scripts/train_disjoint_de.py`. See
+  `outputs/real-training/*.json` for saved numbers + metadata.
+- **Bidirectional + reranker:** real LLM2Vec/cross-encoder *pipelines* trained only at small
+  scale so far — proofs, not production models. Scaling them is the next step.
+- **Not done:** broad MTEB/MMTEB run, baseline comparisons, published weights, multi-dataset
+  at-scale training of all three tracks. See `RELEASE_CHECKLIST.md` / `docs/audit/final-audit.md`.
+
+Training data follows a strict **train≠eval** rule (`docs/data/training-datasets-research-2026.md`):
+benchmark datasets (GermanQuAD/GerDaLIR/MMTEB) are held out; training uses non-benchmark
+permissive corpora. No number is a quality claim unless produced by a saved command under
+`outputs/` with run metadata; the local hashing benchmark validates *plumbing* only.
 
 ## Install
 

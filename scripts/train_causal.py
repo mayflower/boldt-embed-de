@@ -38,28 +38,44 @@ def dry_run(config_path: str) -> dict:
     return out
 
 
-def real_train(config_path: str) -> dict:  # pragma: no cover - requires extras + GPU
+def real_train(config_path: str, data_path: str | None = None,
+               out_dir: str | None = None) -> dict:  # pragma: no cover - requires extras + GPU
+    """Real MNRL training (train.train_pairs_real). Uses --data JSONL of {query, positive}
+    pairs if given, else the toy triples. For at-scale, contamination-free German training
+    use scripts/train_disjoint_de.py (DT-de-dpr -> held-out GerDaLIR)."""
     try:
         import torch  # noqa: F401
+        from boldt_embed import train as T
     except ImportError as exc:
-        raise SystemExit(
-            "Real training needs the training extras: pip install -e '.[train]' (and a GPU)."
-        ) from exc
-    raise SystemExit(
-        "Real training loop is intentionally not implemented in this scaffold. "
-        "Wire SentenceTransformers MNRL + Matryoshka here once weights and licensed data exist."
-    )
+        raise SystemExit("Real training needs: pip install -e '.[train]' (and a GPU).") from exc
+
+    cfg = load_causal_config(config_path)
+    pooling = "mean" if cfg.pooling == "mean" else "eos"
+    if data_path:
+        recs = data.load_jsonl(data_path)
+        pairs = [(r["query"], r["positive"]) for r in recs if r.get("query") and r.get("positive")]
+    else:
+        triples = data.load_jsonl(TOY_TRIPLES)
+        pairs = [(t["query"], t["positive"]) for t in triples]
+        print("[note] training on TOY pairs; for a real run pass --data or use "
+              "scripts/train_disjoint_de.py")
+    report = T.train_pairs_real(cfg, pairs, output_dir=out_dir or str(ROOT / "outputs" / "checkpoints" / "causal-real"),
+                                pooling=pooling, temperature=cfg.temperature)
+    print(json.dumps({k: report[k] for k in ("num_pairs", "steps", "final_loss", "checkpoint")}, indent=2))
+    return report
 
 
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", default=str(ROOT / "configs" / "training_causal.json"))
     parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument("--data", default=None, help="JSONL of {query, positive} for real training")
+    parser.add_argument("--out", default=None, help="checkpoint output dir for real training")
     parser.add_argument("--format", choices=["json", "markdown"], default="json")
     args = parser.parse_args()
 
     if not args.dry_run:
-        real_train(args.config)
+        real_train(args.config, args.data, args.out)
         return 0
 
     report = dry_run(args.config)

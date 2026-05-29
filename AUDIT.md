@@ -1,8 +1,17 @@
-# Final Audit — Boldt-Embed-DE
+# Audit summary — Boldt-Embed-DE
 
-Date: 2026-05-28. Scope: the scaffold built in this repository (no training/benchmark run
-has been executed — see "Honest scope" below). This audit red-teams licensing, leakage,
-validation honesty, reproducibility, and overclaims.
+> **Canonical, up-to-date audit: [`docs/audit/final-audit.md`](docs/audit/final-audit.md).**
+> This root file is a short summary; on any conflict the canonical file wins.
+
+**Status (2026-05-29):** scaffold + pipelines verified on GPU, with a real causal embedder
+run on GermanQuAD (in-domain nDCG@10 0.879) and an at-scale contamination-free run
+(DT-de-dpr → held-out **legal** GerDaLIR). The **bidirectional and reranker** tracks have
+real pipelines but are trained only at **small scale** so far. Broad MTEB/MMTEB, baseline
+comparisons, and published weights are **not done**. **Not releasable as a model** — see
+`RELEASE_CHECKLIST.md`.
+
+Date: 2026-05-28 (updated 2026-05-29). This audit red-teams licensing, leakage, validation
+honesty, reproducibility, and overclaims.
 
 ## Honest scope
 **Correction (2026-05-29):** an earlier version of this audit and the project's scoping
