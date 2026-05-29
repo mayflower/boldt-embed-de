@@ -55,15 +55,30 @@ Saved: `outputs/real-training/germanquad-report.json` (`scripts/train_causal_ger
 | Base `Boldt-DC-350M` (untrained) | 0.006 | 0.005 | 0.003 | 0.011 | 0.120 |
 | **+ contrastive (GermanQuAD)** | **0.879** | **0.851** | **0.779** | **0.963** | **0.995** |
 
-A real, large improvement on held-out German data. **Scope/caveats:** single in-domain
-dataset (GermanQuAD) with a small 474-passage corpus — strong in-domain retrieval, **not** a
-broad multi-task or multi-domain claim.
+A large improvement, but this is **in-domain** (train and test are both GermanQuAD/Wikipedia)
+— it does **not** measure transfer.
+
+### Cross-domain generalization (the honest number) — held-out legal GerDaLIR
+Trained on **150k non-benchmark German-Wikipedia pairs** (`deutsche-telekom/wikipedia-22-12-de-dpr`,
+CC-BY-SA-4.0), 1 epoch / 4,688 steps, ~49 min on A6000. Evaluated on the **held-out, disjoint-domain
+legal** benchmark `mteb/GerDaLIRSmall` (9,969 docs / 12,234 queries); **train↔eval leakage check = 0**.
+Saved: `outputs/real-training/disjoint-de-report.json` (`scripts/train_disjoint_de.py`).
+
+| Model | nDCG@10 | MRR@10 | Recall@10 | Recall@100 |
+|---|---:|---:|---:|---:|
+| Base `Boldt-DC-350M` (untrained) | 0.0015 | 0.0013 | 0.0028 | 0.018 |
+| + contrastive (Wikipedia, 150k) | **0.027** | 0.024 | 0.043 | 0.126 |
+
+**Honest interpretation:** ~17× over the useless base, but **absolute quality is low** — a model
+trained only on Wikipedia QA **generalizes weakly to legal retrieval**. The in-domain GermanQuAD
+0.879 is *not* representative of cross-domain ability. Closing this needs: (1) **domain-diverse
+training data** incl. legal/admin, (2) **hard negatives** (currently in-batch only), (3) more
+**scale/epochs** (vs 150k/1ep), and (4) **baseline comparisons** (multilingual-e5, mxbai-de) under
+this harness — none done yet.
 
 ### Broader public benchmark (MMTEB) — not run
-Full MMTEB German + GermanDPR + cross-domain evaluation remains pending (needs the larger task
-downloads); see `docs/benchmark-report.md`. Numbers are reported only from saved runs (ADR-005).
-
-(An earlier toy 7-triple smoke run is superseded by the GermanQuAD run above.)
+Full MMTEB German + GermanDPR + baseline comparison remains pending. Numbers are reported only
+from saved runs (ADR-005). (Earlier toy 7-triple smoke run superseded.)
 
 ## Limitations
 - ~435M-param German-first model (LlamaForCausalLM, hidden 1024, 24 layers): not a "best

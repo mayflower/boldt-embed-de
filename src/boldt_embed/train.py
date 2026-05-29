@@ -496,21 +496,23 @@ def train_pairs_real(
     pooling: str = "eos",
     temperature: float = 0.05,
     use_amp: bool = True,
+    grad_checkpoint: bool = True,
     seed: int = 0,
     max_steps: Optional[int] = None,
     log: Callable[[str], None] = print,
 ) -> Dict[str, object]:
     """Real MNRL fine-tune over (query, positive) pairs with in-batch negatives.
 
-    Minibatched, multi-epoch, bf16 autocast. This is a real training run on real data,
-    not a toy overfit. ``pairs`` is a list of (query, positive) tuples.
+    Minibatched, multi-epoch, bf16 autocast, optional gradient checkpointing (keeps GPU
+    memory low so it fits alongside other jobs). ``pairs`` is a list of (query, positive).
     """
     import random
     import torch
     from transformers import AutoModel, AutoTokenizer
 
     dev = pick_device(None, device_index)
-    log(f"[full] device={dev} pairs={len(pairs)} epochs={epochs} bs={batch_size}")
+    log(f"[full] device={dev} pairs={len(pairs)} epochs={epochs} bs={batch_size} "
+        f"grad_ckpt={grad_checkpoint}")
     tok = AutoTokenizer.from_pretrained(config.model_name_or_path, trust_remote_code=True)
     if tok.pad_token is None:
         tok.pad_token = tok.eos_token
@@ -518,6 +520,9 @@ def train_pairs_real(
     model = AutoModel.from_pretrained(config.model_name_or_path, trust_remote_code=True,
                                       torch_dtype=torch.float32).to(dev)
     model.train()
+    if grad_checkpoint:
+        model.config.use_cache = False
+        model.gradient_checkpointing_enable()
     opt = torch.optim.AdamW(model.parameters(), lr=lr)
     n = len(pairs)
     losses: List[float] = []

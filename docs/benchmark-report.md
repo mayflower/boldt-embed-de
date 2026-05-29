@@ -5,11 +5,16 @@ gpu, torch, date). Generated from executed runs; unrun items say **not run** wit
 
 ## 1. Executive summary
 The training/eval pipeline is implemented and **verified on real hardware** (NVIDIA RTX
-A6000): all three tracks load `Boldt/Boldt-DC-350M` and train for real. **Headline real
-result:** fine-tuning the causal embedder on **11,494 real GermanQuAD pairs** (CC-BY-4.0)
-lifts held-out test retrieval from near-random to **nDCG@10 = 0.879 / Recall@1 = 0.779**
-(2,204 queries vs 474 passages). This is a genuine in-domain German retrieval model. Caveat:
-one dataset / small corpus — **not** a broad multi-domain or full-MMTEB claim (still not run).
+A6000). Two contrasting causal results tell the honest story:
+- **In-domain (flattering):** trained on 11,494 GermanQuAD pairs → GermanQuAD-test nDCG@10 =
+  **0.879**. But train and test share the dataset/domain → not a generalization measure.
+- **Cross-domain (honest):** trained on 150k *non-benchmark* German-Wikipedia pairs (DT-de-dpr)
+  → held-out **legal** GerDaLIR (leakage-checked = 0) nDCG@10 = **0.027** (base 0.0015). ~17×
+  over base, but **low in absolute terms** — Wikipedia-QA training transfers weakly to legal IR.
+
+**Conclusion:** a working *pipeline* + a narrow Wikipedia-trained causal embedder, **not** a
+general German retriever. Closing the gap needs domain-diverse data + hard negatives + scale +
+baseline comparisons. Broad MMTEB and baselines remain **not run**.
 
 ## 2. Model variants compared
 | Variant | Status | Notes |
@@ -43,6 +48,18 @@ bidirectional (10 MNTP + 12 contrastive steps) and reranker (15 epochs) ≈ tens
 | **+ contrastive (GermanQuAD)** | **0.879** | **0.851** | **0.779** | **0.963** | **0.995** |
 
 (An earlier 7-triple toy smoke run — base 0.774 → 0.94 on an 8-query toy set — is superseded.)
+
+### 6a-bis. Causal embedder — CROSS-DOMAIN held-out (the honest number) (`outputs/real-training/disjoint-de-report.json`)
+Train: 150k DT-de-dpr **Wikipedia** pairs · 1 epoch / 4,688 steps · A6000. Eval: held-out
+**legal** GerDaLIR (9,969 docs / 12,234 queries) · train↔eval leakage = 0.
+| Model | nDCG@10 | MRR@10 | Recall@10 | Recall@100 |
+|---|---:|---:|---:|---:|
+| Base `Boldt-DC-350M` (untrained) | 0.0015 | 0.0013 | 0.0028 | 0.018 |
+| + contrastive (Wikipedia, 150k) | **0.027** | 0.024 | 0.043 | 0.126 |
+
+This cross-domain number — not the in-domain 0.879 — is the honest indicator: Wikipedia-QA
+training generalizes weakly to legal retrieval. No baseline (mxbai-de / e5) run yet to
+contextualize how far 0.027 is from a strong model on GerDaLIR.
 
 ### 6b. Bidirectional (LLM2Vec) — training signal (`bidirectional-report.json`)
 | Phase | initial loss | final loss |

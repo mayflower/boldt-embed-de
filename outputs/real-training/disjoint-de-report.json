@@ -1,0 +1,63 @@
+{
+  "status": "ok",
+  "setup": "train=deutsche-telekom/wikipedia-22-12-de-dpr (Wikipedia, CC-BY-SA-4.0); eval=mteb/GerDaLIRSmall (legal, MIT) — DISJOINT domains, held-out",
+  "train_pairs": 150000,
+  "train_steps": 4688,
+  "eval_corpus": 9969,
+  "eval_queries": 12234,
+  "leakage_sample_hits": 0,
+  "run_metadata": {
+    "command": "scripts/train_disjoint_de.py",
+    "commit": "409a0ee467f45e4449d99e2b95f1158770e21a73",
+    "date": "2026-05-29",
+    "hardware": "Linux-6.11.0-1013-gcp-x86_64-with-glibc2.39",
+    "gpu": "NVIDIA RTX A6000",
+    "torch": "2.6.0+cu124"
+  },
+  "training": {
+    "status": "trained",
+    "base_model": "Boldt/Boldt-DC-350M",
+    "device": "cuda:0",
+    "gpu_name": "NVIDIA RTX A6000",
+    "hidden_size": 1024,
+    "num_pairs": 150000,
+    "epochs": 1,
+    "batch_size": 32,
+    "lr": 2e-05,
+    "pooling": "eos",
+    "steps": 4688,
+    "initial_loss": 21.718305587768555,
+    "final_loss": 0.0035133850760757923,
+    "mean_last_50_loss": 0.06307044384535403,
+    "wall_time_sec": 2950.0,
+    "checkpoint": "/bigdata/johann/src/boldtembed/boldt-embed-de/outputs/checkpoints/causal-disjoint-de"
+  },
+  "eval_base_model": {
+    "ndcg@1": 0.0008173941474579042,
+    "mrr@1": 0.0008173941474579042,
+    "recall@1": 0.0006811617895482535,
+    "map@1": 0.0008173941474579042,
+    "ndcg@10": 0.0015493983659022454,
+    "mrr@10": 0.0013334228574542453,
+    "recall@10": 0.002751893629774944,
+    "map@10": 0.0010984382581979443,
+    "ndcg@100": 0.004402840908197663,
+    "mrr@100": 0.0017846621150798955,
+    "recall@100": 0.01772655441120375,
+    "map@100": 0.001477321323087486
+  },
+  "eval_trained_model": {
+    "ndcg@1": 0.014713094654242276,
+    "mrr@1": 0.014713094654242276,
+    "recall@1": 0.013098741213012915,
+    "map@1": 0.014713094654242276,
+    "ndcg@10": 0.02694261964523578,
+    "mrr@10": 0.023594146938923793,
+    "recall@10": 0.04283281565037327,
+    "map@10": 0.02114289866129003,
+    "ndcg@100": 0.04334483989807353,
+    "mrr@100": 0.026361959431535346,
+    "recall@100": 0.1258991335622037,
+    "map@100": 0.02370791131117837
+  }
+}
