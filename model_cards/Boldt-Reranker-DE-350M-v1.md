@@ -68,6 +68,35 @@ GermanQuAD-style + mMARCO/mqa) and a harder eval with room to help.
   stage over a shortlist, not for first-stage retrieval over a large corpus.
 - 350M German-first; quality unverified until trained and benchmarked.
 - `max_length` (1536) bounds combined query+document length.
+- **Not legal advice:** relevance scoring over German text (including legal/admin passages)
+  is for information retrieval only and is **not legal advice** — verify against primary sources.
+
+## Teacher distillation
+Trained in the 2026 teacher→student workflow: `Qwen/Qwen3-Reranker-8B` scores German
+(query, document) pairs (`configs/teacher_models.json`) and the student is distilled toward
+the teacher (listwise KL over candidate scores + pointwise/pairwise; `docs/reranker-training-2026.md`).
+Numbers come only from saved runs with run cards (`docs/experiment-registry.md`).
+
+## Training data provenance
+Permissively-licensed, **non-benchmark** German pairs + teacher-filtered hard negatives
+(`scripts/build_training_candidates.py`, `scripts/mine_hard_negatives_2026.py`); every
+candidate carries `source`, `domain`, `license`. Weights are publishable only if every
+dataset's license permits it (ADR-004).
+
+## Leakage policy
+GermanQuAD / GerDaLIR / MTEB / MMTEB test data are **evaluation-only** and removed from the
+candidate pool by `filter_leakage_against_eval_texts` (ADR-009, `docs/data/leakage-policy.md`).
+
+## German stress tests
+Evaluated separately on German-specific hard cases — ß/ss and umlaut variants, compounds,
+negation, dates/numbers, legal references (§/Absatz/Satz/SGB/BGB), formal/informal register,
+and entity disambiguation (`german_adversarial.py`, `benchmarks/stress_cases_de.jsonl`).
+
+## Reranker lift
+Quality is reported **only as lift over a fixed first stage** (nDCG@10 first-stage vs
++reranker on pre-built shortlists), with the Qwen3 reranker teacher as the ceiling
+(`scripts/eval_reranker_lift.py`). A reranker that does not lift a fixed candidate set is not
+shipped — this is the explicit v1 lesson.
 
 ## License
 - **Code:** Apache-2.0. **Base weights:** apache-2.0 (verified 2026-05-28).

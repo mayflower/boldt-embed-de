@@ -59,6 +59,7 @@ _SCRIPTS = [
     "generate_synthetic_queries", "mine_hard_negatives_2026", "train_modern_embedder",
     "prepare_bidirectional_student", "train_modern_reranker", "eval_reranker_lift",
     "eval_hybrid_retrieval", "run_baseline_benchmarks", "summarize_experiments",
+    "validate_release_2026",
 ]
 _DOCS = [
     "RESEARCH_NOTES_2026", "ARCHITECTURE_PLAN", "DATA_PLAN",

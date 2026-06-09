@@ -47,6 +47,35 @@ bidirectional production default is decided strictly on German benchmark results
   vetted LLM2Vec implementation.
 - 350M German-first; no long-context or "best multilingual" claims.
 - 1024-d output subject to the same base hidden-size MUST-VERIFY (ADR-003).
+- **Not legal advice:** retrieval/similarity over German text (including legal/admin
+  passages) is for information access only and is **not legal advice** — verify against
+  primary sources.
+
+## Teacher distillation
+Trained in the 2026 teacher→student workflow: `Qwen/Qwen3-Embedding-8B` scores German
+(query, passage) candidates (`configs/teacher_models.json`) and the bidirectional student
+learns to match them (MarginMSE distillation + cached contrastive + Matryoshka, after MNTP
+adaptation; `docs/bidirectional-adaptation.md`, `docs/modern-embedding-training.md`). Numbers
+come only from saved runs with run cards (`docs/experiment-registry.md`).
+
+## Training data provenance
+Permissively-licensed, **non-benchmark** German data — multi-domain candidates (mMARCO-de,
+clips/mqa, SWIM-IR, synthetic, German-stress) built and license-tracked by
+`scripts/build_training_candidates.py`; every candidate carries `source`, `domain`, `license`.
+Weights are publishable only if every dataset's license permits it (ADR-004).
+
+## Leakage policy
+GermanQuAD / GerDaLIR / MTEB / MMTEB test data are **evaluation-only** and removed from the
+candidate pool by `filter_leakage_against_eval_texts` (ADR-009, `docs/data/leakage-policy.md`).
+
+## German stress tests
+Evaluated separately on German-specific hard cases — ß/ss and umlaut variants, compounds,
+negation, dates/numbers, legal references (§/Absatz/Satz/SGB/BGB), formal/informal register,
+and entity disambiguation (`german_adversarial.py`, `benchmarks/stress_cases_de.jsonl`).
+
+## Matryoshka dimensions
+Native 1024-d, truncatable to 768 / 512 / 256 / 128 / 64 (re-normalize after truncation);
+per-dimension trade-off reported by the Matryoshka sweep in `scripts/eval_hybrid_retrieval.py`.
 
 ## License
 - **Code:** Apache-2.0. **Base weights:** apache-2.0 (verified 2026-05-28).

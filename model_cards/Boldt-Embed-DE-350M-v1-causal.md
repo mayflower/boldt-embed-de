@@ -95,6 +95,37 @@ from saved runs (ADR-005). (Earlier toy 7-triple smoke run superseded.)
 - Native 1024-d output confirmed (base hidden_size = 1024); no projection head needed.
 - Last-token pooling can under-weight early-sequence content vs. bidirectional pooling.
 - Not instruction/chat tuned; the "instruction" is a representation prompt.
+- **Not legal advice:** retrieval/similarity over German text (including legal/admin
+  passages) is for information access only and is **not legal advice** — verify against
+  primary sources.
+
+## Teacher distillation
+Trained in the 2026 teacher→student workflow: `Qwen/Qwen3-Embedding-8B` scores German
+(query, passage) candidates (`configs/teacher_models.json`) and the student learns to match
+them (MarginMSE distillation + cached contrastive + Matryoshka; `docs/modern-embedding-training.md`).
+Numbers are reported only from saved runs with run cards (`docs/experiment-registry.md`).
+
+## Training data provenance
+Permissively-licensed, **non-benchmark** German data — multi-domain candidates (mMARCO-de,
+clips/mqa, SWIM-IR, synthetic, German-stress) built and license-tracked by
+`scripts/build_training_candidates.py`. Every candidate carries `source`, `domain`, `license`;
+weights are publishable only if every contributing dataset's license permits it
+(ADR-004, `docs/data/license-policy.md`).
+
+## Leakage policy
+GermanQuAD / GerDaLIR / MTEB / MMTEB test data are **evaluation-only** and are removed from
+the candidate pool by `filter_leakage_against_eval_texts` (ADR-009,
+`docs/data/leakage-policy.md`). No tuning against public test labels.
+
+## German stress tests
+Evaluated separately on German-specific hard cases — ß/ss and umlaut variants, compounds,
+negation, dates/numbers, legal references (§/Absatz/Satz/SGB/BGB), formal/informal register,
+and entity disambiguation (`german_adversarial.py`, `benchmarks/stress_cases_de.jsonl`).
+
+## Matryoshka dimensions
+Native 1024-d, truncatable to 768 / 512 / 256 / 128 / 64 (re-normalize after truncation). The
+accuracy/footprint trade-off per dimension is reported by the Matryoshka sweep in
+`scripts/eval_hybrid_retrieval.py`.
 
 ## License
 - **Code:** Apache-2.0.

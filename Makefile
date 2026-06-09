@@ -1,10 +1,11 @@
-.PHONY: help validate smoke bench test report all dry-run-causal dry-run-bi dry-run-reranker clean
+.PHONY: help validate validate-release smoke bench test report all dry-run-causal dry-run-bi dry-run-reranker clean
 
 PY ?= python
 
 help:
 	@echo "Targets:"
 	@echo "  validate          structural validation of the repo (stdlib)"
+	@echo "  validate-release  2026 release gate: provenance/overclaim/weights checks (stdlib)"
 	@echo "  smoke             deterministic CPU smoke tests (stdlib)"
 	@echo "  bench             local toy German retrieval benchmark (stdlib)"
 	@echo "  test              unittest suite (stdlib)"
@@ -16,6 +17,9 @@ help:
 
 validate:
 	$(PY) scripts/validate_repo.py --format markdown
+
+validate-release:
+	$(PY) scripts/validate_release_2026.py --format markdown
 
 smoke:
 	$(PY) scripts/run_smoke_tests.py --format markdown
