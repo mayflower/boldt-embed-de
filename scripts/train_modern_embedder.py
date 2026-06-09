@@ -16,6 +16,7 @@ import sys
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
+from boldt_embed import experiment_registry as ER  # noqa: E402
 from boldt_embed import teacher as T  # noqa: E402  (stdlib-only at import time)
 from boldt_embed import train_modern as TM  # noqa: E402
 from boldt_embed.config_teacher import load_student_training_config  # noqa: E402
@@ -36,6 +37,7 @@ def main() -> int:
     ap.add_argument("--gradient-checkpointing", action="store_true")
     ap.add_argument("--lora", action="store_true")
     ap.add_argument("--dry-run-rows", type=int, default=2000, help="rows to scan in --dry-run")
+    ap.add_argument("--run-id", default=None, help="experiment run id (run card written on success)")
     ap.add_argument("--dry-run", action="store_true")
     args = ap.parse_args()
 
@@ -81,6 +83,12 @@ def main() -> int:
         batch_size=args.batch_size, mini_batch_size=args.mini_batch_size, lr=args.lr,
         bf16=args.bf16, gradient_checkpointing=args.gradient_checkpointing,
         use_lora=args.lora, guide_model_name=args.guide_model)
+    card = ER.emit_run_card(args.run_id, "train_embedder", "scripts/train_modern_embedder.py",
+                            model=cfg.base_model, dataset=args.teacher_cache,
+                            metrics={"num_examples": report.get("num_examples")},
+                            input_artifacts=[args.teacher_cache], output_artifacts=[args.output],
+                            gpu=report.get("gpu_name"), notes=f"variant={cfg.student_variant}")
+    report["run_card"] = card
     print(json.dumps(report, ensure_ascii=False, indent=2, default=str))
     return 0
 

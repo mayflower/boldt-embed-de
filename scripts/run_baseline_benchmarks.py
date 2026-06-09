@@ -13,40 +13,21 @@ stand-in for plumbing/tests — NOT a quality claim.
 from __future__ import annotations
 
 import argparse
-import importlib.metadata as ilm
 import json
 import pathlib
-import subprocess
 import sys
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
 from boldt_embed import data_pipeline as dp  # noqa: E402
+from boldt_embed import experiment_registry as ER  # noqa: E402
 from boldt_embed.config_teacher import load_baseline_models_config  # noqa: E402
 from boldt_embed.eval_harness import HashingEncoder, cosine_rank  # noqa: E402
+from boldt_embed.experiment_registry import collect_env_metadata  # noqa: E402  (canonical)
 from boldt_embed.metrics import aggregate, metrics_for_query  # noqa: E402
 
 KS = (10, 100)
-
-
-def _pkg_version(pkg):
-    try:
-        return ilm.version(pkg)  # reads metadata; does NOT import the package
-    except Exception:
-        return None
-
-
-def collect_env_metadata():
-    try:
-        commit = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip()
-    except Exception:
-        commit = "unknown"
-    return {"commit": commit, "python": sys.version.split()[0],
-            "platform": __import__("platform").platform(),
-            "torch": _pkg_version("torch"), "transformers": _pkg_version("transformers"),
-            "sentence_transformers": _pkg_version("sentence-transformers"),
-            "mteb": _pkg_version("mteb")}
 
 
 def _load_local(corpus_p, queries_p, qrels_p, limit):
@@ -120,6 +101,7 @@ def main() -> int:
     ap.add_argument("--output", default=str(ROOT / "outputs" / "baselines" / "baseline_report.json"))
     ap.add_argument("--limit", type=int, default=None)
     ap.add_argument("--device", default="cuda")
+    ap.add_argument("--run-id", default=None, help="experiment run id (run card written on success)")
     ap.add_argument("--dry-run", action="store_true")
     args = ap.parse_args()
 
@@ -172,7 +154,13 @@ def main() -> int:
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
     out.with_suffix(".md").write_text(_render_md(results, meta), encoding="utf-8")
-    print(f"saved: {out} and {out.with_suffix('.md')}")
+    best = next((r for r in results if r.get("metrics")), {})
+    card = ER.emit_run_card(args.run_id, "eval", "scripts/run_baseline_benchmarks.py",
+                            dataset=args.task_name, metrics=best.get("metrics"),
+                            input_artifacts=[args.eval_corpus, args.eval_queries, args.qrels],
+                            output_artifacts=[str(out)],
+                            notes=f"baseline benchmark, {len(results)} models, mode={args.mode}")
+    print(f"saved: {out} and {out.with_suffix('.md')}; run card: {card}")
     return 0
 
 

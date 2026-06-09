@@ -19,6 +19,7 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
 from boldt_embed import data_pipeline as dp  # noqa: E402
+from boldt_embed import experiment_registry as ER  # noqa: E402
 from boldt_embed import hybrid_eval as H  # noqa: E402
 
 MODES = ["bm25_only", "dense_only", "hybrid_rrf", "hybrid_rrf_plus_reranker"]
@@ -60,6 +61,7 @@ def main() -> int:
     ap.add_argument("--config", default=str(ROOT / "configs" / "training_reranker.json"))
     ap.add_argument("--device-index", type=int, default=0)
     ap.add_argument("--output", default=str(ROOT / "outputs" / "eval" / "hybrid_eval.json"))
+    ap.add_argument("--run-id", default=None, help="experiment run id (run card written on success)")
     ap.add_argument("--dry-run", action="store_true")
     args = ap.parse_args()
 
@@ -138,10 +140,15 @@ def main() -> int:
     out = pathlib.Path(args.output)
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
+    card = ER.emit_run_card(args.run_id, "eval", "scripts/eval_hybrid_retrieval.py",
+                            model=args.embedder_model, dataset=args.eval_corpus,
+                            metrics={m: r.get("ndcg@10") for m, r in results.items()},
+                            input_artifacts=[args.eval_corpus, args.eval_queries, args.qrels],
+                            output_artifacts=[str(out)], notes="hybrid BM25+dense+RRF+reranker")
     print("=== SUMMARY (nDCG@10 by mode) ===")
     for mode, m in results.items():
         print(f"  {mode:28s} ndcg@10={m.get('ndcg@10')}")
-    print("saved:", out)
+    print(f"saved: {out}; run card: {card}")
     return 0
 
 

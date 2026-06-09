@@ -17,6 +17,7 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
 from boldt_embed import data_pipeline as dp  # noqa: E402  (stdlib)
+from boldt_embed import experiment_registry as ER  # noqa: E402
 from boldt_embed.config import load_bidirectional_config  # noqa: E402
 
 
@@ -42,6 +43,7 @@ def main() -> int:
     ap.add_argument("--pooling", default="mean")
     ap.add_argument("--bf16", action="store_true")
     ap.add_argument("--gradient-checkpointing", action="store_true")
+    ap.add_argument("--run-id", default=None, help="experiment run id (run card written on success)")
     ap.add_argument("--dry-run", action="store_true")
     args = ap.parse_args()
 
@@ -83,7 +85,13 @@ def main() -> int:
                                   device=device)
     print(f"[mntp] {json.dumps(stats, ensure_ascii=False)}")
     out = B.export_bi_encoder(model, tok, args.output, pooling=args.pooling)
-    print(f"[export] bi-encoder -> {out}")
+    card = ER.emit_run_card(args.run_id, "train_embedder", "scripts/prepare_bidirectional_student.py",
+                            model=base_model, dataset=args.texts,
+                            metrics={"mntp_final_loss": stats.get("final_loss"),
+                                     "is_bidirectional": verdict.get("is_bidirectional")},
+                            input_artifacts=[args.texts], output_artifacts=[out],
+                            notes="LLM2Vec bidirectional + MNTP")
+    print(f"[export] bi-encoder -> {out}; run card: {card}")
     return 0
 
 

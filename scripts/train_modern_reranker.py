@@ -16,6 +16,7 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
 from boldt_embed import data_pipeline as dp  # noqa: E402
+from boldt_embed import experiment_registry as ER  # noqa: E402
 from boldt_embed import reranker_modern as RM  # noqa: E402
 from boldt_embed import teacher as T  # noqa: E402
 from boldt_embed.config import load_reranker_config  # noqa: E402
@@ -54,6 +55,7 @@ def main() -> int:
     ap.add_argument("--margin", type=float, default=0.2)
     ap.add_argument("--lora", action="store_true")
     ap.add_argument("--bf16", action="store_true")
+    ap.add_argument("--run-id", default=None, help="experiment run id (run card written on success)")
     ap.add_argument("--dry-run", action="store_true")
     args = ap.parse_args()
 
@@ -98,7 +100,14 @@ def main() -> int:
         reports.append(RM.train_listwise_distilled_reranker(
             cfg, listwise, args.output, epochs=args.epochs, max_length=args.max_length,
             lr=args.lr, temperature=args.temperature, bf16=args.bf16, use_lora=args.lora))
-    print(json.dumps({"trained": reports}, ensure_ascii=False, indent=2, default=str))
+    card = ER.emit_run_card(args.run_id, "train_reranker", "scripts/train_modern_reranker.py",
+                            model=cfg.model_name_or_path,
+                            dataset=args.teacher_cache or args.hard_negatives,
+                            metrics={"objective": args.loss,
+                                     "final_loss": reports[-1].get("final_loss") if reports else None},
+                            input_artifacts=[p for p in (args.teacher_cache, args.hard_negatives) if p],
+                            output_artifacts=[args.output], notes=f"loss={args.loss}")
+    print(json.dumps({"trained": reports, "run_card": card}, ensure_ascii=False, indent=2, default=str))
     return 0
 
 

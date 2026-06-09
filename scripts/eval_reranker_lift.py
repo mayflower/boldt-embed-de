@@ -26,6 +26,7 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
 from boldt_embed import data_pipeline as dp  # noqa: E402
+from boldt_embed import experiment_registry as ER  # noqa: E402
 from boldt_embed import reranker_modern as RM  # noqa: E402
 from boldt_embed.config import load_reranker_config  # noqa: E402
 
@@ -62,6 +63,7 @@ def main() -> int:
     ap.add_argument("--k", type=int, default=10)
     ap.add_argument("--device-index", type=int, default=0)
     ap.add_argument("--output", default=str(ROOT / "outputs" / "real-training" / "reranker-lift-report.json"))
+    ap.add_argument("--run-id", default=None, help="experiment run id (run card written on success)")
     ap.add_argument("--dry-run", action="store_true")
     args = ap.parse_args()
 
@@ -119,9 +121,14 @@ def main() -> int:
     out = pathlib.Path(args.output)
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
+    card = ER.emit_run_card(args.run_id, "eval", "scripts/eval_reranker_lift.py",
+                            model=args.reranker, dataset=args.candidates,
+                            metrics={k: v for k, v in report.items() if "ndcg@" in k},
+                            input_artifacts=[args.candidates], output_artifacts=[str(out)],
+                            notes="reranker lift over fixed candidate sets")
     print("=== LIFT SUMMARY ===")
     print(json.dumps(report, ensure_ascii=False, indent=2))
-    print("saved:", out)
+    print(f"saved: {out}; run card: {card}")
     return 0
 
 

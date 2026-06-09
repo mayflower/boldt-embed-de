@@ -20,6 +20,7 @@ import sys
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
+from boldt_embed import experiment_registry as ER  # noqa: E402
 from boldt_embed import teacher as T  # noqa: E402  (stdlib-only at import time)
 from boldt_embed.config_teacher import load_teacher_models_config  # noqa: E402
 
@@ -44,6 +45,7 @@ def main() -> int:
     ap.add_argument("--resume", action="store_true")
     ap.add_argument("--batch-size-embedding", type=int, default=None)
     ap.add_argument("--batch-size-reranker", type=int, default=None)
+    ap.add_argument("--run-id", default=None, help="experiment run id (run card written on success)")
     args = ap.parse_args()
 
     cfg = load_teacher_models_config(args.teacher_config)
@@ -96,7 +98,11 @@ def main() -> int:
         batch_size_embedding=args.batch_size_embedding,
         batch_size_reranker=args.batch_size_reranker)
     n = T.write_teacher_cache_jsonl(args.output, rows, append=args.resume)
-    print(f"[score] wrote {n} cache rows to {args.output} (append={args.resume})")
+    card = ER.emit_run_card(args.run_id, "teacher_cache", "scripts/build_teacher_cache.py",
+                            model=f"{emb_name} + {rr_name}", dataset=args.input,
+                            metrics={"rows_written": n}, input_artifacts=[args.input],
+                            output_artifacts=[args.output], notes=f"mode={args.mode}")
+    print(f"[score] wrote {n} cache rows to {args.output} (append={args.resume}); run card: {card}")
     return 0
 
 
