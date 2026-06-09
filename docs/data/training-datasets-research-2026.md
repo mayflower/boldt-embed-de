@@ -57,6 +57,44 @@ GermanQuAD/MMTEB numbers honest (ADR-009, `docs/data/leakage-policy.md`).
 4. Train causal + bidirectional (MNRL + Matryoshka) on the A6000.
 5. Evaluate on **held-out** GermanQuAD + GerDaLIR (and MMTEB-de) — a true generalization number.
 
+## Candidate JSONL pipeline (2026 workflow)
+
+The teacher/student workflow standardizes on a single **candidate** record so every source
+(mMARCO-de, clips/mqa, SWIM-IR, synthetic, German-stress) flows through the same scoring,
+mining, and training code. Built with **stdlib only** (`src/boldt_embed/data_pipeline.py`,
+`scripts/build_training_candidates.py`) — no network in tests.
+
+```json
+{"query_id": "...", "doc_id": "...", "query": "...", "document": "...",
+ "positive": true, "metadata": {"source_passage_id": "..."},
+ "source": "mMARCO-de|clips-mqa-de|synthetic|...",
+ "domain": "web|faq|admin|legal_adversarial|wiki|german_stress|...",
+ "license": "..."}
+```
+
+Pipeline stages (all deterministic, order-preserving):
+
+1. **normalize_record** — NFC + whitespace normalize; derive stable content-hash ids when
+   absent; apply source/domain/license defaults.
+2. **deduplicate_by_text_hash** — collapse identical (query, document) pairs (`--dedup`).
+3. **filter_leakage_against_eval_texts** — drop any candidate whose query *or* document
+   text-hash collides with an eval corpus (`--leakage-corpus-jsonl`). Logs kept/dropped.
+4. **domain_balanced_sample** — cap per domain (`--max-per-domain`) so no single source
+   dominates (the v1 Wikipedia-only failure mode).
+
+German stress candidates come from `scripts/generate_german_adversarial.py`
+(`german_adversarial.py`): orthographic (ß/ss, umlaut), compound splits, register shifts and
+legal-wording paraphrases are **positives**; negation, altered numbers/dates, wrong legal
+sections, and swapped entities are **hard-negative distractors**. All are tagged
+`source=synthetic_adversarial`, `domain=german_stress`, with `metadata.template_id`.
+
+### Eval-only rule (non-negotiable)
+
+**GermanQuAD, GerDaLIR, MTEB and MMTEB test data stay evaluation-only and never enter the
+candidate pool.** They are passed *only* as `--leakage-corpus-jsonl` so overlapping
+candidates are removed. This is the same train≠eval wall as ADR-009 and
+`docs/data/leakage-policy.md`, enforced here at candidate-build time.
+
 ## Sources (fetched 2026-05-29)
 - clips/mqa — https://huggingface.co/datasets/clips/mqa (CC0-1.0; de; FAQ/CQA from Common Crawl)
 - deutsche-telekom/wikipedia-22-12-de-dpr — https://huggingface.co/datasets/deutsche-telekom/wikipedia-22-12-de-dpr · https://github.com/telekom/wikipedia-22-12-de-dpr (CC-BY-SA-4.0; de; 135k Wikipedia contexts + question/imperative variants; built from Cohere/wikipedia-22-12-de-embeddings)
