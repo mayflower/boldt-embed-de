@@ -1,0 +1,59 @@
+{
+  "models": [
+    {
+      "model_name_or_path": "intfloat/multilingual-e5-base",
+      "backend": "sentence_transformers",
+      "query_instruction": "query: ",
+      "document_instruction": "passage: ",
+      "max_length": 512, "batch_size": 64, "expected_dim": 768, "normalize": true
+    },
+    {
+      "model_name_or_path": "intfloat/multilingual-e5-large-instruct",
+      "backend": "sentence_transformers",
+      "query_instruction": "Instruct: Given a German search query, retrieve relevant German passages.\nQuery: ",
+      "document_instruction": null,
+      "max_length": 512, "batch_size": 32, "expected_dim": 1024, "normalize": true
+    },
+    {
+      "model_name_or_path": "BAAI/bge-m3",
+      "backend": "sentence_transformers",
+      "query_instruction": "", "document_instruction": null,
+      "max_length": 8192, "batch_size": 16, "expected_dim": 1024, "normalize": true
+    },
+    {
+      "model_name_or_path": "mixedbread-ai/deepset-mxbai-embed-de-large-v1",
+      "backend": "sentence_transformers",
+      "query_instruction": "Repräsentiere diese Suchanfrage für die Suche nach relevanten Dokumenten: ",
+      "document_instruction": null,
+      "max_length": 512, "batch_size": 32, "expected_dim": 1024, "normalize": true
+    },
+    {
+      "model_name_or_path": "Qwen/Qwen3-Embedding-0.6B",
+      "backend": "sentence_transformers",
+      "query_instruction": "Instruct: Given a German search query, retrieve relevant German passages.\nQuery: ",
+      "document_instruction": null,
+      "max_length": 8192, "batch_size": 32, "expected_dim": 1024, "normalize": true
+    },
+    {
+      "model_name_or_path": "Qwen/Qwen3-Embedding-4B",
+      "backend": "sentence_transformers",
+      "query_instruction": "Instruct: Given a German search query, retrieve relevant German passages.\nQuery: ",
+      "document_instruction": null,
+      "max_length": 8192, "batch_size": 16, "expected_dim": 1024, "normalize": true
+    },
+    {
+      "model_name_or_path": "Qwen/Qwen3-Embedding-8B",
+      "backend": "sentence_transformers",
+      "query_instruction": "Instruct: Given a German search query, retrieve relevant German passages.\nQuery: ",
+      "document_instruction": null,
+      "max_length": 8192, "batch_size": 8, "expected_dim": 1024, "normalize": true
+    },
+    {
+      "model_name_or_path": "outputs/checkpoints/boldt-modern-bi",
+      "backend": "local_boldt",
+      "query_instruction": "Instruct: Repräsentiere die Suchanfrage für die Suche nach passenden deutschen Dokumenten.\nQuery: ",
+      "document_instruction": null,
+      "max_length": 512, "batch_size": 64, "expected_dim": 1024, "normalize": true
+    }
+  ]
+}

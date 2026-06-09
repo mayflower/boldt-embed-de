@@ -21,6 +21,9 @@ from typing import Any, Dict, List, Optional
 # rest of the config layer (same messages for matryoshka / positive-int / non-empty-str).
 from .config import _check_matryoshka, _check_pos_int, _check_str  # noqa: F401
 
+# local_hashing = the deterministic stdlib char-n-gram stand-in (eval_harness.HashingEncoder)
+# used for plumbing/tests only — NOT a quality claim.
+BASELINE_BACKENDS = {"sentence_transformers", "transformers_custom", "local_boldt", "local_hashing"}
 EMBEDDING_BACKENDS = {"sentence_transformers", "transformers_custom"}
 RERANKER_BACKENDS = {"sentence_transformers_cross_encoder", "transformers_custom"}
 DTYPES = {"bfloat16", "float16", "float32"}
@@ -220,3 +223,63 @@ def load_student_training_config(path: str | Path) -> StudentTrainingConfig:
         hardware_profile=d["hardware_profile"],
         raw=d,
     )
+
+
+# ------------------------------------------------------------------- baseline models
+@dataclass
+class BaselineModel:
+    model_name_or_path: str
+    backend: str
+    query_instruction: str
+    document_instruction: Optional[str]
+    max_length: int
+    batch_size: int
+    expected_dim: Optional[int]
+    normalize: bool
+    raw: Dict[str, Any] = field(default_factory=dict)
+
+
+def validate_baseline_model(d: Any, idx: int = 0) -> List[str]:
+    errors: List[str] = []
+    if not isinstance(d, dict):
+        return [f"model[{idx}] must be an object"]
+    if not isinstance(d.get("model_name_or_path"), str) or not d["model_name_or_path"].strip():
+        errors.append(f"model[{idx}] missing/empty 'model_name_or_path'")
+    backend = d.get("backend")
+    if backend not in BASELINE_BACKENDS:
+        errors.append(f"model[{idx}].backend '{backend}' not in {sorted(BASELINE_BACKENDS)}")
+    _check_pos_int(d, "max_length", errors, required=False)
+    _check_pos_int(d, "batch_size", errors, required=False)
+    _check_pos_int(d, "expected_dim", errors, required=False)
+    return errors
+
+
+def validate_baseline_models(d: Dict[str, Any]) -> List[str]:
+    models = d.get("models")
+    if not isinstance(models, list) or not models:
+        return ["'models' must be a non-empty list"]
+    errors: List[str] = []
+    for i, m in enumerate(models):
+        errors += validate_baseline_model(m, i)
+    return errors
+
+
+def load_baseline_models_config(path: str | Path) -> List[BaselineModel]:
+    d = _read(path)
+    errors = validate_baseline_models(d)
+    if errors:
+        raise ValueError("invalid baseline_models config: " + "; ".join(errors))
+    out = []
+    for m in d["models"]:
+        out.append(BaselineModel(
+            model_name_or_path=m["model_name_or_path"],
+            backend=m["backend"],
+            query_instruction=m.get("query_instruction", ""),
+            document_instruction=m.get("document_instruction"),
+            max_length=int(m.get("max_length", 512)),
+            batch_size=int(m.get("batch_size", 32)),
+            expected_dim=(int(m["expected_dim"]) if m.get("expected_dim") is not None else None),
+            normalize=bool(m.get("normalize", True)),
+            raw=m,
+        ))
+    return out

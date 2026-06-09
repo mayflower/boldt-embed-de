@@ -1,0 +1,10 @@
+{
+  "models": [
+    {
+      "model_name_or_path": "stdlib-hashing-stand-in",
+      "backend": "local_hashing",
+      "query_instruction": "", "document_instruction": null,
+      "max_length": 256, "batch_size": 32, "expected_dim": 256, "normalize": true
+    }
+  ]
+}
