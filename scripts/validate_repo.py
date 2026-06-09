@@ -41,6 +41,8 @@ _SRC_MODULES = [
     "__init__", "textutil", "config", "instructions", "pooling", "matryoshka",
     "losses", "merging", "metrics", "data", "hard_negatives", "eval_harness",
     "model_causal", "model_bidirectional", "reranker", "cli", "train",
+    # 2026 teacher/student distillation workflow
+    "config_teacher", "teacher",
 ]
 _SCRIPTS = [
     "validate_repo", "run_smoke_tests", "run_local_benchmark",
@@ -50,6 +52,8 @@ _SCRIPTS = [
     "train_causal", "train_bidirectional", "train_reranker", "train_causal_germanquad",
     "train_disjoint_de", "train_hardneg_de", "train_reranker_de", "eval_baseline",
     "eval_reranker_general",
+    # 2026 teacher/student distillation workflow
+    "build_teacher_cache",
 ]
 _DOCS = [
     "RESEARCH_NOTES_2026", "ARCHITECTURE_PLAN", "DATA_PLAN",

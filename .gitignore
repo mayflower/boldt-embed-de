@@ -37,4 +37,7 @@ outputs/**/*.parquet
 outputs/**/*.arrow
 mteb_results/
 
+# Generated teacher score caches (never committed; can be many GB of JSONL)
+outputs/teacher-cache/
+
 .DS_Store

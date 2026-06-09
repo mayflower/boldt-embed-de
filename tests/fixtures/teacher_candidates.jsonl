@@ -1,0 +1,3 @@
+{"query_id": "q1", "doc_id": "d1", "query": "Wie hoch darf die Mietkaution sein?", "document": "Die Mietkaution darf höchstens das Dreifache der Nettokaltmiete betragen.", "positive": true, "source": "synthetic", "domain": "admin", "license": "CC-BY-4.0"}
+{"query_id": "q1", "doc_id": "d2", "query": "Wie hoch darf die Mietkaution sein?", "document": "Ein Mietvertrag kann befristet oder unbefristet abgeschlossen werden.", "positive": false, "source": "synthetic", "domain": "admin", "license": "CC-BY-4.0"}
+{"query_id": "q2", "doc_id": "d3", "query": "Was ist die Hauptstadt von Bayern?", "document": "München ist die Landeshauptstadt des Freistaats Bayern.", "positive": true, "source": "wiki", "domain": "wiki", "license": "CC-BY-SA-4.0"}
