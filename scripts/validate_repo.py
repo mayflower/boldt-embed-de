@@ -43,7 +43,7 @@ _SRC_MODULES = [
     "model_causal", "model_bidirectional", "reranker", "cli", "train",
     # 2026 teacher/student distillation workflow
     "config_teacher", "teacher", "data_pipeline", "german_adversarial",
-    "synthetic_queries", "local_llm_generation", "negative_mining_2026",
+    "synthetic_queries", "local_llm_generation", "negative_mining_2026", "train_modern",
 ]
 _SCRIPTS = [
     "validate_repo", "run_smoke_tests", "run_local_benchmark",
@@ -55,7 +55,7 @@ _SCRIPTS = [
     "eval_reranker_general",
     # 2026 teacher/student distillation workflow
     "build_teacher_cache", "build_training_candidates", "generate_german_adversarial",
-    "generate_synthetic_queries", "mine_hard_negatives_2026",
+    "generate_synthetic_queries", "mine_hard_negatives_2026", "train_modern_embedder",
 ]
 _DOCS = [
     "RESEARCH_NOTES_2026", "ARCHITECTURE_PLAN", "DATA_PLAN",
