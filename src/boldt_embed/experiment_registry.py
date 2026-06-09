@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import importlib.metadata as ilm
 import json
+import os
 import platform
 import re
 import subprocess
@@ -21,6 +22,12 @@ from typing import Any, Dict, List, Optional, Sequence
 
 ROOT = Path(__file__).resolve().parents[2]
 RUN_CARD_DIR = ROOT / "outputs" / "run-cards"
+
+
+def _default_run_card_dir() -> Path:
+    """Default run-card directory, overridable via ``BOLDT_RUN_CARD_DIR`` (used by tests so
+    real-run scripts don't write into the repo's outputs/ during the suite)."""
+    return Path(os.environ.get("BOLDT_RUN_CARD_DIR") or RUN_CARD_DIR)
 RUN_TYPES = {"teacher_cache", "train_embedder", "train_reranker", "eval"}
 REQUIRED_FIELDS = ("run_id", "run_type", "command", "commit", "date")
 
@@ -123,7 +130,7 @@ def write_run_card(card: Dict[str, Any], out_dir: Optional[Path] = None) -> str:
     errors = validate_run_card(card)
     if errors:
         raise ValueError("invalid run card: " + "; ".join(errors))
-    out_dir = Path(out_dir) if out_dir else RUN_CARD_DIR
+    out_dir = Path(out_dir) if out_dir else _default_run_card_dir()
     out_dir.mkdir(parents=True, exist_ok=True)
     path = out_dir / f"{_slug(card['run_id'])}.json"
     path.write_text(json.dumps(card, ensure_ascii=False, indent=2), encoding="utf-8")

@@ -1,5 +1,6 @@
 """Stdlib tests for the baseline benchmark runner: config, metadata, dry-run, tiny benchmark."""
 import json
+import os
 import pathlib
 import subprocess
 import sys
@@ -60,18 +61,19 @@ class TestDryRun(unittest.TestCase):
 
 
 class TestTinyBenchmark(unittest.TestCase):
-    def _run(self, out_path):
+    def _run(self, out_path, run_card_dir):
+        env = dict(os.environ, BOLDT_RUN_CARD_DIR=str(run_card_dir))  # don't pollute repo outputs/
         return subprocess.run(
             [sys.executable, str(SCRIPT), "--models", str(HASHING_CFG), "--mode", "local",
              "--eval-corpus", str(CORPUS), "--eval-queries", str(QUERIES), "--qrels", str(QRELS),
-             "--output", str(out_path)], capture_output=True, text=True)
+             "--output", str(out_path)], capture_output=True, text=True, env=env)
 
     def test_local_hashing_benchmark_deterministic_and_no_ml(self):
         with tempfile.TemporaryDirectory() as d:
             out1 = pathlib.Path(d) / "r1.json"
             out2 = pathlib.Path(d) / "r2.json"
-            r1 = self._run(out1)
-            r2 = self._run(out2)
+            r1 = self._run(out1, pathlib.Path(d) / "cards")
+            r2 = self._run(out2, pathlib.Path(d) / "cards")
             self.assertEqual(r1.returncode, 0, r1.stderr)
             self.assertEqual(r2.returncode, 0, r2.stderr)
             rep1 = json.loads(out1.read_text())
