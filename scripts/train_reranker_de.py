@@ -30,8 +30,32 @@ def _git_commit() -> str:
         return "unknown"
 
 
-def build_reranker_examples(n_pairs, miner_model, device_index, log):
-    """positives (q, ctx, 1) + one mined hard negative (q, hardneg_ctx, 0) per pair."""
+def mine_e5(queries, corpus, pos_idx, k, device_index, log):
+    """Hard negatives from a STRONG retriever (multilingual-e5-base) top-K, excluding the
+    positive — i.e. topically-similar confusions, the negatives a reranker must learn to beat."""
+    import torch
+    from sentence_transformers import SentenceTransformer
+
+    e5 = SentenceTransformer("intfloat/multilingual-e5-base", device=f"cuda:{device_index}")
+    C = e5.encode(["passage: " + c for c in corpus], batch_size=128, normalize_embeddings=True,
+                  convert_to_tensor=True, show_progress_bar=False)
+    out = []
+    for start in range(0, len(queries), 2048):
+        Q = e5.encode(["query: " + q for q in queries[start:start + 2048]], batch_size=128,
+                      normalize_embeddings=True, convert_to_tensor=True, show_progress_bar=False)
+        top = torch.topk(Q @ C.t(), k + 1, dim=1).indices.tolist()
+        for j, cand in enumerate(top):
+            pos = pos_idx[start + j]
+            out.append([c for c in cand if c != pos][:k])
+    log(f"[mine-e5] mined {k} hard negatives/query for {len(queries)} queries")
+    return out
+
+
+def build_reranker_examples(n_pairs, neg_source, neg_k, miner_model, device_index, log):
+    """positives (q, ctx, 1) + neg_k mined hard negatives (q, hardneg_ctx, 0) per pair.
+
+    neg_source='e5' (default) mines from a strong retriever (the correct hard negatives);
+    'embedder' uses the warmup causal embedder (weak -> too-easy negatives, kept for ablation)."""
     from datasets import load_dataset
 
     from boldt_embed import train as T
@@ -50,13 +74,18 @@ def build_reranker_examples(n_pairs, miner_model, device_index, log):
     raw = raw[:n_pairs]
     qtexts = [q for q, _ in raw]
     pos_idx = [ci for _, ci in raw]
-    log(f"[rr-data] pairs={len(raw)} corpus={len(corpus)} miner={miner_model}")
-    hn_idx = T.mine_hard_negatives_gpu(miner_model, qtexts, corpus, pos_idx, k=1,
+    log(f"[rr-data] pairs={len(raw)} corpus={len(corpus)} neg_source={neg_source} neg_k={neg_k}")
+    if neg_source == "e5":
+        neg_lists = mine_e5(qtexts, corpus, pos_idx, neg_k, device_index, log)
+    else:
+        hn = T.mine_hard_negatives_gpu(miner_model, qtexts, corpus, pos_idx, k=neg_k,
                                        pooling="eos", device_index=device_index, max_len=192)
+        neg_lists = [[h] if isinstance(h, int) else list(h) for h in hn]
     examples = []
     for i, (q, ci) in enumerate(raw):
         examples.append((q, corpus[ci], 1.0))
-        examples.append((q, corpus[hn_idx[i]], 0.0))
+        for ni in neg_lists[i]:
+            examples.append((q, corpus[ni], 0.0))
     random.Random(1).shuffle(examples)
     return examples
 
@@ -124,8 +153,12 @@ def main() -> int:
     ap.add_argument("--epochs", type=int, default=2)
     ap.add_argument("--batch-size", type=int, default=32)
     ap.add_argument("--miner-model", default=str(ROOT / "outputs" / "checkpoints" / "causal-hn-final"))
+    ap.add_argument("--neg-source", choices=["e5", "embedder"], default="e5",
+                    help="e5 = strong-retriever hard negatives (correct); embedder = weak warmup (ablation)")
+    ap.add_argument("--neg-k", type=int, default=2)
     ap.add_argument("--out", default=str(ROOT / "outputs" / "checkpoints" / "reranker-de"))
     ap.add_argument("--skip-train", action="store_true", help="eval an already-trained checkpoint at --out")
+    ap.add_argument("--no-eval", action="store_true", help="skip the built-in legal eval (use eval_reranker_general.py)")
     args = ap.parse_args()
 
     try:
@@ -140,16 +173,21 @@ def main() -> int:
         tr = {"status": "reused", "checkpoint": args.out, "miner_model": miner}
         print(f"=== Skipping training; evaluating existing checkpoint at {args.out} ===")
     else:
-        examples = build_reranker_examples(args.pairs, miner, args.device_index, print)
-        print(f"=== Train reranker on {len(examples)} examples ===")
+        examples = build_reranker_examples(args.pairs, args.neg_source, args.neg_k, miner,
+                                           args.device_index, print)
+        print(f"=== Train reranker on {len(examples)} examples (neg_source={args.neg_source}) ===")
         tr = T.train_reranker_scaled(cfg, examples, output_dir=args.out, device_index=args.device_index,
                                      epochs=args.epochs, batch_size=args.batch_size)
+    if args.no_eval:
+        print("=== Skipping built-in legal eval (run eval_reranker_general.py for the general eval) ===")
+        print(json.dumps({"training": tr}, indent=2, default=str))
+        return 0
     print("=== Reranking eval on GerDaLIR (e5 first stage vs +reranker) ===")
     corpus, queries = load_gerdalir()
     ev = rerank_eval(args.out, cfg, corpus, queries, args.device_index)
 
     report = {"status": "ok", "miner_model": miner,
-              "setup": "train=DT-de-dpr pos + embedder-mined hard negs; eval=rerank e5 top-50 on GerDaLIR",
+              "setup": f"train=DT-de-dpr pos + {args.neg_source}-mined hard negs; eval=rerank e5 top-50 on GerDaLIR",
               "run_metadata": {"command": "scripts/train_reranker_de.py", "commit": _git_commit(),
                                "date": "2026-05-29", "hardware": platform.platform(),
                                "gpu": tr.get("gpu_name"), "torch": __import__("torch").__version__},

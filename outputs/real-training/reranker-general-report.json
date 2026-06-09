@@ -1,0 +1,34 @@
+{
+  "status": "ok",
+  "reranker": "/bigdata/johann/src/boldtembed/boldt-embed-de/outputs/checkpoints/reranker-de",
+  "top_k": 50,
+  "note": "GENERAL reranking eval (GermanQuAD + DT-test); nDCG@10 first-stage vs +reranker",
+  "run_metadata": {
+    "command": "scripts/eval_reranker_general.py",
+    "commit": "120dcb7ed448dfba2418c96ba9fb059f6e26974c",
+    "date": "2026-06-09",
+    "hardware": "Linux-6.11.0-1013-gcp-x86_64-with-glibc2.39"
+  },
+  "results": {
+    "germanquad_test": {
+      "e5": {
+        "first_stage": 0.9389,
+        "plus_reranker": 0.1996
+      },
+      "bm25": {
+        "first_stage": 0.9034,
+        "plus_reranker": 0.1943
+      }
+    },
+    "dt_test": {
+      "e5": {
+        "first_stage": 0.9936,
+        "plus_reranker": 0.1943
+      },
+      "bm25": {
+        "first_stage": 0.9782,
+        "plus_reranker": 0.2303
+      }
+    }
+  }
+}
