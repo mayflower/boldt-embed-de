@@ -1,0 +1,9 @@
+# Baseline benchmark report
+
+commit: `dfeab5cc77c3c325a92ce19bc26e073c9a10aec2` · torch: 2.6.0+cu124 · sentence-transformers: 5.5.1
+
+| model | task | nDCG@10 | MRR@10 | Recall@10 | Recall@100 | MAP@10 |
+|---|---|---:|---:|---:|---:|---:|
+| Boldt/Boldt-DC-350M | gerdalir | 0.0021202301571267164 | 0.002416666666666667 | 0.0031666666666666666 | 0.02033333333333333 | 0.0015833333333333333 |
+| outputs/checkpoints/boldt-modern-de | gerdalir | 0.07818485477726753 | 0.07365502645502646 | 0.11613333333333332 | 0.27721111111111113 | 0.06296265432098766 |
+| intfloat/multilingual-e5-base | gerdalir | 0.13425593925752854 | 0.1269957671957672 | 0.19033333333333333 | 0.37971111111111117 | 0.1112202380952381 |

@@ -117,6 +117,48 @@ reranker needs diverse training question-styles/domains + a harder eval. (Legal 
 | RAG | nDCG@10 | 0.900 |
 | Stress (BM25) | nDCG@10 | 1.000 |
 
+### 6e. REAL 2026 teacher→student run — EXECUTED on RTX A6000 (2026-06-09)
+
+The teacher/student distillation workflow (Prompts 1–12) run end-to-end on real data and GPU.
+**Teachers:** `Qwen/Qwen3-Embedding-8B` + `Qwen/Qwen3-Reranker-8B` (both downloaded, bf16).
+**Training data:** 3,764 multi-domain, **non-benchmark** German candidates — TED talks
+(`ger-backtrans-paraphrase`), Wikipedia (`DT-de-dpr`), synthetic-query wiki (`swim-ir`), and
+German-stress adversarial — leakage-filtered against the eval corpora. Both teachers scored
+every candidate; the **false-negative filter vetoed 464 of 574** adversarial distractors as
+teacher-confirmed near-duplicates (the v1 failure mode, caught). Student = `Boldt/Boldt-DC-350M`
++ mean pooling, trained with **CachedMultipleNegativesRankingLoss + MatryoshkaLoss** (300 steps)
+on the teacher-validated positives. Run cards: `outputs/run-cards/real-*.json`; eval reports:
+`outputs/baselines/real_{germanquad,dt_test,gerdalir}.json`.
+
+nDCG@10 on **held-out** sets (1,500 queries each; first-stage dense retrieval, cosine):
+
+| Held-out set (domain) | Base `Boldt-DC-350M` (untrained) | **Student `boldt-modern-de`** | `multilingual-e5-base` |
+|---|---:|---:|---:|
+| GermanQuAD (Wikipedia QA, OOD) | 0.288 | **0.883** | 0.939 |
+| DT-test (Wikipedia, in-domain) | 0.223 | **0.950** | 0.994 |
+| GerDaLIR (legal, **OOD**) | 0.0021 | **0.0782** | 0.1343 |
+
+Recall@100 (same runs): GermanQuAD 0.529 → **0.997** (e5 0.998); DT-test 0.546 → **0.996**
+(e5 1.000); GerDaLIR 0.020 → **0.277** (e5 0.380).
+
+**Honest interpretation.**
+- The student is **competitive with multilingual-e5-base** on German Wikipedia-QA and in-domain
+  retrieval (0.88 / 0.95 nDCG@10 vs e5's 0.94 / 0.99), from a 350M German-only model — a real,
+  large jump over the untrained base (0.29 / 0.22).
+- On **out-of-domain legal** (GerDaLIR), the student reaches **0.078** — ~37× the untrained base
+  (0.002) and **~1.6–3× better than the v1 Wikipedia-only runs** (0.027 plain / 0.050
+  hard-neg; §6 above), now ~58% of e5-base (0.134). Multi-domain teacher-validated training
+  measurably improved transfer; e5-base still leads on legal (it has far more, broader training
+  data, and we deliberately used **no legal data**, keeping GerDaLIR a clean held-out test).
+- This is the genuine result of an **executed** pipeline, not a projection: every number above
+  was produced by a saved command with a run card, on the held-out splits, with train↔eval
+  leakage filtered.
+
+**What this run did not do** (next steps, not claimed): MNTP-bidirectional student (trained the
+causal base with mean pooling instead), MarginMSE score-distillation (the adversarial negatives
+were teacher-identified false negatives, so contrastive used in-batch negatives), reranker
+training, and a full MMTEB sweep.
+
 ## 7. Matryoshka truncation analysis
 Storage scales linearly with dim (fp32): 1024→4096 B, 512→2048 B, 256→1024 B, 128→512 B,
 64→256 B/vector. The HashingEncoder by-dim retrieval (toy) stays near-perfect down to 64 dims

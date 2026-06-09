@@ -171,10 +171,17 @@ def load_embedding_teacher(cfg, device: Optional[str] = None):
         except Exception:
             pass  # eager attention; documented fallback
     try:
-        return SentenceTransformer(cfg.model_name, device=device, model_kwargs=model_kwargs)
+        st = SentenceTransformer(cfg.model_name, device=device, model_kwargs=model_kwargs)
     except Exception:
         model_kwargs.pop("attn_implementation", None)
-        return SentenceTransformer(cfg.model_name, device=device, model_kwargs=model_kwargs)
+        st = SentenceTransformer(cfg.model_name, device=device, model_kwargs=model_kwargs)
+    # Cap sequence length to the configured max — large 8B teachers OOM on long inputs at
+    # their native (32k) max_seq_length, especially on a shared GPU.
+    try:
+        st.max_seq_length = int(cfg.max_length)
+    except Exception:
+        pass
+    return st
 
 
 def load_reranker_teacher(cfg, device: Optional[str] = None):
@@ -258,6 +265,14 @@ def score_candidates_for_queries(candidates: Sequence[Dict[str, Any]], teacher_c
         model = embedding_model or load_embedding_teacher(emb_cfg, device)
         emb_scores = score_pairs_with_embedding_teacher(model, pairs, emb_cfg,
                                                         batch_size_embedding)
+        if embedding_model is None and mode == "both":
+            # Free the 8B embedding teacher before loading the 8B reranker — two at once
+            # will not fit on a shared 48GB GPU.
+            import gc
+            import torch
+            del model
+            gc.collect()
+            torch.cuda.empty_cache()
     if mode in ("reranker", "both"):
         rr_cfg = teacher_cfg.reranker_teacher
         rr_name = rr_cfg.model_name

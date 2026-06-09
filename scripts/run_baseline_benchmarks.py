@@ -49,11 +49,22 @@ def _load_local(corpus_p, queries_p, qrels_p, limit):
 
 
 def _encode(model_cfg, texts, device):
+    # Char-truncate BEFORE tokenization: some corpora (e.g. legal) have 100k+ char docs;
+    # feeding those whole to the tokenizer is a CPU bottleneck even though max_seq_length
+    # truncates afterward. ~8 chars/token * max_length gives a safe upper bound.
+    cap = max(int(model_cfg.max_length) * 8, 2048)
+    texts = [t[:cap] for t in texts]
     if model_cfg.backend == "local_hashing":
         return HashingEncoder(dim=model_cfg.expected_dim or 256).encode(texts)
     if model_cfg.backend in ("sentence_transformers", "local_boldt"):
         from sentence_transformers import SentenceTransformer
         model = SentenceTransformer(model_cfg.model_name_or_path, device=device)
+        # Cap sequence length — long legal docs at a model's native (2k+) max_seq_length
+        # explode compute/memory; the configured max_length is the eval setting.
+        try:
+            model.max_seq_length = int(model_cfg.max_length)
+        except Exception:
+            pass
         return model.encode(texts, batch_size=model_cfg.batch_size,
                             normalize_embeddings=model_cfg.normalize,
                             show_progress_bar=False).tolist()
@@ -63,15 +74,25 @@ def _encode(model_cfg, texts, device):
 
 
 def _eval_local(model_cfg, corpus, queries, device):
+    import torch
+
     q_texts = [(model_cfg.query_instruction or "") + q["query"] for q in queries]
     d_prefix = model_cfg.document_instruction or ""
     d_texts = [d_prefix + c["text"] for c in corpus]
-    c_vecs = list(zip([c["id"] for c in corpus], _encode(model_cfg, d_texts, device)))
-    q_vecs = _encode(model_cfg, q_texts, device)
+    cids = [c["id"] for c in corpus]
+    # Embeddings are L2-normalized -> cosine = dot product. Rank on the GPU via matmul;
+    # the previous pure-Python ranking was O(queries*corpus*dim) and unusable at corpus scale.
+    dev = device if (device and device.startswith("cuda") and torch.cuda.is_available()) else "cpu"
+    c_t = torch.tensor(_encode(model_cfg, d_texts, device), dtype=torch.float32, device=dev)
+    q_t = torch.tensor(_encode(model_cfg, q_texts, device), dtype=torch.float32, device=dev)
+    topk = min(200, len(cids))
     rows = []
-    for i, q in enumerate(queries):
-        ranked = cosine_rank(q_vecs[i], c_vecs)
-        rows.append(metrics_for_query(ranked, set(q["positive_ids"]), KS))
+    for start in range(0, q_t.size(0), 256):
+        sims = q_t[start:start + 256] @ c_t.t()
+        idx = torch.topk(sims, topk, dim=1).indices.tolist()
+        for j, row in enumerate(idx):
+            ranked = [cids[k] for k in row]
+            rows.append(metrics_for_query(ranked, set(queries[start + j]["positive_ids"]), KS))
     return aggregate(rows)
 
 

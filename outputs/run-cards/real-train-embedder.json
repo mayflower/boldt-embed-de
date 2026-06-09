@@ -1,0 +1,25 @@
+{
+  "run_id": "real-train-embedder",
+  "run_type": "train_embedder",
+  "command": "scripts/train_modern_embedder.py",
+  "commit": "dfeab5cc77c3c325a92ce19bc26e073c9a10aec2",
+  "date": "2026-06-09T12:57:45.244323+00:00",
+  "hardware": "Linux-6.11.0-1013-gcp-x86_64-with-glibc2.39",
+  "gpu": "NVIDIA RTX A6000",
+  "python": "3.12.13",
+  "torch": "2.6.0+cu124",
+  "transformers": "5.9.0",
+  "sentence_transformers": "5.5.1",
+  "input_artifacts": [
+    "outputs/teacher-cache/cache_train_pos.jsonl"
+  ],
+  "output_artifacts": [
+    "outputs/checkpoints/boldt-modern-de"
+  ],
+  "model": "Boldt/Boldt-DC-350M",
+  "dataset": "outputs/teacher-cache/cache_train_pos.jsonl",
+  "metrics": {
+    "num_examples": 3186
+  },
+  "notes": "variant=bidirectional"
+}

@@ -12,11 +12,14 @@ tags: [german, embeddings, retrieval, matryoshka, causal]
 German-first text embedding model: a **causal decoder** embedder built on
 `Boldt/Boldt-DC-350M` with **EOS/last-token pooling** and Matryoshka-truncatable vectors.
 
-> **Status: pipeline proven on GPU; not production-trained.** A *real* training run was
-> executed on an RTX A6000 (2026-05-29) — see Evaluation — but only on 7 toy triples. It
-> demonstrates the end-to-end GPU pipeline (real forward/pool/contrastive/backward + a real
-> checkpoint), **not** a production-quality model. Production training on licensed German
-> corpora at scale is still outstanding.
+> **Status: real multi-domain distillation run executed; not yet a final release.** On
+> 2026-06-09 the full 2026 teacher→student workflow ran end-to-end on an RTX A6000: Qwen3-8B
+> teachers scored 3,764 multi-domain non-benchmark German candidates, and the student trained
+> with CachedMNRL + Matryoshka reached **0.88 nDCG@10 on held-out GermanQuAD and 0.95 on
+> DT-test** (competitive with multilingual-e5-base) and **0.078 on out-of-domain legal
+> GerDaLIR** (~37× the untrained base, ~1.6–3× the v1 Wikipedia-only runs) — see Evaluation /
+> `docs/benchmark-report.md` §6e. Still outstanding: bidirectional/MNTP student, score
+> distillation, broader (incl. legal) data, and a full MMTEB sweep.
 
 ## Intended use
 - Asymmetric German retrieval (query → document), semantic similarity, clustering.
@@ -43,6 +46,25 @@ d = model.encode(docs, normalize_embeddings=True)
 - Data: license-clean German pairs/triples + synthetic (see DATA_PLAN, ADR-004).
 
 ## Evaluation
+
+### 2026 teacher→student run — EXECUTED (2026-06-09, RTX A6000)
+The distillation workflow, run end-to-end: Qwen3-Embedding-8B + Qwen3-Reranker-8B teachers
+scored 3,764 **multi-domain, non-benchmark** German candidates (TED/Wikipedia/synthetic/
+German-stress); the teacher false-negative filter vetoed 464/574 adversarial distractors; the
+student (this base + mean pooling) was trained with CachedMNRL + MatryoshkaLoss. nDCG@10 on
+held-out sets (1,500 queries each), vs the untrained base and `multilingual-e5-base`:
+
+| Held-out set | Base (untrained) | **Student** | e5-base |
+|---|---:|---:|---:|
+| GermanQuAD (wiki QA) | 0.288 | **0.883** | 0.939 |
+| DT-test (in-domain) | 0.223 | **0.950** | 0.994 |
+| GerDaLIR (legal, OOD) | 0.002 | **0.078** | 0.134 |
+
+Competitive with e5-base on German wiki-QA/in-domain; on out-of-domain **legal** the student
+(0.078) is ~37× the untrained base and ~1.6–3× the v1 Wikipedia-only runs (0.027–0.050) — real
+transfer improvement, though e5-base still leads (we used no legal training data). Saved:
+`outputs/baselines/real_*.json`, run cards `outputs/run-cards/real-*.json`,
+`docs/benchmark-report.md` §6e.
 
 ### Real GermanQuAD run (held-out test retrieval)
 Trained on **11,494 real GermanQuAD pairs** (deepset/germanquad, CC-BY-4.0), 2 epochs / 720
