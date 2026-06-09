@@ -88,18 +88,24 @@ domain-diverse (incl. legal-adjacent) training data, which we exclude to keep Ge
 | Contrastive | 3.04 | ~0.00 |
 Bidirectional attention verified: token-0 hidden Δ = 0.0 (causal) vs 7.35 (bidirectional).
 
-### 6c. Reranker — REAL-scale run (`reranker-de-report.json`)
-Trained on **80k examples** (40k DT-de-dpr positives + 40k embedder-mined hard negatives),
-2 epochs, A6000. Reranking eval: e5-base top-50 first stage on held-out GerDaLIR (1,000 queries).
-| Ranking | nDCG@10 |
-|---|---:|
-| e5 first stage | 0.141 |
-| e5 + this reranker | **0.061** |
+### 6c. Reranker — general reranking eval (`reranker-general-report.json`)
+Real-scale, two iterations (the original 7-pair toy is superseded):
+- **v1** (hard negs from the *weak* warmup embedder, 80k ex): **catastrophic** — dragged every
+  first stage to ~0.20 (random), even in-domain. Diagnostic: scored relevant 0.999 vs random
+  0.001 but couldn't separate top-50 confusions → negatives too easy.
+- **v2** (hard negs from **e5** top-K, 150k ex, 1 ep): fixes it.
 
-**Honest result:** the real-scale reranker (no longer the 7-pair toy) **degrades** out-of-domain
-legal reranking (0.141 → 0.061) — trained only on Wikipedia, it doesn't transfer to legal. Same
-domain-mismatch story as the embedder. An in-domain reranking eval was not run.
-(The earlier 7-triple toy reranker — `reranker-eval-report.json`, no lift — is superseded.)
+v2, nDCG@10 (first stage → +reranker):
+| Eval | BM25 | e5 |
+|---|---|---|
+| DT-test (in-domain, held-out) | 0.978 → **0.989** | 0.994 → 0.993 |
+| GermanQuAD (different general dataset) | 0.903 → 0.776 | 0.939 → 0.800 |
+
+**Honest status:** v2 is **competent in-distribution** (lifts BM25 on held-out DT-test; neutral
+vs near-ceiling e5) but **not robustly general** — degrades GermanQuAD (different question style).
+Eval tasks are near-ceiling (small corpora) so they barely show reranker value. A robust general
+reranker needs diverse training question-styles/domains + a harder eval. (Legal GerDaLIR rerank —
+`reranker-eval-report.json` — was the wrong yardstick for a general reranker and is dropped.)
 
 ### 6d. Eval suite — HashingEncoder STAND-IN (plumbing, `outputs/benchmarks/eval-suite-report.json`)
 | Task | Metric | Value |

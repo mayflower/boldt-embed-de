@@ -12,12 +12,12 @@ German **cross-encoder reranker** on `Boldt/Boldt-DC-350M`. Encodes (query, docu
 together and emits a relevance score (or `Ja`/`Nein` logit). Used for production reranking,
 hard-negative mining, and as a distillation teacher for the bi-encoders.
 
-> **Status: trained at real scale; useful only in-domain so far.** Trained on **80k examples**
-> (40k DT-de-dpr positives + 40k embedder-mined hard negatives), 2 epochs, on an A6000
-> (`scripts/train_reranker_de.py`, `outputs/real-training/reranker-de-report.json`). It is **no
-> longer the 7-pair toy**. But on **out-of-domain legal** reranking it **degrades** the first
-> stage (see Evaluation) because it was trained only on German Wikipedia. An earlier 7-pair toy
-> run is superseded.
+> **Status: real-scale, competent in-distribution, not yet robustly general.** Current model
+> `reranker-de-v2`: 150k examples (DT-de-dpr positives + **e5-mined hard negatives**), 1 epoch,
+> A6000 (`scripts/train_reranker_de.py --neg-source e5`). It is **not** the 7-pair toy and **not**
+> the broken v1. It slightly lifts BM25 on held-out in-domain DT-test but still degrades a
+> different general dataset (GermanQuAD) — see Evaluation. A robust general reranker needs
+> diverse training question-styles/domains + a harder eval.
 
 ## Intended use
 - Re-rank a candidate list retrieved by a first-stage embedder for German queries.
@@ -42,19 +42,26 @@ ranked = rr.rerank(query, docs)   # [(index, score), ...] best-first
 - Dry-run: `make dry-run-reranker`.
 
 ## Evaluation
-Real-scale run (`outputs/real-training/reranker-de-report.json`). Reranking an
-`intfloat/multilingual-e5-base` top-50 first stage on **held-out legal GerDaLIR** (1,000 queries):
+**GENERAL reranking** (`scripts/eval_reranker_general.py`, `reranker-general-report.json`):
+rerank BM25 / e5 top-50 first stages, nDCG@10 before → after. The current model (`reranker-de-v2`)
+is trained on DT-de-dpr positives + **e5-mined hard negatives** (strong-retriever confusions).
 
-| Ranking | nDCG@10 |
-|---|---:|
-| e5 first stage | 0.141 |
-| e5 + this reranker | **0.061** |
+| Eval | BM25 → +reranker | e5 → +reranker |
+|---|---|---|
+| DT-test (in-domain, held-out) | 0.978 → **0.989** (+0.011) | 0.994 → 0.993 |
+| GermanQuAD (different general dataset) | 0.903 → 0.776 | 0.939 → 0.800 |
 
-**Honest result:** the reranker **degrades** the legal ranking (0.141 → 0.061). It was trained
-only on German **Wikipedia** (DT-de-dpr) and does not transfer to legal — a domain-mismatch
-result, consistent with the embedder. A fair **in-domain** reranking eval (Wikipedia first stage)
-was not run; it would likely show lift, but is not claimed without a saved run. A useful general
-reranker needs domain-diverse training pairs (incl. legal-adjacent).
+**Honest status:** competent **in-distribution** (slightly lifts BM25 on held-out DT-test;
+neutral vs near-ceiling e5) but **not yet robustly general** — it degrades GermanQuAD (a different
+question style). The eval tasks are also near-ceiling (small corpora), so they barely show
+reranker value.
+
+**Why two versions:** v1 (hard negatives mined by the *weak* warmup embedder) was catastrophic —
+it dragged every first stage to ~0.20 (random), failing even in-domain, because the negatives
+were too easy ("relevant vs unrelated"); diagnostic showed it scored relevant 0.999 vs random
+0.001 but couldn't separate top-50 confusions. v2 fixes this with **e5-mined hard negatives**.
+A robust general reranker still needs **diverse training question-styles/domains** (DT +
+GermanQuAD-style + mMARCO/mqa) and a harder eval with room to help.
 
 ## Limitations
 - Higher latency than the bi-encoders (full cross-attention per pair) — use as a re-ranking
