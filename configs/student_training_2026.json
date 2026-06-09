@@ -1,0 +1,9 @@
+{
+  "base_model": "Boldt/Boldt-DC-350M",
+  "student_variant": "bidirectional",
+  "matryoshka_dims": [1024, 768, 512, 256, 128, 64],
+  "target_dim": 1024,
+  "losses": ["cached_gist_or_cached_mnrl", "matryoshka", "distillation", "margin_mse"],
+  "train_eval_split_policy": "public_benchmarks_eval_only",
+  "hardware_profile": "single_gpu_48gb"
+}

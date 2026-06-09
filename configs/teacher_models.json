@@ -1,0 +1,25 @@
+{
+  "embedding_teacher": {
+    "model_name": "Qwen/Qwen3-Embedding-8B",
+    "backend": "sentence_transformers",
+    "device": "cuda",
+    "torch_dtype": "bfloat16",
+    "max_length": 8192,
+    "batch_size": 8,
+    "query_instruction": "Given a German search query, retrieve relevant German passages that answer the query.",
+    "document_instruction": null,
+    "output_dim": 1024,
+    "normalize": true,
+    "use_flash_attention_2_if_available": true
+  },
+  "reranker_teacher": {
+    "model_name": "Qwen/Qwen3-Reranker-8B",
+    "backend": "sentence_transformers_cross_encoder",
+    "device": "cuda",
+    "torch_dtype": "bfloat16",
+    "max_length": 8192,
+    "batch_size": 4,
+    "instruction": "Given a German search query, judge whether the German document answers the query.",
+    "score_activation": "raw"
+  }
+}

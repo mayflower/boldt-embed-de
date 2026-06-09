@@ -20,7 +20,10 @@ dependencies = []
 [project.optional-dependencies]
 train = [
   "torch>=2.1",
-  "transformers>=4.40",
+  # Qwen3 teacher model cards require a recent Transformers; <4.51 cannot load Qwen3.
+  "transformers>=4.51.0",
+  # 3.x ships CachedMultipleNegativesRankingLoss / (Cached)GISTEmbedLoss / MatryoshkaLoss
+  # and Qwen3 CrossEncoder support used by the 2026 teacher/student workflow.
   "sentence-transformers>=3.0",
   "accelerate>=0.30",
   "datasets>=2.19",
@@ -29,6 +32,13 @@ train = [
 eval = [
   "mteb>=1.12",
   "sentence-transformers>=3.0",
+]
+# flash-attn is intentionally NOT a hard dependency: its wheels need a matching CUDA
+# toolchain + torch already installed and frequently fail under build isolation. Install
+# it manually if desired (the teacher loader falls back to eager attention when absent):
+#   pip install flash-attn --no-build-isolation
+flash = [
+  "flash-attn>=2.5.0",
 ]
 dev = [
   "ruff>=0.5",

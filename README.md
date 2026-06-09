@@ -73,6 +73,28 @@ python scripts/run_real_training.py --device-index 0 --epochs 15
 python scripts/run_mteb_benchmark_template.py --model <path> --config benchmarks/mteb_german_tasks.json
 ```
 
+## Teacher/student 2026 workflow
+
+A distillation-based path that fixes the Wikipedia-only overfitting found in the v1 runs:
+strong teachers score multi-domain German data, and the Boldt student is trained to match
+them. **Teacher execution requires the `train` extras + a GPU** (the 48 GB RTX 6000 profile);
+the configs and validation below run on stdlib alone.
+
+Configs:
+
+- `configs/teacher_models.json` — `Qwen/Qwen3-Embedding-8B` + `Qwen/Qwen3-Reranker-8B`
+  teacher defaults (model, backend, dtype, max_length, batch_size, instructions). Both are
+  Apache-2.0, 32k context, instruction-aware. Loaded/validated by
+  `boldt_embed.config_teacher.load_teacher_models_config`.
+- `configs/student_training_2026.json` — Boldt student plan: bidirectional variant,
+  Matryoshka dims `[1024,768,512,256,128,64]`, loss stack (cached MNRL/GIST + Matryoshka +
+  distillation + margin-MSE), `train_eval_split_policy = public_benchmarks_eval_only` (a hard
+  config error if violated), single-48GB hardware profile. Loaded by
+  `load_student_training_config`.
+
+`flash-attn` is optional (`pip install flash-attn --no-build-isolation`); the teacher loader
+falls back to eager attention when it is unavailable.
+
 ## Layout
 
 ```
