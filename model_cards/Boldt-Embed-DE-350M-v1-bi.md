@@ -12,9 +12,13 @@ tags: [german, embeddings, retrieval, matryoshka, bidirectional, llm2vec]
 German-first **bidirectional** embedder: `Boldt/Boldt-DC-350M` adapted with the LLM2Vec
 recipe (bidirectional attention → MNTP → contrastive), with Matryoshka-truncatable vectors.
 
-> **Status: untrained scaffold.** The adaptation/merge plan and pooling ablation are
-> implemented and validated; MNTP + contrastive training has not been run here. No quality
-> numbers are claimed below.
+> **Status: bidirectional attention verified; MNTP still required.** On 2026-06-10 the
+> bidirectional attention patch was **verified on the real model** (early-token Δ 0.0 causal
+> vs 51.15 bidirectional) and a bidirectional student was trained (contrastive, **no MNTP**).
+> Result: it **underperforms** the causal student on every held-out set (DT-test 0.401 vs
+> 0.950) — see Evaluation. Honest takeaway: bidirectional needs **MNTP pre-adaptation** first
+> (LLM2Vec recipe); the no-MNTP shortcut hurts. The causal variant is the current shipped
+> embedder.
 
 ## Intended use
 - Same as the causal variant (German retrieval / similarity / clustering), but using a
@@ -37,9 +41,24 @@ emb = model.encode(texts, normalize_embeddings=True)
 - A full implementation should use the `llm2vec` package.
 
 ## Evaluation
-**Pending** — identical protocol and honesty rule as the causal card (ADR-005). No numbers
-are reported until a saved MTEB run with metadata exists under `outputs/`. The causal vs.
-bidirectional production default is decided strictly on German benchmark results.
+
+### 2026 bidirectional-without-MNTP run — EXECUTED (2026-06-10, RTX A6000)
+Trained identically to the causal student (CachedMNRL + Matryoshka, 300 steps) but with the
+LLM2Vec attention patch enabled (eager attention; re-applied at eval) and **no MNTP**. nDCG@10
+on held-out sets (`outputs/baselines/real_bi_*.json`):
+
+| Held-out set | causal student | this bi (no MNTP) | e5-base |
+|---|---:|---:|---:|
+| GermanQuAD | 0.883 | 0.659 | 0.939 |
+| DT-test | 0.950 | 0.401 | 0.994 |
+| GerDaLIR (legal) | 0.078 | 0.020 | 0.134 |
+
+**Honest:** bidirectional attention without MNTP pre-adaptation **degrades** quality (a causal
+model's representations break under sudden full attention). MNTP first is required — that run
+is the documented next step. The causal vs. bidirectional production default is decided on
+these German benchmark results; for now **causal wins**. See `docs/benchmark-report.md` §6g.
+
+(Numbers reported only from saved runs with metadata + run cards — ADR-005.)
 
 ## Limitations
 - Adds an MNTP adaptation phase and merging complexity vs. the causal route.

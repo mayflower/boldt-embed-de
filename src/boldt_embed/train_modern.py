@@ -110,18 +110,42 @@ def plan_loss_stack(student_cfg, has_teacher_scores: bool, use_guide: bool = Fal
 
 
 # --------------------------------------------------------------- ML layer (lazy import)
+def apply_bidirectional_to_st_module(transformer_module) -> None:
+    """Apply the LLM2Vec bidirectional mask patch to a SentenceTransformers Transformer
+    module's wrapped HF model (``transformer_module.auto_model``). ML-only."""
+    from .train import enable_bidirectional
+    enable_bidirectional(transformer_module.auto_model)
+
+
+def apply_bidirectional_to_st(st_model) -> None:
+    """Re-apply the bidirectional patch to a loaded SentenceTransformer (its first module is
+    the Transformer). Eval code calls this so a saved bidirectional student is actually
+    bidirectional at inference — the patch is runtime, not persisted in weights."""
+    apply_bidirectional_to_st_module(st_model[0])
+
+
 def load_student_sentence_transformer(model_name: str, max_seq_length: int = 512,
                                       pooling: str = "mean", device: Optional[str] = None,
-                                      trust_remote_code: bool = True):
+                                      trust_remote_code: bool = True, bidirectional: bool = False):
     """Load the Boldt student as a SentenceTransformer. Builds a Transformer+Pooling stack
     explicitly so a decoder base gets a defined pooling head. Raises a clear error (pointing
-    to the bidirectional adapter) rather than silently training the wrong architecture."""
+    to the bidirectional adapter) rather than silently training the wrong architecture.
+
+    ``bidirectional=True`` loads with eager attention and applies the LLM2Vec mask patch to the
+    wrapped decoder so every token attends to all non-pad positions. NOTE: the patch is a
+    runtime modification (not saved weights) — eval code must re-apply it on load
+    (``apply_bidirectional_to_st``)."""
     from sentence_transformers import SentenceTransformer, models
 
+    model_args = {"trust_remote_code": trust_remote_code}
+    if bidirectional:
+        model_args["attn_implementation"] = "eager"  # custom 4D mask needs eager attention
     try:
         transformer = models.Transformer(model_name, max_seq_length=max_seq_length,
                                           tokenizer_args={"trust_remote_code": trust_remote_code},
-                                          model_args={"trust_remote_code": trust_remote_code})
+                                          model_args=model_args)
+        if bidirectional:
+            apply_bidirectional_to_st_module(transformer)
         pool = models.Pooling(transformer.get_word_embedding_dimension(), pooling_mode=pooling)
         st = SentenceTransformer(modules=[transformer, pool], device=device)
         return st
@@ -165,8 +189,10 @@ def train_modern_embedder(student_cfg, examples: Sequence[Dict[str, Any]], outpu
     from sentence_transformers import SentenceTransformerTrainer, SentenceTransformerTrainingArguments
     from sentence_transformers.training_args import BatchSamplers
 
+    bidirectional = getattr(student_cfg, "student_variant", "causal") == "bidirectional"
     model = load_student_sentence_transformer(
-        student_cfg.base_model, max_seq_length=max_seq_length, device=device)
+        student_cfg.base_model, max_seq_length=max_seq_length, device=device,
+        bidirectional=bidirectional)
     if use_lora:
         from peft import LoraConfig
         model.add_adapter(LoraConfig(task_type="FEATURE_EXTRACTION", r=16, lora_alpha=32))
@@ -197,6 +223,7 @@ def train_modern_embedder(student_cfg, examples: Sequence[Dict[str, Any]], outpu
     trainer.train()
     model.save(output_dir)
     return {"status": "ok", "output_dir": output_dir, "num_examples": len(examples),
+            "bidirectional": bidirectional,
             "gpu_name": torch.cuda.get_device_name(0) if torch.cuda.is_available() else None,
             "loss_stack": plan_loss_stack(student_cfg, has_scores, use_guide=guide is not None)}
 

@@ -1,6 +1,6 @@
 # Experiments
 
-9 run card(s).
+13 run card(s).
 
 | run_id | type | model | dataset | key metrics | commit | date |
 |---|---|---|---|---|---|---|
@@ -13,3 +13,7 @@
 | real-train-reranker | train_reranker | Boldt/Boldt-DC-350M | data/processed/reranker_train.jsonl | final_loss=0.02311387099325657 | `9f34fb98` | 2026-06-10T07:42:17.637558+00:00 |
 | real-lift-germanquad | eval | outputs/checkpoints/boldt-reranker-modern | data/processed/eval/germanquad_shortlist.jsonl | — | `9f34fb98` | 2026-06-10T07:47:53.062089+00:00 |
 | real-lift-dt_test | eval | outputs/checkpoints/boldt-reranker-modern | data/processed/eval/dt_test_shortlist.jsonl | — | `9f34fb98` | 2026-06-10T07:51:18.614613+00:00 |
+| real-train-embedder-bi | train_embedder | Boldt/Boldt-DC-350M | outputs/teacher-cache/cache_train_pos.jsonl | — | `8faaa61f` | 2026-06-10T20:43:09.507224+00:00 |
+| real-eval-bi-germanquad | eval | — | germanquad | ndcg@10=0.6589046162896803, mrr@10=0.598510582010582, recall@100=0.982 | `8faaa61f` | 2026-06-10T20:44:09.031603+00:00 |
+| real-eval-bi-dt_test | eval | — | dt_test | ndcg@10=0.40064628282286585, mrr@10=0.3611329365079365, recall@100=0.817 | `8faaa61f` | 2026-06-10T20:44:45.304168+00:00 |
+| real-eval-bi-gerdalir | eval | — | gerdalir | ndcg@10=0.01963749860077362, mrr@10=0.01822010582010582, recall@100=0.11205555555555556 | `8faaa61f` | 2026-06-10T20:47:08.763627+00:00 |

@@ -58,7 +58,14 @@ def _encode(model_cfg, texts, device):
         return HashingEncoder(dim=model_cfg.expected_dim or 256).encode(texts)
     if model_cfg.backend in ("sentence_transformers", "local_boldt"):
         from sentence_transformers import SentenceTransformer
-        model = SentenceTransformer(model_cfg.model_name_or_path, device=device)
+        bi = bool(model_cfg.raw.get("bidirectional"))
+        st_kwargs = {"model_kwargs": {"attn_implementation": "eager"}} if bi else {}
+        model = SentenceTransformer(model_cfg.model_name_or_path, device=device, **st_kwargs)
+        if bi:
+            # Re-apply the LLM2Vec bidirectional patch — runtime, not saved in weights — so a
+            # bidirectional student is actually bidirectional at eval (matches training).
+            from boldt_embed.train_modern import apply_bidirectional_to_st
+            apply_bidirectional_to_st(model)
         # Cap sequence length — long legal docs at a model's native (2k+) max_seq_length
         # explode compute/memory; the configured max_length is the eval setting.
         try:
