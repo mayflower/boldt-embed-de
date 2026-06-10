@@ -159,6 +159,48 @@ causal base with mean pooling instead), MarginMSE score-distillation (the advers
 were teacher-identified false negatives, so contrastive used in-batch negatives), reranker
 training, and a full MMTEB sweep.
 
+### 6f. REAL reranker + Matryoshka + bidirectional (EXECUTED 2026-06-10, RTX A6000)
+
+Continuation of the §6e run on the freed GPU.
+
+**Bidirectional attention — VERIFIED on the real model** (`llm2vec_boldt.verify_bidirectional_attention`,
+transformers 5.9): changing the last token of a sequence leaves an early token's hidden state
+**unchanged under causal attention (Δ = 0.0)** but **changes it under the bidirectional patch
+(Δ = 51.15)** → `is_bidirectional = true`. The LLM2Vec mask patch genuinely works. (A
+bidirectional student that stays bidirectional at *eval* time needs the patch persisted on
+load — a wrapper change — so the §6e student remains causal+mean-pooling for now.)
+
+**Reranker — trained + lift over a FIXED first stage.** A cross-encoder (`Boldt-DC-350M` +
+classification head) trained pointwise (BCE, final loss 0.023) on **3,190 teacher-validated
+positives vs 8,692 dense-mined genuine hard negatives** (student-retrieved; the false-negative
+filter vetoed 866 where the Qwen3 reranker still rated them relevant — positive reranker score
+median **6.94** vs genuine-neg **−5.19**). Evaluated as lift over the student's top-50 dense
+first stage (1,000 queries; `scripts/eval_reranker_lift.py`,
+`outputs/real-training/reranker-lift-*.json`):
+
+| Held-out set | first-stage nDCG@10 | + student reranker | oracle |
+|---|---:|---:|---:|
+| DT-test (in-domain) | 0.950 | **0.990** | 0.994 |
+| GermanQuAD (different question style) | 0.886 | **0.532** | 0.996 |
+
+**Honest finding:** the reranker **lifts in-distribution** (DT-test +0.040, near oracle) but
+**degrades GermanQuAD** (−0.354) — the same v1 lesson, sharper: a cross-encoder trained on one
+candidate distribution does not generalize to a different question style. It is real and
+correctly trained (clean positive/negative separation), but **competent in-distribution, not
+robustly general**. Generalizing needs diverse training question-styles (DT + GermanQuAD-style
++ web) and a harder first stage — not yet done.
+
+**Matryoshka dimension sweep — REAL** (student on held-out GermanQuAD, matmul ranking,
+`outputs/baselines/real_matryoshka_germanquad.json`):
+
+| dim | 1024 | 768 | 512 | 256 | 128 | 64 |
+|---|---:|---:|---:|---:|---:|---:|
+| nDCG@10 | 0.882 | 0.880 | 0.876 | 0.859 | 0.825 | 0.732 |
+| Recall@10 | 0.973 | 0.973 | 0.977 | 0.967 | 0.941 | 0.879 |
+
+Quality holds to **256-d (~97% of full at 4× smaller storage)**; the cliff is below 128-d.
+This is a real measured trade-off (re-normalize after truncation), not the toy-encoder §7.
+
 ## 7. Matryoshka truncation analysis
 Storage scales linearly with dim (fp32): 1024→4096 B, 512→2048 B, 256→1024 B, 128→512 B,
 64→256 B/vector. The HashingEncoder by-dim retrieval (toy) stays near-perfect down to 64 dims

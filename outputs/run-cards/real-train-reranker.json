@@ -1,0 +1,26 @@
+{
+  "run_id": "real-train-reranker",
+  "run_type": "train_reranker",
+  "command": "scripts/train_modern_reranker.py",
+  "commit": "9f34fb98f18ef241427aa8d6adfe52fd3aab2276",
+  "date": "2026-06-10T07:42:17.637558+00:00",
+  "hardware": "Linux-6.11.0-1013-gcp-x86_64-with-glibc2.39",
+  "gpu": null,
+  "python": "3.12.13",
+  "torch": "2.6.0+cu124",
+  "transformers": "5.9.0",
+  "sentence_transformers": "5.5.1",
+  "input_artifacts": [
+    "data/processed/reranker_train.jsonl"
+  ],
+  "output_artifacts": [
+    "outputs/checkpoints/boldt-reranker-modern"
+  ],
+  "model": "Boldt/Boldt-DC-350M",
+  "dataset": "data/processed/reranker_train.jsonl",
+  "metrics": {
+    "objective": "pointwise",
+    "final_loss": 0.02311387099325657
+  },
+  "notes": "loss=pointwise"
+}

@@ -98,6 +98,21 @@ Quality is reported **only as lift over a fixed first stage** (nDCG@10 first-sta
 (`scripts/eval_reranker_lift.py`). A reranker that does not lift a fixed candidate set is not
 shipped — this is the explicit v1 lesson.
 
+### 2026 reranker (`boldt-reranker-modern`) — EXECUTED (2026-06-10, RTX A6000)
+Trained pointwise (BCE, final loss 0.023) on 3,190 teacher-validated positives vs 8,692
+**dense-mined genuine hard negatives** (student-retrieved; teacher false-negative filter
+vetoed 866 — positive reranker score median 6.94 vs genuine-neg −5.19). Lift over the student's
+top-50 dense first stage (1,000 held-out queries), `outputs/real-training/reranker-lift-*.json`:
+
+| Held-out set | first-stage nDCG@10 | + this reranker |
+|---|---:|---:|
+| DT-test (in-domain) | 0.950 | **0.990** |
+| GermanQuAD (different question style) | 0.886 | **0.532** |
+
+**Honest:** lifts in-distribution (DT-test, near oracle 0.994) but **degrades** GermanQuAD —
+competent in-distribution, **not robustly general**. Same lesson as v2: generalizing needs
+diverse training question-styles + a harder first stage. See `docs/benchmark-report.md` §6f.
+
 ## License
 - **Code:** Apache-2.0. **Base weights:** apache-2.0 (verified 2026-05-28).
 - **Derivative weights:** intended apache-2.0, contingent on training-data licenses (ADR-004).

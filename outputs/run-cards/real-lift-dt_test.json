@@ -1,0 +1,27 @@
+{
+  "run_id": "real-lift-dt_test",
+  "run_type": "eval",
+  "command": "scripts/eval_reranker_lift.py",
+  "commit": "9f34fb98f18ef241427aa8d6adfe52fd3aab2276",
+  "date": "2026-06-10T07:51:18.614613+00:00",
+  "hardware": "Linux-6.11.0-1013-gcp-x86_64-with-glibc2.39",
+  "gpu": null,
+  "python": "3.12.13",
+  "torch": "2.6.0+cu124",
+  "transformers": "5.9.0",
+  "sentence_transformers": "5.5.1",
+  "input_artifacts": [
+    "data/processed/eval/dt_test_shortlist.jsonl"
+  ],
+  "output_artifacts": [
+    "outputs/real-training/reranker-lift-dt_test.json"
+  ],
+  "model": "outputs/checkpoints/boldt-reranker-modern",
+  "dataset": "data/processed/eval/dt_test_shortlist.jsonl",
+  "metrics": {
+    "first_stage_ndcg@10": 0.9503255217482516,
+    "oracle_ndcg@10": 0.994,
+    "student_reranker_ndcg@10": 0.9895257835028081
+  },
+  "notes": "reranker lift over fixed candidate sets"
+}

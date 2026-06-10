@@ -1,0 +1,25 @@
+{
+  "run_id": "real-rr-teacher-cache",
+  "run_type": "teacher_cache",
+  "command": "scripts/build_teacher_cache.py",
+  "commit": "9f34fb98f18ef241427aa8d6adfe52fd3aab2276",
+  "date": "2026-06-10T06:54:26.879087+00:00",
+  "hardware": "Linux-6.11.0-1013-gcp-x86_64-with-glibc2.39",
+  "gpu": null,
+  "python": "3.12.13",
+  "torch": "2.6.0+cu124",
+  "transformers": "5.9.0",
+  "sentence_transformers": "5.5.1",
+  "input_artifacts": [
+    "data/processed/teacher_rr_input.jsonl"
+  ],
+  "output_artifacts": [
+    "outputs/teacher-cache/rr_cache.jsonl"
+  ],
+  "model": "Qwen/Qwen3-Embedding-8B + Qwen/Qwen3-Reranker-8B",
+  "dataset": "data/processed/teacher_rr_input.jsonl",
+  "metrics": {
+    "rows_written": 12748
+  },
+  "notes": "mode=reranker"
+}

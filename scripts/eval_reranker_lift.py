@@ -93,15 +93,26 @@ def main() -> int:
         raise SystemExit(f"Reranking needs extras: pip install -e '.[train,eval]'. ({exc})")
 
     device = f"cuda:{args.device_index}"
+    # Flatten ALL (query, doc) pairs across queries into ONE batched scoring call — the model
+    # is loaded once, not once per query.
+    layout, all_pairs = [], []
+    for r in rows:
+        layout.append((r, len(r["candidates"])))
+        all_pairs.extend([(r["query"], c["document"]) for c in r["candidates"]])
+
+    def _rows_from_scores(scores):
+        out, p = [], 0
+        for r, n in layout:
+            s = scores[p:p + n]; p += n
+            out.append(RM.rerank_metrics([c["doc_id"] for c in r["candidates"]], s,
+                                         _positives(r), (args.k,)))
+        return out
+
     if args.reranker:
-        rr_rows = []
-        for r in rows:
-            pairs = [(r["query"], c["document"]) for c in r["candidates"]]
-            scores = RM.score_with_student_reranker(args.reranker, pairs, cfg.input_template,
-                                                    device=device)
-            rr_rows.append(RM.rerank_metrics([c["doc_id"] for c in r["candidates"]], scores,
-                                             _positives(r), (args.k,)))
-        report[f"student_reranker_ndcg@{args.k}"] = RM.aggregate_rows(rr_rows).get(f"ndcg@{args.k}")
+        scores = RM.score_with_student_reranker(args.reranker, all_pairs, cfg.input_template,
+                                                device=device)
+        report[f"student_reranker_ndcg@{args.k}"] = RM.aggregate_rows(
+            _rows_from_scores(scores)).get(f"ndcg@{args.k}")
 
     if args.teacher_config:
         from boldt_embed import teacher as T

@@ -1,0 +1,13 @@
+{
+  "n_queries": 1000,
+  "first_stage_ndcg@10": 0.9503255217482516,
+  "oracle_ndcg@10": 0.994,
+  "first_stage_pos_in_top_10": 0.982,
+  "student_reranker_ndcg@10": 0.9895257835028081,
+  "run_metadata": {
+    "command": "scripts/eval_reranker_lift.py",
+    "commit": "9f34fb98f18ef241427aa8d6adfe52fd3aab2276",
+    "hardware": "Linux-6.11.0-1013-gcp-x86_64-with-glibc2.39",
+    "reranker": "outputs/checkpoints/boldt-reranker-modern"
+  }
+}

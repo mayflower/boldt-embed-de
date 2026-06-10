@@ -1,0 +1,44 @@
+{
+  "status": "ok",
+  "model": "outputs/checkpoints/boldt-modern-de",
+  "dataset": "germanquad",
+  "n_queries": 1500,
+  "n_corpus": 474,
+  "matryoshka_sweep": {
+    "1024": {
+      "ndcg@10": 0.8821,
+      "recall@10": 0.9733,
+      "recall@100": 0.9967
+    },
+    "768": {
+      "ndcg@10": 0.8799,
+      "recall@10": 0.9733,
+      "recall@100": 0.996
+    },
+    "512": {
+      "ndcg@10": 0.8755,
+      "recall@10": 0.9773,
+      "recall@100": 0.9953
+    },
+    "256": {
+      "ndcg@10": 0.8585,
+      "recall@10": 0.9667,
+      "recall@100": 0.9953
+    },
+    "128": {
+      "ndcg@10": 0.8252,
+      "recall@10": 0.9407,
+      "recall@100": 0.9947
+    },
+    "64": {
+      "ndcg@10": 0.7319,
+      "recall@10": 0.8787,
+      "recall@100": 0.9853
+    }
+  },
+  "run_metadata": {
+    "command": "matryoshka sweep (matmul)",
+    "commit": "9f34fb98f18ef241427aa8d6adfe52fd3aab2276",
+    "hardware": "Linux-6.11.0-1013-gcp-x86_64-with-glibc2.39"
+  }
+}
