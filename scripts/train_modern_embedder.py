@@ -37,11 +37,15 @@ def main() -> int:
     ap.add_argument("--gradient-checkpointing", action="store_true")
     ap.add_argument("--lora", action="store_true")
     ap.add_argument("--dry-run-rows", type=int, default=2000, help="rows to scan in --dry-run")
+    ap.add_argument("--base-model", default=None,
+                    help="override student_cfg.base_model (e.g. an MNTP-adapted checkpoint)")
     ap.add_argument("--run-id", default=None, help="experiment run id (run card written on success)")
     ap.add_argument("--dry-run", action="store_true")
     args = ap.parse_args()
 
     cfg = load_student_training_config(args.student_config)
+    if args.base_model:
+        cfg.base_model = args.base_model  # train contrastive on an MNTP-adapted checkpoint
     print(f"[student] base={cfg.base_model} variant={cfg.student_variant} "
           f"dims={cfg.matryoshka_dims} policy={cfg.train_eval_split_policy}")
 

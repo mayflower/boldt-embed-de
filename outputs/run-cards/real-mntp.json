@@ -1,0 +1,26 @@
+{
+  "run_id": "real-mntp",
+  "run_type": "train_embedder",
+  "command": "scripts/prepare_bidirectional_student.py",
+  "commit": "9cb6ee12a4d0e1ca8eb57ca2943306689d24e6f9",
+  "date": "2026-06-10T21:36:06.889585+00:00",
+  "hardware": "Linux-6.11.0-1013-gcp-x86_64-with-glibc2.39",
+  "gpu": null,
+  "python": "3.12.13",
+  "torch": "2.6.0+cu124",
+  "transformers": "5.9.0",
+  "sentence_transformers": "5.5.1",
+  "input_artifacts": [
+    "data/processed/mntp_texts.jsonl"
+  ],
+  "output_artifacts": [
+    "outputs/checkpoints/boldt-bi-mntp"
+  ],
+  "model": "Boldt/Boldt-DC-350M",
+  "dataset": "data/processed/mntp_texts.jsonl",
+  "metrics": {
+    "mntp_final_loss": 3.984375,
+    "is_bidirectional": true
+  },
+  "notes": "LLM2Vec bidirectional + MNTP"
+}

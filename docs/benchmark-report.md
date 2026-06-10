@@ -201,29 +201,36 @@ robustly general**. Generalizing needs diverse training question-styles (DT + Ge
 Quality holds to **256-d (~97% of full at 4× smaller storage)**; the cliff is below 128-d.
 This is a real measured trade-off (re-normalize after truncation), not the toy-encoder §7.
 
-### 6g. Bidirectional student WITHOUT MNTP — negative result (EXECUTED 2026-06-10)
+### 6g. Bidirectional student + MNTP ablation — EXECUTED (2026-06-10)
 
-To test whether bidirectional pooling beats the §6e causal mean-pooling student, a
-bidirectional student was trained identically (CachedMNRL + Matryoshka, 300 steps) but with
-the LLM2Vec attention patch enabled (eager attention; patch verified at train **and** eval —
-`train_modern.apply_bidirectional_to_st`) and **no MNTP pre-adaptation**. nDCG@10 on the same
-held-out sets (`outputs/baselines/real_bi_*.json`):
+Does bidirectional pooling beat the §6e causal mean-pooling student? Two bidirectional
+students were trained identically to §6e (CachedMNRL + Matryoshka, 300 steps) with the
+LLM2Vec attention patch enabled (eager attention; verified at train **and** eval via
+`train_modern.apply_bidirectional_to_st`) — one **without** MNTP, one **with** MNTP
+pre-adaptation (`prepare_bidirectional_student.py`, 600 MNTP steps over the candidate
+passages, loss 4.53→3.98). nDCG@10 on the held-out sets (`outputs/baselines/real_bi*_*.json`):
 
-| Held-out set | causal student (§6e) | **bidirectional, no MNTP** | e5-base |
-|---|---:|---:|---:|
-| GermanQuAD | 0.883 | **0.659** | 0.939 |
-| DT-test | 0.950 | **0.401** | 0.994 |
-| GerDaLIR (legal) | 0.078 | **0.020** | 0.134 |
+| Held-out set | causal (§6e) | bi, **no** MNTP | bi, **+ MNTP** | e5-base |
+|---|---:|---:|---:|---:|
+| GermanQuAD | 0.883 | 0.659 | **0.848** | 0.939 |
+| DT-test | 0.950 | 0.401 | **0.967** | 0.994 |
+| GerDaLIR (legal) | 0.078 | 0.020 | **0.060** | 0.134 |
 
-**Honest finding (a useful negative result):** naive bidirectional — flipping a *causally*-
-pretrained model to bidirectional attention and running only short contrastive training —
-**degrades the embedder across the board** (DT-test 0.950 → 0.401). The model's representations
-were learned under causal masking; enabling full attention without adaptation breaks them.
-This is precisely why LLM2Vec inserts **MNTP** (masked-next-token prediction) *before*
-contrastive training. The bidirectional *plumbing* is correct and verified (§6f); the *recipe*
-is incomplete without MNTP. Next step for the bi track: run `prepare_bidirectional_student`
-MNTP adaptation first, then contrastive — not yet done. **The causal mean-pooling student
-(§6e) remains the shipped embedder.**
+**Findings (clean ablation):**
+- **MNTP is essential, not optional.** Flipping a causally-pretrained model to bidirectional
+  attention and running only contrastive training **wrecks it** (DT-test 0.950 → 0.401) — its
+  representations were learned under causal masking. **MNTP pre-adaptation recovers almost all
+  of it** (DT-test 0.401 → **0.967**, GermanQuAD 0.659 → 0.848). This empirically reproduces
+  the core LLM2Vec result on Boldt.
+- **bi+MNTP vs causal:** bi+MNTP **beats** the causal student in-domain (DT-test 0.967 vs
+  0.950), is competitive on GermanQuAD (0.848 vs 0.883), and slightly behind on OOD legal
+  (0.060 vs 0.078). At this small (300-step) budget neither dominates; both are real,
+  competitive students. The production default stays evidence-driven — currently causal for
+  its slight OOD edge, but bi+MNTP is the stronger in-domain retriever.
+
+The bidirectional patch is persisted-on-load (re-applied at eval), so these numbers reflect a
+genuinely bidirectional encoder, not a causal one. Run cards: `outputs/run-cards/real-mntp.json`,
+`real-train-embedder-bi*.json`, `real-eval-bi*-*.json`.
 
 ## 7. Matryoshka truncation analysis
 Storage scales linearly with dim (fp32): 1024→4096 B, 512→2048 B, 256→1024 B, 128→512 B,

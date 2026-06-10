@@ -12,13 +12,14 @@ tags: [german, embeddings, retrieval, matryoshka, bidirectional, llm2vec]
 German-first **bidirectional** embedder: `Boldt/Boldt-DC-350M` adapted with the LLM2Vec
 recipe (bidirectional attention → MNTP → contrastive), with Matryoshka-truncatable vectors.
 
-> **Status: bidirectional attention verified; MNTP still required.** On 2026-06-10 the
-> bidirectional attention patch was **verified on the real model** (early-token Δ 0.0 causal
-> vs 51.15 bidirectional) and a bidirectional student was trained (contrastive, **no MNTP**).
-> Result: it **underperforms** the causal student on every held-out set (DT-test 0.401 vs
-> 0.950) — see Evaluation. Honest takeaway: bidirectional needs **MNTP pre-adaptation** first
-> (LLM2Vec recipe); the no-MNTP shortcut hurts. The causal variant is the current shipped
-> embedder.
+> **Status: real MNTP→bidirectional run executed; competitive with the causal student.** On
+> 2026-06-10 the full LLM2Vec recipe ran end-to-end: bidirectional attention **verified** (Δ
+> 0.0 causal vs 51.7 bidirectional), **MNTP** pre-adaptation (600 steps), then bidirectional
+> contrastive. Result: bi+MNTP reaches **0.848 GermanQuAD / 0.967 DT-test / 0.060 GerDaLIR** —
+> it **beats** the causal student in-domain (DT-test 0.967 vs 0.950) and is competitive
+> elsewhere. Crucially, **MNTP is essential**: the no-MNTP ablation collapsed to 0.401 on
+> DT-test. See Evaluation / `docs/benchmark-report.md` §6g. Production default stays
+> evidence-driven (causal has a slight OOD edge at this 300-step budget).
 
 ## Intended use
 - Same as the causal variant (German retrieval / similarity / clustering), but using a
@@ -42,21 +43,22 @@ emb = model.encode(texts, normalize_embeddings=True)
 
 ## Evaluation
 
-### 2026 bidirectional-without-MNTP run — EXECUTED (2026-06-10, RTX A6000)
-Trained identically to the causal student (CachedMNRL + Matryoshka, 300 steps) but with the
-LLM2Vec attention patch enabled (eager attention; re-applied at eval) and **no MNTP**. nDCG@10
-on held-out sets (`outputs/baselines/real_bi_*.json`):
+### 2026 MNTP→bidirectional ablation — EXECUTED (2026-06-10, RTX A6000)
+Two bidirectional students trained identically to the causal one (CachedMNRL + Matryoshka, 300
+steps, attention patch re-applied at eval) — without vs with MNTP pre-adaptation (600 steps).
+nDCG@10 on held-out sets (`outputs/baselines/real_bi*_*.json`):
 
-| Held-out set | causal student | this bi (no MNTP) | e5-base |
-|---|---:|---:|---:|
-| GermanQuAD | 0.883 | 0.659 | 0.939 |
-| DT-test | 0.950 | 0.401 | 0.994 |
-| GerDaLIR (legal) | 0.078 | 0.020 | 0.134 |
+| Held-out set | causal | bi (no MNTP) | bi + MNTP | e5-base |
+|---|---:|---:|---:|---:|
+| GermanQuAD | 0.883 | 0.659 | 0.848 | 0.939 |
+| DT-test | 0.950 | 0.401 | 0.967 | 0.994 |
+| GerDaLIR (legal) | 0.078 | 0.020 | 0.060 | 0.134 |
 
-**Honest:** bidirectional attention without MNTP pre-adaptation **degrades** quality (a causal
-model's representations break under sudden full attention). MNTP first is required — that run
-is the documented next step. The causal vs. bidirectional production default is decided on
-these German benchmark results; for now **causal wins**. See `docs/benchmark-report.md` §6g.
+**Honest:** **MNTP is essential** — without it, switching a causal model to bidirectional
+attention collapses quality (DT-test 0.401); MNTP recovers it (→0.967). **bi+MNTP beats the
+causal student in-domain** (DT-test 0.967 vs 0.950), is competitive on GermanQuAD, and slightly
+behind on OOD legal. At this 300-step budget neither dominates; production default stays
+evidence-driven (causal has a slight OOD edge). See `docs/benchmark-report.md` §6g.
 
 (Numbers reported only from saved runs with metadata + run cards — ADR-005.)
 

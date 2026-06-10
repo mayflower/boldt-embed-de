@@ -188,8 +188,9 @@ def mask_tokens(input_ids, attention_mask, mask_prob, vocab_size, special_ids):
     """
     import torch
 
+    dev = input_ids.device  # keep all tensors on the input's device (GPU during real MNTP)
     labels = input_ids.clone()
-    probs = torch.full(input_ids.shape, float(mask_prob))
+    probs = torch.full(input_ids.shape, float(mask_prob), device=dev)
     special = (attention_mask == 0)
     for sid in special_ids:
         if sid is not None:
@@ -197,7 +198,7 @@ def mask_tokens(input_ids, attention_mask, mask_prob, vocab_size, special_ids):
     probs.masked_fill_(special, 0.0)
     masked = torch.bernoulli(probs).bool()
     labels[~masked] = -100
-    rand = torch.randint(0, int(vocab_size), input_ids.shape, dtype=input_ids.dtype)
+    rand = torch.randint(0, int(vocab_size), input_ids.shape, dtype=input_ids.dtype, device=dev)
     masked_input = input_ids.clone()
     masked_input[masked] = rand[masked]
     return masked_input, labels, masked

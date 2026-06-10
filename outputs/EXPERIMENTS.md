@@ -1,6 +1,6 @@
 # Experiments
 
-13 run card(s).
+18 run card(s).
 
 | run_id | type | model | dataset | key metrics | commit | date |
 |---|---|---|---|---|---|---|
@@ -17,3 +17,8 @@
 | real-eval-bi-germanquad | eval | — | germanquad | ndcg@10=0.6589046162896803, mrr@10=0.598510582010582, recall@100=0.982 | `8faaa61f` | 2026-06-10T20:44:09.031603+00:00 |
 | real-eval-bi-dt_test | eval | — | dt_test | ndcg@10=0.40064628282286585, mrr@10=0.3611329365079365, recall@100=0.817 | `8faaa61f` | 2026-06-10T20:44:45.304168+00:00 |
 | real-eval-bi-gerdalir | eval | — | gerdalir | ndcg@10=0.01963749860077362, mrr@10=0.01822010582010582, recall@100=0.11205555555555556 | `8faaa61f` | 2026-06-10T20:47:08.763627+00:00 |
+| real-mntp | train_embedder | Boldt/Boldt-DC-350M | data/processed/mntp_texts.jsonl | — | `9cb6ee12` | 2026-06-10T21:36:06.889585+00:00 |
+| real-train-embedder-bi-mntp | train_embedder | outputs/checkpoints/boldt-bi-mntp | outputs/teacher-cache/cache_train_pos.jsonl | — | `9cb6ee12` | 2026-06-10T21:42:58.734942+00:00 |
+| real-eval-bimntp-germanquad | eval | — | germanquad | ndcg@10=0.8481662093244587, mrr@10=0.8098187830687831, recall@100=0.9953333333333333 | `9cb6ee12` | 2026-06-10T21:43:33.170355+00:00 |
+| real-eval-bimntp-dt_test | eval | — | dt_test | ndcg@10=0.9673604310851938, mrr@10=0.9606373015873017, recall@100=1.0 | `9cb6ee12` | 2026-06-10T21:44:09.760841+00:00 |
+| real-eval-bimntp-gerdalir | eval | — | gerdalir | ndcg@10=0.06034699029372519, mrr@10=0.05523333333333333, recall@100=0.2564444444444445 | `9cb6ee12` | 2026-06-10T21:46:33.267594+00:00 |

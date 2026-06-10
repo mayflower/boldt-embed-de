@@ -83,18 +83,21 @@ def pooled_output_shape(batch: int, hidden: int) -> tuple:
 # --------------------------------------------------------------- ML layer (lazy import)
 def load_boldt_for_bidirectional(model_name: str, device: Optional[str] = None,
                                  dtype: str = "bfloat16"):
-    """Load Boldt with eager attention (required for the bidirectional mask patch).
-    Returns (model, tokenizer). ML-only."""
+    """Load Boldt as a CausalLM with eager attention (required for the bidirectional mask
+    patch and for the MNTP LM head). Returns (model, tokenizer). ML-only."""
     import torch
-    from transformers import AutoModel, AutoTokenizer
+    from transformers import AutoModelForCausalLM, AutoTokenizer
 
     torch_dtype = {"bfloat16": torch.bfloat16, "float16": torch.float16,
                    "float32": torch.float32}.get(dtype, torch.bfloat16)
     tok = AutoTokenizer.from_pretrained(model_name)
     if tok.pad_token is None:
         tok.pad_token = tok.eos_token
-    model = AutoModel.from_pretrained(model_name, torch_dtype=torch_dtype,
-                                      attn_implementation="eager", trust_remote_code=True)
+    # CausalLM gives us logits (lm_head applied) for the MNTP objective; the inner decoder
+    # (model.model) is what enable_bidirectional patches.
+    model = AutoModelForCausalLM.from_pretrained(model_name, torch_dtype=torch_dtype,
+                                                 attn_implementation="eager",
+                                                 trust_remote_code=True)
     if device:
         model = model.to(device)
     return model, tok
@@ -116,15 +119,22 @@ def _token_delta_when_last_changes(model, tok, text: str, probe_index: int = 1,
     if device:
         enc = {k: v.to(device) for k, v in enc.items()}
     ids = enc["input_ids"]
+
+    def _last_hidden(features):
+        out = model(**features, output_hidden_states=True)
+        # CausalLM: last decoder hidden state; AutoModel: last_hidden_state.
+        return getattr(out, "last_hidden_state", None) if getattr(out, "last_hidden_state", None) \
+            is not None else out.hidden_states[-1]
+
     with torch.no_grad():
-        h1 = model(**enc).last_hidden_state[0, probe_index]
+        h1 = _last_hidden(enc)[0, probe_index]
         ids2 = ids.clone()
         # replace the last real token with a different id (avoid pad/eos collisions)
         new_id = int((ids2[0, -1].item() + 7) % model.config.vocab_size)
         ids2[0, -1] = new_id
         enc2 = dict(enc)
         enc2["input_ids"] = ids2
-        h2 = model(**enc2).last_hidden_state[0, probe_index]
+        h2 = _last_hidden(enc2)[0, probe_index]
     return float(torch.linalg.vector_norm((h1 - h2).float()).item())
 
 
@@ -155,13 +165,11 @@ def run_mntp_adaptation(model, tok, texts: Sequence[str], steps: int = 100,
     """Masked-next-token-prediction pre-adaptation (LLM2Vec step 2). Trains the bidirectional
     model to predict masked tokens, adapting it to bidirectional context. ML-only."""
     import torch
-    from transformers import AutoModelForMaskedLM  # noqa: F401  (documented; we use LM head below)
 
     model.train()
     opt = torch.optim.AdamW(model.parameters(), lr=lr)
     special = [getattr(tok, a + "_token_id", None) for a in ("pad", "cls", "sep", "bos", "eos")]
     losses: List[float] = []
-    lm_head = getattr(model, "get_output_embeddings", lambda: None)()
     step = 0
     while step < steps:
         for start in range(0, len(texts), batch_size):
@@ -174,11 +182,10 @@ def run_mntp_adaptation(model, tok, texts: Sequence[str], steps: int = 100,
                 enc = {k: v.to(device) for k, v in enc.items()}
             masked_input, labels, _ = mask_tokens(enc["input_ids"], enc["attention_mask"],
                                                    mask_prob, model.config.vocab_size, special)
+            # CausalLM applies the (tied) LM head internally -> use logits directly. With the
+            # bidirectional patch active, this is masked-token prediction with full context.
             out = model(input_ids=masked_input, attention_mask=enc["attention_mask"])
-            hidden = out.last_hidden_state
-            if lm_head is None:
-                raise RuntimeError("Base model exposes no LM head for MNTP; load with a head.")
-            logits = lm_head(hidden)
+            logits = out.logits
             loss = torch.nn.functional.cross_entropy(
                 logits.view(-1, logits.size(-1)), labels.view(-1), ignore_index=-100)
             opt.zero_grad()
