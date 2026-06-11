@@ -208,3 +208,74 @@ def build_triplets_or_lists(positives: Sequence[Dict[str, Any]],
     stats["kept_by_source"] = dict(sorted(stats["kept_by_source"].items()))
     stats["kept_by_domain"] = dict(sorted(stats["kept_by_domain"].items()))
     return rows, stats
+
+
+def _median(xs):
+    xs = sorted(x for x in xs if x is not None)
+    return None if not xs else round(xs[len(xs) // 2], 4)
+
+
+def build_reranker_candidate_lists(positives: Sequence[Dict[str, Any]],
+                                   merged: Dict[str, List[Dict[str, str]]],
+                                   corpus_lookup: Dict[str, Dict[str, Any]],
+                                   teacher_scores: Dict[ScoreKey, Dict[str, Any]],
+                                   negatives_per_query: int = 8, margin: float = 0.1
+                                   ) -> Tuple[List[Dict[str, Any]], Dict[str, Any]]:
+    """Build per-query CANDIDATE LISTS for reranker training (distribution-aware): each list is
+    the positive (label 1) plus teacher-filtered, multi-source hard negatives (label 0), with
+    ``teacher_score`` / ``candidate_source`` / ``domain`` per candidate. Returns (rows, stats).
+
+    This is the v2 fix for the reranker generalization failure: candidates come from multiple
+    sources (BM25/dense/...) so the reranker doesn't overfit one candidate distribution."""
+    rows: List[Dict[str, Any]] = []
+    stats = {"queries": 0, "positives": 0, "negatives": 0, "vetoed_false_negatives": 0,
+             "candidates_by_source": {}, "candidates_by_domain": {},
+             "pos_teacher_median": None, "neg_teacher_median": None}
+    pos_scores_all, neg_scores_all = [], []
+    for pos in positives:
+        qid = str(pos["query_id"]); pos_doc_id = str(pos["doc_id"])
+        stats["queries"] += 1
+        pos_score = _filter_score(teacher_scores.get((qid, pos_doc_id)))
+        pos_scores_all.append(pos_score)
+        pos_doc = corpus_lookup.get(pos_doc_id, {})
+        cands = [{"doc_id": pos_doc_id,
+                  "document": pos.get("document") or pos_doc.get("text", pos_doc.get("document", "")),
+                  "label": 1, "teacher_score": pos_score, "first_stage_score": None,
+                  "candidate_source": "positive", "domain": str(pos.get("domain", "unknown"))}]
+        stats["positives"] += 1
+
+        kept = []
+        for cand in merged.get(qid, []):
+            did = cand["doc_id"]
+            if did == pos_doc_id:
+                continue
+            scores = teacher_scores.get((qid, did))
+            ns = _filter_score(scores)
+            if false_negative_reason(pos_score, ns, margin):
+                stats["vetoed_false_negatives"] += 1
+                continue
+            doc = corpus_lookup.get(did, {})
+            kept.append({"doc_id": did,
+                         "document": doc.get("text", doc.get("document", "")),
+                         "label": 0, "teacher_score": ns, "first_stage_score": None,
+                         "candidate_source": cand["source"],
+                         "domain": str(doc.get("domain", "unknown")), "_s": ns})
+        kept.sort(key=lambda c: c["doc_id"])
+        kept.sort(key=lambda c: (c["_s"] is not None, c["_s"] or 0.0), reverse=True)
+        kept = kept[:negatives_per_query]
+        for c in kept:
+            c.pop("_s", None)
+            neg_scores_all.append(c["teacher_score"])
+            stats["candidates_by_source"][c["candidate_source"]] = \
+                stats["candidates_by_source"].get(c["candidate_source"], 0) + 1
+            stats["candidates_by_domain"][c["domain"]] = \
+                stats["candidates_by_domain"].get(c["domain"], 0) + 1
+            stats["negatives"] += 1
+        rows.append({"query_id": qid, "query": pos["query"], "candidates": cands + kept,
+                     "positive_doc_ids": [pos_doc_id], "source": pos.get("source", "unknown"),
+                     "domain": str(pos.get("domain", "unknown"))})
+    stats["candidates_by_source"] = dict(sorted(stats["candidates_by_source"].items()))
+    stats["candidates_by_domain"] = dict(sorted(stats["candidates_by_domain"].items()))
+    stats["pos_teacher_median"] = _median(pos_scores_all)
+    stats["neg_teacher_median"] = _median(neg_scores_all)
+    return rows, stats

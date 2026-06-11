@@ -83,3 +83,12 @@ Without `--teacher-cache`, false-negative filtering is disabled and all candidat
 (useful for a quick BM25-only smoke run). Margin scale depends on which teacher score is
 present: cosine (embedding) lives in `[-1, 1]`; raw reranker logits are unbounded — tune
 `--false-negative-margin` to the score you cached.
+
+## v2: multi-source candidate lists
+
+For v2, in addition to the embedder hard-negative file (`hardneg_v2.jsonl`, the schema above),
+`scripts/build_reranker_candidates_v2.py` produces **reranker candidate lists**
+(`reranker_train_v2.jsonl`) — per query, the positive plus teacher-filtered negatives from
+**multiple sources** (BM25 + dense student/e5/teacher), each with `teacher_score`,
+`candidate_source`, `domain`. Mixing sources is the fix for the v1 reranker's
+single-distribution overfit (see `docs/reranker-training-2026.md`).

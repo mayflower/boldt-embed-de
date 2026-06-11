@@ -62,3 +62,26 @@ python scripts/eval_reranker_lift.py \
 
 `--dry-run` on the eval still computes the **first-stage and oracle** numbers (pure stdlib),
 so you can sanity-check shortlists before spending GPU time. Checkpoints are never committed.
+
+## v2: candidate-list training data (fix the GermanQuAD degradation)
+
+The v1 reranker degraded GermanQuAD because it trained on one candidate distribution. v2 trains
+on **candidate lists** built from multiple sources. `scripts/build_reranker_candidates_v2.py`
+(via `negative_mining_2026.build_reranker_candidate_lists`) emits, per query, the positive
+(label 1) + teacher-filtered hard negatives (label 0) drawn from BM25 + dense (student/e5/
+teacher) sources, each tagged with `teacher_score`, `candidate_source`, `domain`:
+
+```json
+{"query_id": "...", "query": "...",
+ "candidates": [{"doc_id": "...", "document": "...", "label": 1, "teacher_score": 6.9,
+                 "candidate_source": "positive", "domain": "admin"},
+                {"doc_id": "...", "document": "...", "label": 0, "teacher_score": -5.0,
+                 "candidate_source": "bm25", "domain": "web"}],
+ "positive_doc_ids": ["..."], "source": "...", "domain": "..."}
+```
+
+The report shows positives/negatives, vetoed false negatives, candidate counts by
+source/domain, and pos-vs-neg teacher-score medians — so distribution mismatch is visible
+before training. The v2 reranker trainer (Prompt 9) consumes these lists with a mixed
+(pointwise+pairwise+listwise) loss, and a promotion gate blocks any reranker that degrades
+GermanQuAD.
