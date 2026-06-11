@@ -39,6 +39,14 @@ def main() -> int:
     ap.add_argument("--dry-run-rows", type=int, default=2000, help="rows to scan in --dry-run")
     ap.add_argument("--base-model", default=None,
                     help="override student_cfg.base_model (e.g. an MNTP-adapted checkpoint)")
+    ap.add_argument("--hard-negatives", default=None,
+                    help="mined hard-negative JSONL (triplet training); overrides cache dataset")
+    ap.add_argument("--bidirectional", choices=["auto", "true", "false"], default="auto",
+                    help="override the student variant (auto = from config)")
+    ap.add_argument("--use-teacher-score-distillation", choices=["auto", "true", "false"],
+                    default="auto")
+    ap.add_argument("--effective-batch-size", type=int, default=None,
+                    help="logical contrastive batch via cached loss (informational)")
     ap.add_argument("--run-id", default=None, help="experiment run id (run card written on success)")
     ap.add_argument("--dry-run", action="store_true")
     args = ap.parse_args()
@@ -46,28 +54,40 @@ def main() -> int:
     cfg = load_student_training_config(args.student_config)
     if args.base_model:
         cfg.base_model = args.base_model  # train contrastive on an MNTP-adapted checkpoint
+    bidi = {"auto": None, "true": True, "false": False}[args.bidirectional]
+    distill = {"auto": None, "true": True, "false": False}[args.use_teacher_score_distillation]
     print(f"[student] base={cfg.base_model} variant={cfg.student_variant} "
-          f"dims={cfg.matryoshka_dims} policy={cfg.train_eval_split_policy}")
+          f"bidirectional={bidi if bidi is not None else 'auto'} dims={cfg.matryoshka_dims} "
+          f"policy={cfg.train_eval_split_policy}")
 
-    if not pathlib.Path(args.teacher_cache).exists():
-        msg = f"teacher cache not found: {args.teacher_cache} (build it with build_teacher_cache.py)"
+    # Dataset: prefer the mined hard-negative file (triplets) when given; else the teacher cache.
+    if args.hard_negatives and pathlib.Path(args.hard_negatives).exists():
+        hn_rows = list(T.stream_jsonl(args.hard_negatives))
         if args.dry_run:
-            print(f"[dry-run] WARNING: {msg}; planning loss stack only.")
-            cache_rows = []
-        else:
-            print(f"ERROR: {msg}", file=sys.stderr)
-            return 2
+            hn_rows = hn_rows[:args.dry_run_rows]
+        examples = TM.build_train_dataset_from_hardneg(hn_rows)
+        print(f"[data] hard-negatives: {args.hard_negatives} -> {len(examples)} triplet examples")
     else:
-        limit = args.dry_run_rows if args.dry_run else None
-        cache_rows = T.read_teacher_cache_jsonl(args.teacher_cache)
-        if limit is not None:
-            cache_rows = cache_rows[:limit]
+        if not pathlib.Path(args.teacher_cache).exists():
+            msg = f"teacher cache not found: {args.teacher_cache} (build it with build_teacher_cache.py)"
+            if args.dry_run:
+                print(f"[dry-run] WARNING: {msg}; planning loss stack only.")
+                cache_rows = []
+            else:
+                print(f"ERROR: {msg}", file=sys.stderr)
+                return 2
+        else:
+            cache_rows = T.read_teacher_cache_jsonl(args.teacher_cache)
+            if args.dry_run:
+                cache_rows = cache_rows[:args.dry_run_rows]
+        examples = TM.build_train_dataset_from_teacher_cache(cache_rows)
 
-    examples = TM.build_train_dataset_from_teacher_cache(cache_rows)
     meta = TM.dataset_metadata(examples)
-    plan = TM.plan_loss_stack(cfg, meta["has_teacher_scores"], use_guide=bool(args.guide_model))
+    bidi_eff = bidi if bidi is not None else (cfg.student_variant == "bidirectional")
+    plan = TM.plan_loss_stack(cfg, meta["has_teacher_scores"], use_guide=bool(args.guide_model),
+                              use_distillation=distill)
     print(f"[dataset] {json.dumps(meta, ensure_ascii=False)}")
-    print(f"[loss-stack] {json.dumps(plan, ensure_ascii=False)}")
+    print(f"[loss-stack] {json.dumps(plan, ensure_ascii=False)} bidirectional={bidi_eff}")
 
     if args.dry_run:
         assert "torch" not in sys.modules, "dry-run must not import torch"
@@ -80,13 +100,15 @@ def main() -> int:
     except ImportError as exc:
         raise SystemExit(f"Real training needs extras: pip install -e '.[train]'. ({exc})")
     if not examples:
-        print("ERROR: no training examples built from cache.", file=sys.stderr)
+        print("ERROR: no training examples built.", file=sys.stderr)
         return 2
     report = TM.train_modern_embedder(
         cfg, examples, args.output, epochs=args.epochs, max_steps=args.max_steps,
         batch_size=args.batch_size, mini_batch_size=args.mini_batch_size, lr=args.lr,
         bf16=args.bf16, gradient_checkpointing=args.gradient_checkpointing,
-        use_lora=args.lora, guide_model_name=args.guide_model)
+        use_lora=args.lora, guide_model_name=args.guide_model, bidirectional=bidi,
+        use_distillation=distill,
+        extra_report={"hard_negatives": args.hard_negatives, "teacher_cache": args.teacher_cache})
     card = ER.emit_run_card(args.run_id, "train_embedder", "scripts/train_modern_embedder.py",
                             model=cfg.base_model, dataset=args.teacher_cache,
                             metrics={"num_examples": report.get("num_examples")},

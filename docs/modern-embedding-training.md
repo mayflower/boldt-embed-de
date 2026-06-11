@@ -81,3 +81,29 @@ cannot be loaded that way, `load_student_sentence_transformer` raises a clear er
 to the **bidirectional adapter** (`docs/bidirectional-adaptation.md`, Prompt 5) rather than
 silently training the wrong architecture. Checkpoints are **never committed**
 (`outputs/checkpoints/` is git-ignored).
+
+## v2 training flags
+
+For the v2 causal-vs-bi+MNTP comparison the trainer accepts:
+
+- `--hard-negatives data/processed/hardneg_v2.jsonl` — train on **triplets** (anchor, positive,
+  mined hard negative) from the miner, instead of the cache's (anchor, positive) pairs. A
+  negative column is emitted only when **every** example has a negative (no positive-as-negative
+  placeholders).
+- `--base-model outputs/checkpoints/boldt-bi-mntp-v2` `--bidirectional true` — train the
+  bidirectional student on its MNTP-adapted checkpoint (the eval re-applies the patch).
+- `--use-teacher-score-distillation true|false|auto` — force MarginMSE teacher-score
+  distillation on/off (auto = on when teacher scores are present and the config requests it).
+- `--effective-batch-size` (informational), `--max-steps`, bf16 + gradient checkpointing for the
+  48 GB profile.
+
+```bash
+# causal v2
+python scripts/train_modern_embedder.py --teacher-cache .../qwen3_v2.filtered.jsonl \
+  --hard-negatives data/processed/hardneg_v2.jsonl \
+  --output outputs/checkpoints/boldt-modern-causal-v2 --bf16 --gradient-checkpointing
+# bi+MNTP v2
+python scripts/train_modern_embedder.py --base-model outputs/checkpoints/boldt-bi-mntp-v2 \
+  --bidirectional true --teacher-cache .../qwen3_v2.filtered.jsonl \
+  --output outputs/checkpoints/boldt-modern-bi-mntp-v2 --bf16 --gradient-checkpointing
+```

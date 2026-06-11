@@ -73,6 +73,24 @@ def build_train_dataset_from_teacher_cache(cache_rows: Sequence[Dict[str, Any]]
     return examples
 
 
+def build_train_dataset_from_hardneg(rows: Sequence[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """Build training examples from a mined hard-negative file (schema from
+    negative_mining_2026: {query, positive, negatives:[{document, reranker_teacher_score}]}).
+    Negatives are kept in mined (hardest-first) order. Pure stdlib."""
+    examples: List[Dict[str, Any]] = []
+    for r in rows:
+        negs = r.get("negatives") or []
+        examples.append({
+            "query": r.get("query", ""),
+            "positive": r.get("positive", ""),
+            "negatives": [n.get("document", "") for n in negs],
+            "pos_score": None,
+            "neg_scores": [n.get("reranker_teacher_score", n.get("embedding_teacher_score"))
+                           for n in negs],
+        })
+    return [e for e in examples if e["query"] and e["positive"]]
+
+
 def dataset_metadata(examples: Sequence[Dict[str, Any]]) -> Dict[str, Any]:
     n_neg = sum(len(e["negatives"]) for e in examples)
     with_neg = sum(1 for e in examples if e["negatives"])
@@ -87,18 +105,20 @@ def dataset_metadata(examples: Sequence[Dict[str, Any]]) -> Dict[str, Any]:
     }
 
 
-def plan_loss_stack(student_cfg, has_teacher_scores: bool, use_guide: bool = False
-                    ) -> Dict[str, Any]:
-    """Describe (without importing ML) the loss stack that `build_losses` will instantiate."""
+def plan_loss_stack(student_cfg, has_teacher_scores: bool, use_guide: bool = False,
+                    use_distillation: Optional[bool] = None) -> Dict[str, Any]:
+    """Describe (without importing ML) the loss stack that `build_losses` will instantiate.
+    ``use_distillation``: None = auto (teacher scores present AND config requests it); True/False
+    forces it on/off."""
     losses = [str(x) for x in getattr(student_cfg, "losses", [])]
     dims = list(getattr(student_cfg, "matryoshka_dims", MATRYOSHKA_DEFAULT))
     base = "CachedGISTEmbedLoss" if use_guide else "CachedMultipleNegativesRankingLoss"
     stack = [base]
     if "matryoshka" in losses or not losses:
         stack.append(f"MatryoshkaLoss(dims={dims})")
-    distill = []
-    if has_teacher_scores and ("margin_mse" in losses or "distillation" in losses):
-        distill.append("MarginMSELoss")
+    auto_distill = has_teacher_scores and ("margin_mse" in losses or "distillation" in losses)
+    distill_on = auto_distill if use_distillation is None else (use_distillation and has_teacher_scores)
+    distill = ["MarginMSELoss"] if distill_on else []
     return {
         "base_contrastive": base,
         "matryoshka_dims": dims,
@@ -158,7 +178,8 @@ def load_student_sentence_transformer(model_name: str, max_seq_length: int = 512
         ) from exc
 
 
-def build_losses(model, student_cfg, has_teacher_scores: bool, guide_model=None) -> Dict[str, Any]:
+def build_losses(model, student_cfg, has_teacher_scores: bool, guide_model=None,
+                 use_distillation: Optional[bool] = None) -> Dict[str, Any]:
     """Instantiate the loss objects described by `plan_loss_stack`. ML-only."""
     from sentence_transformers import losses as L
 
@@ -169,8 +190,9 @@ def build_losses(model, student_cfg, has_teacher_scores: bool, guide_model=None)
         base = L.CachedMultipleNegativesRankingLoss(model)
     primary = L.MatryoshkaLoss(model, base, matryoshka_dims=dims)
     out: Dict[str, Any] = {"primary": primary}
-    cfg_losses = [str(x) for x in getattr(student_cfg, "losses", [])]
-    if has_teacher_scores and ("margin_mse" in cfg_losses or "distillation" in cfg_losses):
+    plan = plan_loss_stack(student_cfg, has_teacher_scores, use_guide=guide_model is not None,
+                           use_distillation=use_distillation)
+    if plan["teacher_distillation_active"]:
         out["distill"] = L.MarginMSELoss(model)
     return out
 
@@ -180,38 +202,47 @@ def train_modern_embedder(student_cfg, examples: Sequence[Dict[str, Any]], outpu
                           mini_batch_size: int = 8, lr: float = 2e-5, bf16: bool = True,
                           gradient_checkpointing: bool = True, use_lora: bool = False,
                           guide_model_name: Optional[str] = None, device: Optional[str] = None,
-                          max_seq_length: int = 512) -> Dict[str, Any]:
+                          max_seq_length: int = 512, bidirectional: Optional[bool] = None,
+                          use_distillation: Optional[bool] = None,
+                          base_model: Optional[str] = None,
+                          extra_report: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     """Real training entry point (GPU). Builds the dataset, model, loss stack, and runs the
-    SentenceTransformerTrainer with NO_DUPLICATES batch sampling. ML-only."""
+    SentenceTransformerTrainer with NO_DUPLICATES batch sampling. ML-only.
+
+    ``bidirectional`` overrides the cfg variant; ``base_model`` overrides cfg.base_model (e.g.
+    an MNTP-adapted checkpoint); ``use_distillation`` forces MarginMSE on/off."""
     import torch
     from datasets import Dataset
     from sentence_transformers import SentenceTransformer
     from sentence_transformers import SentenceTransformerTrainer, SentenceTransformerTrainingArguments
     from sentence_transformers.training_args import BatchSamplers
 
-    bidirectional = getattr(student_cfg, "student_variant", "causal") == "bidirectional"
+    if bidirectional is None:
+        bidirectional = getattr(student_cfg, "student_variant", "causal") == "bidirectional"
+    base = base_model or student_cfg.base_model
     model = load_student_sentence_transformer(
-        student_cfg.base_model, max_seq_length=max_seq_length, device=device,
-        bidirectional=bidirectional)
+        base, max_seq_length=max_seq_length, device=device, bidirectional=bidirectional)
     if use_lora:
         from peft import LoraConfig
         model.add_adapter(LoraConfig(task_type="FEATURE_EXTRACTION", r=16, lora_alpha=32))
 
-    # Build a (anchor, positive[, negative]) dataset; include hardest negative if present.
+    # (anchor, positive[, negative]): only emit a negative column when EVERY example has one
+    # (mixing real negatives with positive-as-negative placeholders would corrupt the loss).
     cols: Dict[str, List[Any]] = {"anchor": [], "positive": []}
-    use_neg = any(e["negatives"] for e in examples)
+    use_neg = bool(examples) and all(e["negatives"] for e in examples)
     if use_neg:
         cols["negative"] = []
     for e in examples:
         cols["anchor"].append(e["query"])
         cols["positive"].append(e["positive"])
         if use_neg:
-            cols["negative"].append(e["negatives"][0] if e["negatives"] else e["positive"])
+            cols["negative"].append(e["negatives"][0])
     train_ds = Dataset.from_dict(cols)
 
     guide = SentenceTransformer(guide_model_name, device=device) if guide_model_name else None
     has_scores = dataset_metadata(examples)["has_teacher_scores"]
-    loss_objs = build_losses(model, student_cfg, has_scores, guide_model=guide)
+    loss_objs = build_losses(model, student_cfg, has_scores, guide_model=guide,
+                             use_distillation=use_distillation)
 
     args = SentenceTransformerTrainingArguments(
         output_dir=output_dir, num_train_epochs=epochs, max_steps=max_steps,
@@ -222,10 +253,15 @@ def train_modern_embedder(student_cfg, examples: Sequence[Dict[str, Any]], outpu
                                          loss=loss_objs["primary"])
     trainer.train()
     model.save(output_dir)
-    return {"status": "ok", "output_dir": output_dir, "num_examples": len(examples),
-            "bidirectional": bidirectional,
-            "gpu_name": torch.cuda.get_device_name(0) if torch.cuda.is_available() else None,
-            "loss_stack": plan_loss_stack(student_cfg, has_scores, use_guide=guide is not None)}
+    report = {"status": "ok", "output_dir": output_dir, "base_model": base,
+              "num_examples": len(examples), "uses_explicit_negatives": use_neg,
+              "bidirectional": bidirectional,
+              "gpu_name": torch.cuda.get_device_name(0) if torch.cuda.is_available() else None,
+              "loss_stack": plan_loss_stack(student_cfg, has_scores, use_guide=guide is not None,
+                                            use_distillation=use_distillation)}
+    if extra_report:
+        report.update(extra_report)
+    return report
 
 
 def export_sentence_transformers_model(model, output_dir: str) -> str:
