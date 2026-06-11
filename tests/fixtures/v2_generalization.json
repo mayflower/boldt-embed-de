@@ -1,0 +1,35 @@
+{
+  "experiment_id": "v2-data-scale-generalization",
+  "target_candidate_count_min": 50000,
+  "target_candidate_count_stretch": 250000,
+  "public_benchmarks_eval_only": true,
+  "held_out_eval_sets": ["GermanQuAD", "DT-test", "GerDaLIR"],
+  "student_models": [
+    "causal_mean_pooling",
+    "bidirectional_mntp"
+  ],
+  "reranker": {
+    "train": true,
+    "loss": "mixed",
+    "candidate_sources": ["bm25", "student_dense", "e5_dense", "teacher_dense", "teacher_reranker"],
+    "negatives_per_query": 8
+  },
+  "domains": {
+    "web": {"target_fraction": 0.25},
+    "faq": {"target_fraction": 0.15},
+    "admin": {"target_fraction": 0.15},
+    "legal_adjacency_no_eval_overlap": {"target_fraction": 0.15},
+    "wiki_non_eval": {"target_fraction": 0.15},
+    "german_stress": {"target_fraction": 0.10},
+    "cross_lingual_de_en": {"target_fraction": 0.05}
+  },
+  "success_criteria": {
+    "dense_germanquad_ndcg10_min": 0.88,
+    "dense_dt_test_ndcg10_min": 0.95,
+    "dense_gerdalir_ndcg10_min": 0.10,
+    "dense_gerdalir_ndcg10_stretch": 0.12,
+    "reranker_germanquad_delta_min": 0.0,
+    "reranker_germanquad_delta_target": 0.02,
+    "matryoshka_256_retention_min": 0.95
+  }
+}

@@ -1,0 +1,4 @@
+{
+  "first_stage_ndcg@10": 0.9,
+  "student_reranker_ndcg@10": 0.925
+}
