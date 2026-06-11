@@ -45,7 +45,7 @@ _SRC_MODULES = [
     "config_teacher", "teacher", "data_pipeline", "german_adversarial",
     "synthetic_queries", "local_llm_generation", "negative_mining_2026", "train_modern",
     "llm2vec_boldt", "reranker_modern", "hybrid_eval", "experiment_registry",
-    "v2_experiment_config",
+    "v2_experiment_config", "source_manifest",
 ]
 _SCRIPTS = [
     "validate_repo", "run_smoke_tests", "run_local_benchmark",
@@ -61,6 +61,7 @@ _SCRIPTS = [
     "prepare_bidirectional_student", "train_modern_reranker", "eval_reranker_lift",
     "eval_hybrid_retrieval", "run_baseline_benchmarks", "summarize_experiments",
     "validate_release_2026", "prep_real_run_data", "dense_retrieve",
+    "validate_data_sources_v2",
 ]
 _DOCS = [
     "RESEARCH_NOTES_2026", "ARCHITECTURE_PLAN", "DATA_PLAN",

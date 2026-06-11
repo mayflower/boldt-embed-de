@@ -1,0 +1,29 @@
+{
+  "sources": [
+    {
+      "source_id": "tiny_local_web",
+      "display_name": "tiny local web",
+      "source_type": "local_jsonl",
+      "domain": "web",
+      "license": "CC0-1.0",
+      "allowed_for_training": true,
+      "public_benchmark": false,
+      "eval_only": false,
+      "notes": "fixture",
+      "loader": {"kind": "jsonl", "path_or_id": "tests/fixtures/v2_candidates_seed.jsonl"},
+      "expected_fields": {"query": "query", "document": "document"}
+    },
+    {
+      "source_id": "tiny_eval_quad",
+      "display_name": "tiny eval",
+      "source_type": "hf_dataset",
+      "domain": "qa_wiki",
+      "license": "CC-BY-4.0",
+      "allowed_for_training": false,
+      "public_benchmark": true,
+      "eval_only": true,
+      "notes": "fixture eval-only",
+      "loader": {"kind": "hf", "path_or_id": "deepset/germanquad", "split": "test"}
+    }
+  ]
+}
