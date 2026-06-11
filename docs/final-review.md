@@ -1,37 +1,41 @@
-# Final Project Review (prompt 14)
+# Final Project Review
 
-Date: 2026-05-29.
+Date: updated 2026-06-11.
 
 ## Checklist
 | Item | Status | Evidence |
 |---|---|---|
 | Git status clean | ✅ | working tree clean after each milestone |
 | Latest commit recorded | ✅ | see `git log` (prompt-by-prompt commits) |
-| Tests passed (or failures documented) | ✅ | 117 stdlib tests + real GPU tests pass (`make test`) |
-| Benchmark reports saved | ✅ | `outputs/benchmarks/*` + `outputs/real-training/*` |
+| Tests passed (or failures documented) | ✅ | 238 stdlib tests + real GPU runs (`make test`) |
+| Benchmark reports saved | ✅ | `outputs/baselines/real_*.json`, `outputs/real-training/*`, run cards |
 | Model cards complete | ✅ | 3 variant cards + dataset card; `validate_repo` enforces sections |
 | Data/license audit complete | ✅ | `docs/data/*`, `docs/audit/final-audit.md`, `validate_data_schema` |
 | Release risks documented | ✅ | `RELEASE_CHECKLIST.md`, `docs/audit/final-audit.md` |
-| User-facing summary accurate | ✅ | this file + benchmark report |
+| User-facing summary accurate | ✅ | this file + `docs/benchmark-report.md` §6e–§6g |
 
-## Prompt coverage (00–14)
-All 15 prompt deliverables produced at their named paths, including the real GPU training
-runs for the causal, bidirectional, and reranker tracks. The two honest carve-outs (by
-design, not omission): **public MMTEB is not run** (needs licensed corpora + downloads) and
-all trained models are **tiny pipeline-proving runs**, not production models.
+## Executed status (2026-06)
+The 2026 teacher→student workflow has been **executed and measured** — causal, bi+MNTP, and
+reranker tracks all trained on the A6000 with Qwen3-8B teachers over 3,764 multi-domain
+candidates, with held-out numbers + run cards (`docs/benchmark-report.md` §6e–§6g). The honest
+carve-outs: **broad MMTEB is not run** and training is at **modest scale (3,764 candidates)**,
+so the project is **not release-ready**.
 
 ## What is real vs pending
-- **Real:** verified Llama arch (hidden 1024 / 24L / vocab 32000 / ctx 2048 / ~435M);
-  causal/bi/reranker trained on GPU with saved metadata; ST export; full stdlib eval suite.
-- **Pending (blocking release):** real German corpora + licenses; production training;
-  real MMTEB/GermanDPR evaluation; German safety/bias eval.
+- **Real (measured):** causal student GermanQuAD 0.883 / DT-test 0.950 / GerDaLIR 0.0782;
+  bi+MNTP beats causal in-domain (DT-test 0.967, MNTP essential); reranker lift DT-test
+  0.950→0.990 but degrades GermanQuAD; Matryoshka 256-d ≈ 97% retention. `multilingual-e5-base`
+  leads (0.939 / 0.994 / 0.1343).
+- **Pending (blocking release):** v2 data-scale generalization (50k–250k candidates); broad
+  MMTEB/GermanDPR eval; reranker generalization (anti-degradation gate); German safety/bias;
+  per-source licensing/provenance; derivative-weights license.
 
 ## Recommended next actions
-1. License + ingest real German corpora; run PII/leakage at scale.
-2. Production training of all three tracks; pick causal-vs-bi on real German MMTEB (ADR-002).
-3. Real MMTEB + GermanDPR/GermanQuAD run with saved metadata; fill model-card eval tables.
-4. German safety/bias evaluation; finalize derivative-weights license and published name.
-5. Work `RELEASE_CHECKLIST.md` to green, then publish.
+1. **v2-data-scale-generalization:** 50k–250k teacher-validated multi-domain candidates;
+   retrain causal vs bi+MNTP; reranker on diverse candidate lists; held-out eval.
+2. Broad MMTEB-de + GermanDPR/GermanQuAD eval with saved metadata (eval-only, leakage-checked).
+3. German safety/bias evaluation; finalize derivative-weights license and published name.
+4. Work `RELEASE_CHECKLIST.md` to green, then publish.
 
 ## Commands run (validation)
 ```bash

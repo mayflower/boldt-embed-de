@@ -24,16 +24,24 @@ Two layers:
 **~435M** parameters. So the 1024-d output needs no projection head, and there is no
 long-context capability beyond 2048.
 
-**Honest scale & status (read this):** this is **not** a finished, release-ready German
-embedding family. What exists, concretely:
-- **Causal embedder:** a real GermanQuAD run (11,494 pairs) — in-domain test nDCG@10 0.879;
-  and an at-scale, **contamination-free** run (train on DT-de-dpr Wikipedia → eval on the
-  **held-out, disjoint legal** GerDaLIR benchmark) via `scripts/train_disjoint_de.py`. See
-  `outputs/real-training/*.json` for saved numbers + metadata.
-- **Bidirectional + reranker:** real LLM2Vec/cross-encoder *pipelines* trained only at small
-  scale so far — proofs, not production models. Scaling them is the next step.
-- **Not done:** broad MTEB/MMTEB run, baseline comparisons, published weights, multi-dataset
-  at-scale training of all three tracks. See `RELEASE_CHECKLIST.md` / `docs/audit/final-audit.md`.
+**Honest scale & status (read this):** the 2026 teacher→student workflow has been **executed**
+(Qwen3-Embedding-8B + Qwen3-Reranker-8B teachers; 3,764 multi-domain, non-benchmark German
+candidates), but this is **not release-ready**. Measured held-out nDCG@10 (`docs/benchmark-report.md`
+§6e–§6g, run cards under `outputs/run-cards/`):
+- **Causal student** (current best): GermanQuAD **0.883**, DT-test **0.950**, GerDaLIR (legal,
+  OOD) **0.0782** — competitive in-domain with `multilingual-e5-base` (0.939 / 0.994 / 0.1343),
+  which still leads, especially OOD legal.
+- **Bidirectional + MNTP:** executed (MNTP is essential — without it quality collapses); bi+MNTP
+  **beats causal in-domain** (DT-test 0.967) but causal keeps a slight OOD edge.
+- **Reranker:** lifts DT-test 0.950→**0.990** but **degrades GermanQuAD 0.886→0.532** — competent
+  in-distribution, **not yet robustly general**.
+- **Matryoshka:** 256-d retains ~97% of 1024-d quality on GermanQuAD.
+- **Not release-ready:** needs v2 data scale, broader eval, licensing/provenance, and reranker
+  generalization. See `RELEASE_CHECKLIST.md` / `docs/audit/final-audit.md`.
+
+**Next improvement target — `v2-data-scale-generalization`:** 50k–250k teacher-validated
+multi-domain candidates, causal vs bi+MNTP retrain, reranker trained on diverse candidate lists,
+held-out eval.
 
 Training data follows a strict **train≠eval** rule (`docs/data/training-datasets-research-2026.md`):
 benchmark datasets (GermanQuAD/GerDaLIR/MMTEB) are held out; training uses non-benchmark
