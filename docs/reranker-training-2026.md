@@ -82,6 +82,28 @@ teacher) sources, each tagged with `teacher_score`, `candidate_source`, `domain`
 
 The report shows positives/negatives, vetoed false negatives, candidate counts by
 source/domain, and pos-vs-neg teacher-score medians — so distribution mismatch is visible
-before training. The v2 reranker trainer (Prompt 9) consumes these lists with a mixed
-(pointwise+pairwise+listwise) loss, and a promotion gate blocks any reranker that degrades
-GermanQuAD.
+before training.
+
+### v2 mixed-loss training + promotion gate
+
+`train_modern_reranker.py --candidate-lists reranker_train_v2.jsonl --loss mixed` trains on the
+candidate lists with **pointwise (BCE) + pairwise (margin) + listwise (KL over teacher scores)**
+combined (`reranker_modern.candidate_lists_to_{pointwise,pairwise,listwise}`).
+
+**Anti-degradation gate** (`scripts/check_reranker_promotion_gate.py`): a reranker may NOT be
+promoted unless it is **neutral-or-positive on every held-out set**. It reads the per-dataset
+lift reports and fails if DT-test Δ < 0 **or GermanQuAD Δ < 0** (the v1 failure mode), with
++0.02 on GermanQuAD as the target:
+
+```bash
+python scripts/eval_reranker_lift.py --candidates eval/germanquad_shortlist.jsonl \
+  --reranker outputs/checkpoints/boldt-reranker-modern-v2 --reranker-v1 outputs/checkpoints/boldt-reranker-modern \
+  --output outputs/real-training/reranker-lift-germanquad-v2.json
+python scripts/check_reranker_promotion_gate.py \
+  --dt-test outputs/real-training/reranker-lift-dt_test-v2.json \
+  --germanquad outputs/real-training/reranker-lift-germanquad-v2.json \
+  --output outputs/real-training/reranker_gate.json   # exit 1 if it degrades either set
+```
+
+A model card may only call the reranker "recommended" once this gate passes (enforced by the
+v2 release gate, Prompt 12).

@@ -58,7 +58,8 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--candidates", required=True, help="fixed-shortlist JSONL")
     ap.add_argument("--config", default=str(ROOT / "configs" / "training_reranker.json"))
-    ap.add_argument("--reranker", default=None, help="student reranker checkpoint dir")
+    ap.add_argument("--reranker", default=None, help="student reranker checkpoint dir (v2)")
+    ap.add_argument("--reranker-v1", default=None, help="optional prior reranker for side-by-side")
     ap.add_argument("--teacher-config", default=None, help="teacher_models.json to also score teacher")
     ap.add_argument("--k", type=int, default=10)
     ap.add_argument("--device-index", type=int, default=0)
@@ -113,6 +114,12 @@ def main() -> int:
                                                 device=device)
         report[f"student_reranker_ndcg@{args.k}"] = RM.aggregate_rows(
             _rows_from_scores(scores)).get(f"ndcg@{args.k}")
+
+    if args.reranker_v1:  # side-by-side comparison vs a previous reranker
+        s1 = RM.score_with_student_reranker(args.reranker_v1, all_pairs, cfg.input_template,
+                                            device=device)
+        report[f"v1_reranker_ndcg@{args.k}"] = RM.aggregate_rows(
+            _rows_from_scores(s1)).get(f"ndcg@{args.k}")
 
     if args.teacher_config:
         from boldt_embed import teacher as T

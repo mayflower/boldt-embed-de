@@ -106,6 +106,74 @@ def build_listwise_batches(rows: Sequence[Dict[str, Any]], temperature: float = 
     return out
 
 
+# ----------------------------------------------- stdlib: candidate-list builders (v2)
+def candidate_lists_to_pointwise(rows: Sequence[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """{query, document, label} from candidate-list rows (skips label=None candidates)."""
+    out = []
+    for r in rows:
+        for c in r.get("candidates", []):
+            if c.get("label") is None:
+                continue
+            out.append({"query": r.get("query", ""), "document": c.get("document", ""),
+                        "label": float(c["label"])})
+    return out
+
+
+def candidate_lists_to_pairwise(rows: Sequence[Dict[str, Any]], max_pairs_per_query: int = 8
+                                ) -> List[Dict[str, Any]]:
+    """{query, positive, negative} pairs from candidate lists (label 1 × label 0)."""
+    out = []
+    for r in rows:
+        pos = [c for c in r.get("candidates", []) if c.get("label") == 1]
+        neg = [c for c in r.get("candidates", []) if c.get("label") == 0]
+        made = 0
+        for p in pos:
+            for n in neg:
+                out.append({"query": r.get("query", ""), "positive": p.get("document", ""),
+                            "negative": n.get("document", "")})
+                made += 1
+                if made >= max_pairs_per_query:
+                    break
+            if made >= max_pairs_per_query:
+                break
+    return out
+
+
+def candidate_lists_to_listwise(rows: Sequence[Dict[str, Any]], temperature: float = 1.0
+                                ) -> List[Dict[str, Any]]:
+    """Per-query listwise batch: target = softmax of teacher_scores when present, else the
+    (normalized) labels. {query, documents, target, labels}."""
+    out = []
+    for r in rows:
+        cands = r.get("candidates", [])
+        if len(cands) < 2:
+            continue
+        docs = [c.get("document", "") for c in cands]
+        labels = [float(c.get("label") or 0) for c in cands]
+        scores = [c.get("teacher_score") for c in cands]
+        if all(s is not None for s in scores):
+            target = softmax([float(s) for s in scores], temperature)
+        else:
+            z = sum(labels) or 1.0
+            target = [l / z for l in labels]
+        out.append({"query": r.get("query", ""), "documents": docs, "target": target,
+                    "labels": labels})
+    return out
+
+
+_RERANKER_LOSS_COMPONENTS = {
+    "pointwise": ["BCEWithLogitsLoss"],
+    "pairwise": ["MarginRankingLoss"],
+    "listwise": ["KLDivLoss(listwise)"],
+    "mixed": ["BCEWithLogitsLoss", "MarginRankingLoss", "KLDivLoss(listwise)"],
+}
+
+
+def plan_reranker_loss(loss: str) -> Dict[str, Any]:
+    """Describe the loss stack (stdlib) for a chosen reranker objective."""
+    return {"loss": loss, "components": _RERANKER_LOSS_COMPONENTS.get(loss, [])}
+
+
 # ---------------------------------------------------------------- stdlib: metrics
 def rerank_metrics(candidate_ids: Sequence[str], scores: Sequence[float],
                    positive_ids, ks: Sequence[int] = (10,)) -> Dict[str, float]:

@@ -62,7 +62,7 @@ _SCRIPTS = [
     "eval_hybrid_retrieval", "run_baseline_benchmarks", "summarize_experiments",
     "validate_release_2026", "prep_real_run_data", "dense_retrieve",
     "validate_data_sources_v2", "build_v2_candidates", "summarize_teacher_cache",
-    "build_reranker_candidates_v2",
+    "build_reranker_candidates_v2", "check_reranker_promotion_gate",
 ]
 _DOCS = [
     "RESEARCH_NOTES_2026", "ARCHITECTURE_PLAN", "DATA_PLAN",

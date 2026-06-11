@@ -45,6 +45,8 @@ def main() -> int:
     ap.add_argument("--config", default=str(ROOT / "configs" / "training_reranker.json"))
     ap.add_argument("--teacher-cache", default=None)
     ap.add_argument("--hard-negatives", default=None)
+    ap.add_argument("--candidate-lists", default=None,
+                    help="v2 reranker candidate-list JSONL (build_reranker_candidates_v2.py)")
     ap.add_argument("--output", default=str(ROOT / "outputs" / "checkpoints" / "boldt-reranker-modern"))
     ap.add_argument("--loss", choices=["pointwise", "pairwise", "listwise", "mixed"], default="pointwise")
     ap.add_argument("--epochs", type=int, default=1)
@@ -60,18 +62,26 @@ def main() -> int:
     args = ap.parse_args()
 
     cfg = load_reranker_config(args.config)
-    rows = _cache_rows_from_inputs(args.teacher_cache, args.hard_negatives)
-    if not rows:
-        msg = "no input rows (provide --teacher-cache and/or --hard-negatives)"
-        print(f"{'[dry-run] ' if args.dry_run else 'ERROR: '}{msg}",
-              file=sys.stderr if not args.dry_run else sys.stdout)
-        if not args.dry_run:
+    # v2: candidate-list input (distribution-aware) takes precedence; else cache/hardneg rows.
+    if args.candidate_lists and pathlib.Path(args.candidate_lists).exists():
+        cl_rows = list(dp.stream_jsonl(args.candidate_lists))
+        pointwise = RM.candidate_lists_to_pointwise(cl_rows)
+        pairwise = RM.candidate_lists_to_pairwise(cl_rows)
+        listwise = RM.candidate_lists_to_listwise(cl_rows, temperature=args.temperature)
+        source_desc = f"candidate-lists:{args.candidate_lists} ({len(cl_rows)} queries)"
+    else:
+        rows = _cache_rows_from_inputs(args.teacher_cache, args.hard_negatives)
+        if not rows and not args.dry_run:
+            print("ERROR: no input rows (provide --candidate-lists / --teacher-cache / --hard-negatives)",
+                  file=sys.stderr)
             return 2
+        pointwise = RM.build_reranker_examples_from_teacher_cache(rows)
+        pairwise = RM.build_pairwise_examples(rows)
+        listwise = RM.build_listwise_batches(rows, temperature=args.temperature)
+        source_desc = f"cache/hardneg ({len(rows)} rows)"
 
-    pointwise = RM.build_reranker_examples_from_teacher_cache(rows)
-    pairwise = RM.build_pairwise_examples(rows)
-    listwise = RM.build_listwise_batches(rows, temperature=args.temperature)
-    plan = {"objective": args.loss, "base_model": cfg.model_name_or_path,
+    plan = {"objective": args.loss, "loss_components": RM.plan_reranker_loss(args.loss)["components"],
+            "base_model": cfg.model_name_or_path, "input": source_desc,
             "pointwise_examples": len(pointwise), "pairwise_examples": len(pairwise),
             "listwise_queries": len(listwise)}
     print(f"[plan] {json.dumps(plan, ensure_ascii=False)}")
