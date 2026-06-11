@@ -45,6 +45,7 @@ _SRC_MODULES = [
     "config_teacher", "teacher", "data_pipeline", "german_adversarial",
     "synthetic_queries", "local_llm_generation", "negative_mining_2026", "train_modern",
     "llm2vec_boldt", "reranker_modern", "hybrid_eval", "experiment_registry",
+    "v2_experiment_config",
 ]
 _SCRIPTS = [
     "validate_repo", "run_smoke_tests", "run_local_benchmark",
