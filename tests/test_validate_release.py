@@ -48,13 +48,14 @@ class TestCardChecks(unittest.TestCase):
 
     def test_complete_embedder_card_passes(self):
         text = ("## Teacher distillation\n## Training data provenance\n## Leakage policy\n"
-                "## German stress tests\n## Limitations\n## Matryoshka dimensions\n"
-                "this is not legal advice\n")
+                "## German stress tests\n## Limitations\n## Production default\n"
+                "## Known failure modes\n## Matryoshka dimensions\nthis is not legal advice\n")
         self.assertEqual(VR.check_card_sections("c.md", text, "embedder"), [])
 
     def test_reranker_requires_lift_not_matryoshka(self):
         text = ("## Teacher distillation\n## Training data provenance\n## Leakage policy\n"
-                "## German stress tests\n## Limitations\n## Reranker lift\nnot legal advice\n")
+                "## German stress tests\n## Limitations\n## Production default\n"
+                "## Known failure modes\n## Reranker lift\nnot legal advice\n")
         self.assertEqual(VR.check_card_sections("r.md", text, "reranker"), [])
 
     def test_checklist_reference(self):

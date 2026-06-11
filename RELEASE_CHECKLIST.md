@@ -38,11 +38,27 @@ all **blocking** items pass.
 - [ ] Every reported number has a **run card** (`docs/experiment-registry.md`,
       `outputs/EXPERIMENTS.md` via `scripts/summarize_experiments.py`).
 
+## Blocking — v2 data-scale generalization (run `validate_release_2026.py --require-v2-artifacts`)
+- [ ] v2 source manifest exists + validates (`configs/data_sources_v2.json`); public benchmarks blocked from training.
+- [ ] v2 candidate-building report exists (`candidates_v2.report.json`).
+- [ ] v2 teacher-cache summary exists (`teacher-cache/qwen3_v2.summary.json`); PII + leakage reports clean.
+- [ ] v2 dense retrieval reports exist for GermanQuAD, DT-test, GerDaLIR.
+- [ ] v2 causal-vs-bi+MNTP comparison exists (`summarize_v2_results.py` → V2_RESULTS).
+- [ ] v2 Matryoshka sweep exists.
+- [ ] v2 reranker lift report exists; **reranker promotion gate passes** (no GermanQuAD/DT-test
+      degradation) before any model card calls the reranker "recommended".
+- [ ] Public benchmark datasets are eval-only in BOTH `configs/data_sources_v2.json` and
+      `benchmarks/mteb_german_tasks.json` (enforced by the gate's eval-leakage check).
+- [ ] Every reported v2 number has a run card.
+
 ## Non-blocking — hygiene
 - [ ] `make all` green; CI green on py3.10–3.12.
 - [ ] Working tree clean; release tagged.
 - [ ] `AUDIT.md` completed and signed off.
 
-## Current status (2026-05-28)
-Scaffold complete and validated. **Blocking eval + licensing-of-data items are open** because
-no training/benchmark run has been executed. Not releasable yet — by design.
+## Current status (updated 2026-06-11)
+2026 teacher→student workflow **executed and measured** (v1): causal/bi+MNTP/reranker with
+held-out numbers + run cards (`docs/benchmark-report.md` §6e–§6g). v2 data-scale-generalization
+**infrastructure** is complete and validated (configs, manifest, builders, sharded teacher cache,
+candidate lists, training/orchestration, dashboard, leakage-safe eval, this gate); the v2 **run**
+is not executed yet. **Not release-ready** until the blocking items above are green.

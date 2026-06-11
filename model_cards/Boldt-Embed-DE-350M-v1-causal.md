@@ -149,6 +149,18 @@ Native 1024-d, truncatable to 768 / 512 / 256 / 128 / 64 (re-normalize after tru
 accuracy/footprint trade-off per dimension is reported by the Matryoshka sweep in
 `scripts/eval_hybrid_retrieval.py`.
 
+## Production default
+**Current production default: causal (this variant)**, evidence-driven from the executed runs.
+bi+MNTP is competitive and beats causal in-domain (DT-test 0.967 vs 0.950), but causal keeps a
+slight out-of-domain legal edge at the current budget. Re-decide on v2 results
+(`docs/v2-generalization-plan.md`).
+
+## Known failure modes
+- **Out-of-domain legal** (GerDaLIR 0.078) trails `multilingual-e5-base` (0.134) — no legal data
+  in training; do not rely on it for legal retrieval.
+- **Not legal advice** (see Limitations).
+- In-domain numbers (GermanQuAD/DT-test) are not representative of arbitrary German domains.
+
 ## License
 - **Code:** Apache-2.0.
 - **Base weights:** `Boldt/Boldt-DC-350M` is apache-2.0 (verified 2026-05-28).

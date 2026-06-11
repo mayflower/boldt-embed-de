@@ -98,6 +98,19 @@ and entity disambiguation (`german_adversarial.py`, `benchmarks/stress_cases_de.
 Native 1024-d, truncatable to 768 / 512 / 256 / 128 / 64 (re-normalize after truncation);
 per-dimension trade-off reported by the Matryoshka sweep in `scripts/eval_hybrid_retrieval.py`.
 
+## Production default
+**Current production default: causal (the sibling variant), not this one** — at the current
+300-step budget bi+MNTP wins in-domain (DT-test 0.967) but trails causal slightly on OOD legal.
+The default is evidence-driven and will be re-decided on v2 results.
+
+## Known failure modes
+- **Requires MNTP**: without MNTP pre-adaptation the bidirectional student collapses (DT-test
+  0.401). Always run MNTP first.
+- **Runtime attention patch**: bidirectionality is re-applied on load
+  (`train_modern.apply_bidirectional_to_st`); a consumer that loads the raw weights without the
+  patch gets a causal encoder.
+- **Out-of-domain legal** trails e5; **not legal advice** (see Limitations).
+
 ## License
 - **Code:** Apache-2.0. **Base weights:** apache-2.0 (verified 2026-05-28).
 - **Derivative weights:** intended apache-2.0, contingent on training-data licenses (ADR-004).

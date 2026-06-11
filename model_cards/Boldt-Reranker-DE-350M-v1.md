@@ -113,6 +113,17 @@ top-50 dense first stage (1,000 held-out queries), `outputs/real-training/rerank
 competent in-distribution, **not robustly general**. Same lesson as v2: generalizing needs
 diverse training question-styles + a harder first stage. See `docs/benchmark-report.md` §6f.
 
+## Production default
+**Not recommended for general use yet.** The reranker is competent in-distribution but
+degrades a different question style (GermanQuAD). It may only be labelled "recommended" once the
+**promotion gate** (`scripts/check_reranker_promotion_gate.py`: no GermanQuAD/DT-test
+degradation) passes on v2 — enforced by the release gate.
+
+## Known failure modes
+- **Domain/question-style shift**: lifts DT-test (0.950→0.990) but degrades GermanQuAD
+  (0.886→0.532). Do not deploy as a general reranker until the v2 promotion gate passes.
+- **Not legal advice** (see Limitations); use only as a re-ranking stage over a shortlist.
+
 ## License
 - **Code:** Apache-2.0. **Base weights:** apache-2.0 (verified 2026-05-28).
 - **Derivative weights:** intended apache-2.0, contingent on training-data licenses (ADR-004).
