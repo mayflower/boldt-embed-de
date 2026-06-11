@@ -56,3 +56,27 @@ Benchmarks here are **evaluation-only**. Never feed a benchmark's test corpus in
 both through the *same* fixture and read the gap: the teacher is the ceiling, the student is
 what shipped. The deterministic `local_hashing` stand-in is for verifying the harness, not for
 reporting numbers.
+
+## v2: broader eval (leakage-safe) + public-vs-private-dev
+
+`benchmarks/mteb_german_tasks.json` now defines **task groups** — `retrieval_core`
+(GermanQuAD, GerDaLIR, MLDR-de, MIRACL-de), `semantic_similarity` (STS22-de), `classification`
+(MassiveIntent-de, XNLI-de), `clustering`, and `stress_private` (local fixtures). Every task is
+marked `public_benchmark` / `eval_only: true` / `allowed_for_training: false` / `metric_primary`
+/ `split`. Run a single group with `--task-group`:
+
+```bash
+python scripts/run_baseline_benchmarks.py --models configs/baseline_models.json \
+  --tasks benchmarks/mteb_german_tasks.json --task-group retrieval_core --dry-run
+```
+
+**Leakage guard:** at startup `run_baseline_benchmarks.py` validates the task config
+(`validate_benchmark_tasks`) and cross-checks every eval task's `dataset` against
+`configs/data_sources_v2.json` (`check_eval_leakage_against_manifest`). If any **eval** dataset
+is marked `allowed_for_training` in the manifest, the run **fails** — public test data cannot
+leak into training at the config level.
+
+**Public eval vs private dev:** iterate hyperparameters on **local JSONL fixtures**
+(`stress_private`, `private_dev: true`); do **not** tune against public test labels. Run the
+full MMTEB sweep (`--mode mteb`) only **after freezing** the training config, so the public
+numbers are an honest held-out measurement, not a tuned one.

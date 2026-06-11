@@ -103,6 +103,39 @@ def _eval_local(model_cfg, corpus, queries, device):
     return aggregate(rows)
 
 
+def load_benchmark_tasks(path):
+    """Return the {group: [task,...]} task_groups from a benchmark tasks config."""
+    d = json.loads(pathlib.Path(path).read_text(encoding="utf-8"))
+    return d.get("task_groups", {})
+
+
+def validate_benchmark_tasks(task_groups):
+    """Every benchmark task must be eval-only, not training-allowed, with a primary metric."""
+    errors = []
+    for group, tasks in (task_groups or {}).items():
+        for t in tasks:
+            n = t.get("name", "?")
+            if t.get("eval_only") is not True:
+                errors.append(f"{group}/{n}: eval_only must be true")
+            if t.get("allowed_for_training") is not False:
+                errors.append(f"{group}/{n}: allowed_for_training must be false")
+            if not t.get("metric_primary"):
+                errors.append(f"{group}/{n}: missing metric_primary")
+    return errors
+
+
+def check_eval_leakage_against_manifest(task_groups, manifest_entries):
+    """Flag any benchmark task whose dataset is marked allowed_for_training in the source
+    manifest — that would let an eval set leak into training."""
+    trainable = {e.source_id for e in manifest_entries if e.allowed_for_training}
+    bad = []
+    for group, tasks in (task_groups or {}).items():
+        for t in tasks:
+            if t.get("dataset") in trainable:
+                bad.append(f"{group}/{t.get('name')}: dataset '{t['dataset']}' is training-allowed in the manifest")
+    return bad
+
+
 def _render_md(results, meta):
     lines = ["# Baseline benchmark report", "",
              f"commit: `{meta['commit']}` · torch: {meta['torch']} · "
@@ -126,6 +159,9 @@ def main() -> int:
     ap.add_argument("--eval-queries", default=None)
     ap.add_argument("--qrels", default=None)
     ap.add_argument("--only", nargs="*", default=None, help="restrict to these model ids/substrings")
+    ap.add_argument("--task-group", default=None, help="restrict to one benchmark task group")
+    ap.add_argument("--source-manifest", default=str(ROOT / "configs" / "data_sources_v2.json"),
+                    help="v2 manifest to leakage-check eval tasks against")
     ap.add_argument("--output", default=str(ROOT / "outputs" / "baselines" / "baseline_report.json"))
     ap.add_argument("--limit", type=int, default=None)
     ap.add_argument("--device", default="cuda")
@@ -133,16 +169,39 @@ def main() -> int:
     ap.add_argument("--dry-run", action="store_true")
     args = ap.parse_args()
 
+    # Benchmark-config integrity + eval-leakage guard (whenever the tasks file has task_groups).
+    task_groups = load_benchmark_tasks(args.tasks) if pathlib.Path(args.tasks).exists() else {}
+    if task_groups:
+        errs = validate_benchmark_tasks(task_groups)
+        if args.task_group:
+            if args.task_group not in task_groups:
+                print(f"ERROR: unknown task-group '{args.task_group}' "
+                      f"(have {sorted(task_groups)})", file=sys.stderr)
+                return 2
+            task_groups = {args.task_group: task_groups[args.task_group]}
+        if pathlib.Path(args.source_manifest).exists():
+            from boldt_embed import source_manifest as sm
+            errs += check_eval_leakage_against_manifest(task_groups, sm.load_source_manifest(args.source_manifest))
+        if errs:
+            print("ERROR: benchmark task config invalid / eval-leakage detected:", file=sys.stderr)
+            for e in errs:
+                print(f"  - {e}", file=sys.stderr)
+            return 2
+
     models = load_baseline_models_config(args.models)
     if args.only:
         models = [m for m in models if any(s in m.model_name_or_path for s in args.only)]
     meta = collect_env_metadata()
     print(f"[env] {json.dumps(meta, ensure_ascii=False)}")
-    print(f"[plan] {len(models)} models x mode={args.mode} task={args.task_name}")
+    print(f"[plan] {len(models)} models x mode={args.mode} task={args.task_name}"
+          + (f" task-group={args.task_group}" if args.task_group else ""))
 
     if args.dry_run:
         for m in models:
             print(f"  - {m.model_name_or_path} [{m.backend}] dim={m.expected_dim}")
+        if task_groups:
+            for g, tasks in task_groups.items():
+                print(f"  group {g}: {[t['name'] for t in tasks]}")
         assert "torch" not in sys.modules, "dry-run must not import torch"
         print("dry-run-ok (no ML imports)")
         return 0

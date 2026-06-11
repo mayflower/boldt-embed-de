@@ -36,6 +36,27 @@
       "priority": "medium"
     }
   ],
+  "task_groups": {
+    "retrieval_core": [
+      {"name": "GermanQuADRetrieval", "dataset": "germanquad", "type": "Retrieval", "metric_primary": "ndcg_at_10", "split": "test", "public_benchmark": true, "eval_only": true, "allowed_for_training": false},
+      {"name": "GerDaLIRSmall", "dataset": "gerdalir", "type": "Retrieval", "metric_primary": "ndcg_at_10", "split": "test", "public_benchmark": true, "eval_only": true, "allowed_for_training": false},
+      {"name": "MLDR", "dataset": "mldr_de", "type": "Retrieval", "metric_primary": "ndcg_at_10", "split": "test", "public_benchmark": true, "eval_only": true, "allowed_for_training": false},
+      {"name": "MIRACL", "dataset": "miracl_de", "type": "Retrieval", "metric_primary": "ndcg_at_10", "split": "dev", "public_benchmark": true, "eval_only": true, "allowed_for_training": false}
+    ],
+    "semantic_similarity": [
+      {"name": "STS22", "dataset": "sts22_de", "type": "STS", "metric_primary": "spearman", "split": "test", "public_benchmark": true, "eval_only": true, "allowed_for_training": false}
+    ],
+    "classification": [
+      {"name": "MassiveIntentClassification", "dataset": "massive_de", "type": "Classification", "metric_primary": "accuracy", "split": "test", "public_benchmark": true, "eval_only": true, "allowed_for_training": false},
+      {"name": "XNLI", "dataset": "xnli_de", "type": "Classification", "metric_primary": "accuracy", "split": "test", "public_benchmark": true, "eval_only": true, "allowed_for_training": false}
+    ],
+    "clustering": [
+      {"name": "BlurbsClusteringS2S", "dataset": "blurbs_de", "type": "Clustering", "metric_primary": "v_measure", "split": "test", "public_benchmark": true, "eval_only": true, "allowed_for_training": false}
+    ],
+    "stress_private": [
+      {"name": "german_stress_local", "dataset": "local_stress_fixture", "type": "Retrieval", "metric_primary": "ndcg_at_10", "split": "test", "public_benchmark": false, "eval_only": true, "allowed_for_training": false, "private_dev": true}
+    ]
+  },
   "metrics": [
     "ndcg_at_10",
     "mrr_at_10",
