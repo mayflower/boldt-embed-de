@@ -76,7 +76,42 @@ python scripts/build_teacher_cache.py --input ... --output ... --resume
 - Long German passages: the teachers support up to 32k tokens, but `max_length` in the
   config (default 8192) bounds memory — lower it for short FAQ/admin passages.
 
+## v2: sharding, resume, quality report (50k–250k candidates)
+
+For v2 scale, `build_teacher_cache.py` writes **shards** so scoring is restartable and
+parallelizable:
+
+```bash
+# Sharded scoring (one 8B teacher loaded at a time; --max-length is the memory knob):
+python scripts/build_teacher_cache.py \
+  --input data/processed/candidates_v2.jsonl \
+  --output outputs/teacher-cache/v2/qwen3_v2.jsonl \
+  --mode both --shard-size 5000 --max-length 512 --resume
+#   -> outputs/teacher-cache/v2/qwen3_v2.shard-00000.jsonl, .shard-00001.jsonl, ...
+#   -> outputs/teacher-cache/v2/qwen3_v2.manifest.json
+# Parallel/manual: add --shard-index N to score just one shard.
+```
+
+`--resume` skips already-scored (query_id, doc_id) rows **per shard**. Then check usability
+before training:
+
+```bash
+python scripts/summarize_teacher_cache.py \
+  --input outputs/teacher-cache/v2/qwen3_v2.manifest.json \
+  --output outputs/teacher-cache/v2/qwen3_v2.summary.json \
+  --filter-output outputs/teacher-cache/v2/qwen3_v2.filtered.jsonl \
+  --review-output outputs/teacher-cache/v2/qwen3_v2.review.jsonl \
+  --reranker-threshold 2.0
+```
+
+The summary reports rows by source/domain/license, embedding/reranker score distributions,
+missing-score counts, **suspicious low-scoring positives** (a generated query the teacher can't
+match to its passage = a bad pair), and near-duplicate counts. `--filter-output` keeps positives
+with reranker score ≥ threshold (low-scoring positives go to the review file with a
+`filtering_reason`); negatives are kept for hard-negative mining.
+
 ## Do not commit caches
 
-Generated caches can be many GB. `outputs/teacher-cache/` is git-ignored. Only small JSON/MD
-**reports** under `outputs/` are tracked. Never commit `teacher_scores.jsonl`.
+Generated caches can be many GB. `outputs/teacher-cache/` (incl. `v2/` shards, manifest,
+summary, filtered) is git-ignored. Only small JSON/MD **reports** under `outputs/` are tracked.
+Never commit `teacher_scores.jsonl` or the shard files.

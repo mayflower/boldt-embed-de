@@ -132,6 +132,84 @@ def make_cache_row(candidate: Dict[str, Any], *, embedding_teacher_model: Option
     }
 
 
+def shard_candidates(candidates: Sequence[Dict[str, Any]], shard_size: int
+                     ) -> List[List[Dict[str, Any]]]:
+    """Split candidates into shards of at most ``shard_size`` (deterministic, order-preserving)."""
+    if shard_size <= 0:
+        return [list(candidates)]
+    return [list(candidates[i:i + shard_size]) for i in range(0, len(candidates), shard_size)]
+
+
+def shard_path(out_dir: str | Path, prefix: str, index: int) -> str:
+    return str(Path(out_dir) / f"{prefix}.shard-{index:05d}.jsonl")
+
+
+def _score_distribution(values: Sequence[Any]) -> Dict[str, Any]:
+    import statistics
+    nums = [float(v) for v in values if v is not None]
+    if not nums:
+        return {"n": 0, "missing": len(values)}
+    return {"n": len(nums), "missing": len(values) - len(nums),
+            "min": round(min(nums), 4), "median": round(statistics.median(nums), 4),
+            "mean": round(statistics.mean(nums), 4), "max": round(max(nums), 4)}
+
+
+def summarize_cache(rows: Sequence[Dict[str, Any]], suspicious_low_n: int = 5) -> Dict[str, Any]:
+    """Quality report over a teacher cache (pure stdlib): counts by source/domain/license, score
+    distributions, missing-score counts, suspicious low-scoring positives, near-duplicate counts."""
+    def _counts(key):
+        c: Dict[str, int] = {}
+        for r in rows:
+            v = str(r.get(key) or (r.get("metadata") or {}).get(key) or "unknown")
+            c[v] = c.get(v, 0) + 1
+        return dict(sorted(c.items()))
+
+    positives = [r for r in rows if r.get("positive") is True]
+    pos_rr = [(r.get("reranker_score"), r) for r in positives if r.get("reranker_score") is not None]
+    pos_rr.sort(key=lambda kv: kv[0])
+    pair_hashes = [r.get("pair_hash") for r in rows if r.get("pair_hash")]
+    return {
+        "total_rows": len(rows),
+        "positives": len(positives),
+        "by_source": _counts("source"),
+        "by_domain": _counts("domain"),
+        "by_license": _counts("license"),
+        "embedding_score": _score_distribution([r.get("embedding_score") for r in rows]),
+        "reranker_score": _score_distribution([r.get("reranker_score") for r in rows]),
+        "missing_embedding_score": sum(1 for r in rows if r.get("embedding_score") is None),
+        "missing_reranker_score": sum(1 for r in rows if r.get("reranker_score") is None),
+        "suspicious_low_positives": [
+            {"query": r.get("query", "")[:80], "reranker_score": s}
+            for s, r in pos_rr[:suspicious_low_n]],
+        "near_duplicate_pairs": len(pair_hashes) - len(set(pair_hashes)),
+    }
+
+
+def filter_cache(rows: Sequence[Dict[str, Any]], reranker_threshold: float
+                 ) -> Dict[str, List[Dict[str, Any]]]:
+    """Split into training-keep vs review: positive rows whose reranker score is below threshold
+    go to 'review' (reason recorded); negatives and high-scoring positives are kept. Adds a
+    ``filtering_reason`` field. Pure stdlib."""
+    kept, review = [], []
+    for r in rows:
+        out = dict(r)
+        if r.get("positive") is True:
+            s = r.get("reranker_score")
+            if s is None:
+                out["filtering_reason"] = "kept_positive_no_reranker_score"
+                kept.append(out)
+            elif float(s) >= reranker_threshold:
+                out["filtering_reason"] = None
+                kept.append(out)
+            else:
+                out["filtering_reason"] = f"positive_below_reranker_threshold_{reranker_threshold}"
+                review.append(out)
+        else:
+            out["filtering_reason"] = None
+            kept.append(out)
+    return {"kept": kept, "review": review}
+
+
 def plan_preview_rows(candidates: Sequence[Dict[str, Any]], mode: str,
                       embedding_model: Optional[str], reranker_model: Optional[str],
                       n: int = 3) -> List[Dict[str, Any]]:

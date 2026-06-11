@@ -33,6 +33,65 @@ def _validate_input(candidates):
     return problems
 
 
+def _run_sharded(args, cfg, candidates, emb_name, rr_name) -> int:
+    """Sharded teacher scoring: <out_dir>/<prefix>.shard-NNNNN.jsonl + <prefix>.manifest.json.
+    Resume skips already-scored rows per shard; --shard-index runs a single shard."""
+    out_dir = pathlib.Path(args.output).parent
+    prefix = pathlib.Path(args.output).name
+    if prefix.endswith(".jsonl"):
+        prefix = prefix[:-6]
+    shards = T.shard_candidates(candidates, args.shard_size)
+    indices = [args.shard_index] if args.shard_index is not None else list(range(len(shards)))
+    planned = [(i, T.shard_path(out_dir, prefix, i), len(shards[i]))
+               for i in indices if 0 <= i < len(shards)]
+    print(f"[shard] {len(shards)} shard(s) of <= {args.shard_size}; running {len(planned)} "
+          f"(mode={args.mode})")
+    man_path = out_dir / f"{prefix}.manifest.json"
+
+    if args.dry_run:
+        for i, p, n in planned[:8]:
+            print(f"  shard {i:05d}: {n} rows -> {p}")
+        print(f"  manifest -> {man_path}")
+        assert "torch" not in sys.modules, "dry-run must not import torch"
+        assert "sentence_transformers" not in sys.modules, "dry-run must not import sentence_transformers"
+        print("dry-run-ok (no ML imports)")
+        return 0
+
+    try:
+        import torch  # noqa: F401
+    except ImportError as exc:
+        raise SystemExit(f"Real scoring needs extras: pip install -e '.[train]'. ({exc})")
+
+    out_dir.mkdir(parents=True, exist_ok=True)
+    manifest = {"prefix": prefix, "mode": args.mode, "shard_size": args.shard_size,
+                "n_shards": len(shards), "shards": []}
+    total = 0
+    for i, p, _ in planned:
+        shard = shards[i]
+        if args.resume:
+            shard = T.filter_unscored(shard, T.existing_cache_keys(p))
+        if shard:
+            rows = T.score_candidates_for_queries(
+                shard, cfg, args.mode, device=args.device,
+                batch_size_embedding=args.batch_size_embedding,
+                batch_size_reranker=args.batch_size_reranker)
+            w = T.write_teacher_cache_jsonl(p, rows, append=args.resume)
+            total += w
+            print(f"  shard {i:05d}: wrote {w} -> {p}")
+        else:
+            print(f"  shard {i:05d}: up to date")
+        manifest["shards"].append({"index": i, "path": str(p), "rows": len(shards[i])})
+    man_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
+    card = ER.emit_run_card(args.run_id, "teacher_cache", "scripts/build_teacher_cache.py",
+                            model=f"{emb_name} + {rr_name}", dataset=args.input,
+                            metrics={"rows_written": total, "n_shards": len(planned)},
+                            input_artifacts=[args.input], output_artifacts=[str(man_path)],
+                            notes=f"sharded mode={args.mode} shard_size={args.shard_size}")
+    print(f"[shard] wrote {total} rows across {len(planned)} shard(s); manifest -> {man_path}; "
+          f"run card: {card}")
+    return 0
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--teacher-config", default=str(ROOT / "configs" / "teacher_models.json"))
@@ -45,6 +104,9 @@ def main() -> int:
     ap.add_argument("--resume", action="store_true")
     ap.add_argument("--batch-size-embedding", type=int, default=None)
     ap.add_argument("--batch-size-reranker", type=int, default=None)
+    ap.add_argument("--max-length", type=int, default=None, help="override teacher max_length")
+    ap.add_argument("--shard-size", type=int, default=0, help=">0 enables sharded output")
+    ap.add_argument("--shard-index", type=int, default=None, help="score only this shard (parallel runs)")
     ap.add_argument("--run-id", default=None, help="experiment run id (run card written on success)")
     args = ap.parse_args()
 
@@ -63,6 +125,13 @@ def main() -> int:
     if problems:
         print("ERROR: fix candidate schema problems before scoring.", file=sys.stderr)
         return 2
+
+    if args.max_length:  # memory knob for v2 scale
+        cfg.embedding_teacher.max_length = args.max_length
+        cfg.reranker_teacher.max_length = args.max_length
+
+    if args.shard_size and args.shard_size > 0:
+        return _run_sharded(args, cfg, candidates, emb_name, rr_name)
 
     if args.resume:
         done = T.existing_cache_keys(args.output)
