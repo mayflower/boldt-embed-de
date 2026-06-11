@@ -143,6 +143,24 @@ def domain_balanced_sample(rows: Sequence[Dict[str, Any]], max_per_domain: int
     return out
 
 
+def sample_to_domain_targets(rows: Sequence[Dict[str, Any]], targets: Dict[str, int],
+                             seed: int = 0) -> List[Dict[str, Any]]:
+    """Deterministically sample up to ``targets[domain]`` rows per domain (seeded shuffle).
+    Domains absent from ``targets`` keep all their rows. Returns rows grouped by domain in
+    sorted-domain order for reproducibility."""
+    import random as _random
+    by_domain: Dict[str, List[Dict[str, Any]]] = {}
+    for r in rows:
+        by_domain.setdefault(str(r.get("domain", "unknown")), []).append(r)
+    out: List[Dict[str, Any]] = []
+    for dom in sorted(by_domain):
+        group = list(by_domain[dom])
+        _random.Random(seed).shuffle(group)
+        cap = targets.get(dom)
+        out.extend(group if cap is None else group[:cap])
+    return out
+
+
 def filter_leakage_against_eval_texts(rows: Sequence[Dict[str, Any]],
                                       eval_texts: Iterable[str],
                                       fields: Tuple[str, ...] = ("query", "document"),
