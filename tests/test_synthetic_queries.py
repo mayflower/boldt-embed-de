@@ -57,6 +57,50 @@ class TestGeneration(unittest.TestCase):
         self.assertTrue(any("§ 551" in r["query"] for r in rows))
 
 
+class TestV2Families(unittest.TestCase):
+    def setUp(self):
+        self.passages = list(dp.stream_jsonl(ROOT / "tests" / "fixtures" / "passages_v2.jsonl"))
+
+    def test_families_present(self):
+        rows = sq.generate_synthetic_candidates(self.passages)
+        fams = {r["metadata"]["family"] for r in rows}
+        for f in ("germanquad", "web", "faq", "admin"):
+            self.assertIn(f, fams)
+        self.assertNotIn("negation", fams)  # negation opt-in only
+
+    def test_default_is_all_positive_with_synthetic_flag(self):
+        rows = sq.generate_synthetic_candidates(self.passages)
+        self.assertTrue(all(r["positive"] for r in rows))
+        self.assertTrue(all(r["metadata"]["synthetic"] is True for r in rows))
+        self.assertTrue(all("pair_hash" in r for r in rows))
+
+    def test_negation_family_is_distractor(self):
+        rows = sq.generate_synthetic_candidates(self.passages, families=["negation"])
+        self.assertTrue(rows)
+        self.assertTrue(all(r["positive"] is False for r in rows))
+        self.assertTrue(all(r["metadata"]["family"] == "negation" for r in rows))
+
+    def test_family_filter(self):
+        rows = sq.generate_synthetic_candidates(self.passages, families=["admin"])
+        self.assertTrue(rows)
+        self.assertTrue(all(r["metadata"]["family"] == "admin" for r in rows))
+
+    def test_deterministic_and_german_preserved(self):
+        a = sq.generate_synthetic_candidates(self.passages)
+        b = sq.generate_synthetic_candidates(self.passages)
+        self.assertEqual(a, b)
+        self.assertTrue(any("ü" in r["query"] or "ö" in r["query"] or "ä" in r["query"] or "ß" in r["query"]
+                            or "ü" in r["document"] for r in a))
+
+    def test_min_document_chars_filters(self):
+        short = [{"id": "s", "document": "kurz", "domain": "web", "license": "CC0-1.0"}]
+        self.assertEqual(sq.generate_synthetic_candidates(short, min_document_chars=50), [])
+
+    def test_crosslingual_en_query(self):
+        rows = sq.generate_synthetic_candidates(self.passages, families=["cross_lingual_de_en"])
+        self.assertTrue(any(r["query"].startswith("What is") for r in rows))
+
+
 class TestLocalLLMStub(unittest.TestCase):
     def test_instance_method_raises(self):
         gen = llm.LocalLLMGenerator(model_name="x")

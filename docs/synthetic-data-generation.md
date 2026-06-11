@@ -70,6 +70,36 @@ A generated query whose passage the embedding/reranker teacher scores *low* is a
 (ambiguous, off-topic, or ungrammatical) and is filtered out before training. This keeps
 template noise from polluting the student.
 
+## v2 query families
+
+For data-scale generalization, queries are organized into **families** (`--families`), which
+diversify question style — directly targeting the reranker's GermanQuAD degradation:
+
+| family | examples |
+|---|---|
+| `germanquad` | „Was versteht man unter …?", „Was bedeutet …?", „Wer oder was ist …?", date/number, entity |
+| `web` | keyword, „… erklärung" fragment, orthographic typo variant |
+| `faq` | „Wie kann ich … beantragen?", „Was tun, wenn … nicht funktioniert?", „Ich habe … vergessen" |
+| `admin` | „Welche Unterlagen brauche ich für …?", „Frist für …", „Antrag … online stellen", „§ … Absatz Bedeutung" |
+| `cross_lingual_de_en` | English query over a German document |
+| `negation` | **distractors** („Was hat nichts mit … zu tun?") — `positive=false`, opt-in only |
+
+Defaults emit **all positive families** (negation is opt-in → candidate negatives). Every row
+carries `metadata.family`, `metadata.synthetic=true`, `generation_method`, `template_id`,
+`source_passage_id`, `source_domain`, the inherited `license`, and a stable `pair_hash`. When
+`--queries-per-passage` caps output, selection is **round-robin across families** so a small cap
+still spans styles. CLI also supports `--max-generated-per-source`, `--min-document-chars`,
+`--max-document-chars`.
+
+```bash
+python scripts/generate_synthetic_queries.py --passages data/processed/passages.jsonl \
+  --output data/processed/synthetic_v2.jsonl \
+  --families germanquad web faq admin --queries-per-passage 4 --min-document-chars 40
+```
+
+Public benchmark text is never used as a source passage. Synthetic candidates flow into
+`build_v2_candidates.py` (manifest-gated, leakage-filtered) → `build_teacher_cache.py`.
+
 ## Local-LLM upgrade path (not yet implemented)
 
 `src/boldt_embed/local_llm_generation.py` defines the `LocalLLMGenerator` interface for
