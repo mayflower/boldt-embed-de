@@ -1,0 +1,34 @@
+{
+  "run_id": "v2-eval-bi-gerdalir",
+  "run_type": "eval",
+  "command": "scripts/run_baseline_benchmarks.py",
+  "commit": "1a05590191d9573c84054069f4029bae34bbff22",
+  "date": "2026-06-12T20:14:26.446048+00:00",
+  "hardware": "Linux-6.11.0-1013-gcp-x86_64-with-glibc2.39",
+  "gpu": null,
+  "python": "3.12.13",
+  "torch": "2.6.0+cu124",
+  "transformers": "5.9.0",
+  "sentence_transformers": "5.5.1",
+  "input_artifacts": [
+    "data/processed/eval/gerdalir_corpus.jsonl",
+    "data/processed/eval/gerdalir_queries.jsonl",
+    "data/processed/eval/gerdalir_qrels.jsonl"
+  ],
+  "output_artifacts": [
+    "outputs/v2-generalization/eval/dense_bi_gerdalir.json"
+  ],
+  "model": null,
+  "dataset": "gerdalir",
+  "metrics": {
+    "ndcg@10": 0.09590105401720543,
+    "mrr@10": 0.08662104180127721,
+    "recall@10": 0.14427960329137376,
+    "map@10": 0.07791501187600174,
+    "ndcg@100": 0.1283872624095305,
+    "mrr@100": 0.09250353603875043,
+    "recall@100": 0.3011478549242159,
+    "map@100": 0.08378002699075433
+  },
+  "notes": "baseline benchmark, 1 models, mode=local"
+}

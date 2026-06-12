@@ -1,0 +1,67 @@
+{
+  "total_rows": 44336,
+  "positives": 44336,
+  "by_source": {
+    "dt_de_dpr": 4452,
+    "ger_backtrans_paraphrase": 12500,
+    "local_admin_v2": 7500,
+    "swim_ir_de": 3048,
+    "synthetic_adversarial": 761,
+    "synthetic_cross_lingual_v2": 2500,
+    "synthetic_faq_v2": 7500,
+    "synthetic_legal_v2": 6075
+  },
+  "by_domain": {
+    "admin": 7500,
+    "cross_lingual_de_en": 2500,
+    "faq": 7500,
+    "german_stress": 761,
+    "legal_adjacency_no_eval_overlap": 6075,
+    "web": 12500,
+    "wiki_non_eval": 7500
+  },
+  "by_license": {
+    "unknown": 44336
+  },
+  "embedding_score": {
+    "n": 44336,
+    "missing": 0,
+    "min": 0.0527,
+    "median": 0.5469,
+    "mean": 0.5619,
+    "max": 0.9648
+  },
+  "reranker_score": {
+    "n": 44336,
+    "missing": 0,
+    "min": -14.625,
+    "median": 2.0,
+    "mean": 2.6407,
+    "max": 10.9375
+  },
+  "missing_embedding_score": 0,
+  "missing_reranker_score": 0,
+  "suspicious_low_positives": [
+    {
+      "query": "Nenne das Département und die Region, in denen sich die Pfarrkirche St-Quentin b",
+      "reranker_score": -14.625
+    },
+    {
+      "query": "Welche gesetzliche Regelung gilt für Regierungswechseln?",
+      "reranker_score": -11.125
+    },
+    {
+      "query": "Frist für Kampfhandlungen",
+      "reranker_score": -10.9375
+    },
+    {
+      "query": "Antrag Unternehmens online stellen",
+      "reranker_score": -10.9375
+    },
+    {
+      "query": "Antrag Wirtschaftsgebäuden online stellen",
+      "reranker_score": -10.625
+    }
+  ],
+  "near_duplicate_pairs": 0
+}

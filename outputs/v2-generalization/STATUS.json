@@ -1,0 +1,76 @@
+{
+  "mode": "dry-run",
+  "experiment_id": "v2-data-scale-generalization",
+  "stages": [
+    {
+      "name": "build_candidates",
+      "gpu": false,
+      "status": "planned"
+    },
+    {
+      "name": "generate_synthetic",
+      "gpu": false,
+      "status": "planned"
+    },
+    {
+      "name": "teacher_cache",
+      "gpu": true,
+      "status": "planned"
+    },
+    {
+      "name": "summarize_filter_cache",
+      "gpu": false,
+      "status": "planned"
+    },
+    {
+      "name": "mine_hard_negatives",
+      "gpu": false,
+      "status": "planned"
+    },
+    {
+      "name": "reranker_candidate_lists",
+      "gpu": false,
+      "status": "planned"
+    },
+    {
+      "name": "train_causal",
+      "gpu": true,
+      "status": "planned"
+    },
+    {
+      "name": "prepare_bi_mntp",
+      "gpu": true,
+      "status": "planned"
+    },
+    {
+      "name": "train_bi_mntp",
+      "gpu": true,
+      "status": "planned"
+    },
+    {
+      "name": "train_reranker",
+      "gpu": true,
+      "status": "planned"
+    },
+    {
+      "name": "eval_dense_germanquad",
+      "gpu": true,
+      "status": "planned"
+    },
+    {
+      "name": "eval_dense_dt_test",
+      "gpu": true,
+      "status": "planned"
+    },
+    {
+      "name": "eval_dense_gerdalir",
+      "gpu": true,
+      "status": "planned"
+    },
+    {
+      "name": "summarize_results",
+      "gpu": false,
+      "status": "planned"
+    }
+  ]
+}

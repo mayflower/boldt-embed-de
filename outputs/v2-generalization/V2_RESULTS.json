@@ -1,0 +1,81 @@
+{
+  "verdict": "mixed",
+  "criteria_passed": "3/5",
+  "reranker_promotion_gate": "fail",
+  "dense": {
+    "germanquad": {
+      "v1": {
+        "Boldt-DC-350M": 0.2879650789364867,
+        "boldt-modern-de": 0.8831334574978987,
+        "multilingual-e5-base": 0.9388648472161265
+      },
+      "v2": {
+        "Boldt-DC-350M": 0.2879650789364867,
+        "boldt-modern-causal-v2": 0.8857504605906706,
+        "multilingual-e5-base": 0.9388648472161265
+      }
+    },
+    "dt_test": {
+      "v1": {
+        "Boldt-DC-350M": 0.22260695311181372,
+        "boldt-modern-de": 0.9501286162324378,
+        "multilingual-e5-base": 0.9935873898144528
+      },
+      "v2": {
+        "Boldt-DC-350M": 0.22260695311181372,
+        "boldt-modern-causal-v2": 0.9442777883635152,
+        "multilingual-e5-base": 0.9935873898144528
+      }
+    },
+    "gerdalir": {
+      "v1": {
+        "Boldt-DC-350M": 0.0021202301571267164,
+        "boldt-modern-de": 0.07818485477726753,
+        "multilingual-e5-base": 0.13425593925752854
+      },
+      "v2": {
+        "Boldt-DC-350M": 0.0029451816598497025,
+        "boldt-modern-causal-v2": 0.10958224482523524,
+        "multilingual-e5-base": 0.1530158905028875
+      }
+    }
+  },
+  "reranker_delta": {
+    "dt_test": 0.0348,
+    "germanquad": -0.0397
+  },
+  "matryoshka_256_retention": 0.9719,
+  "checks": {
+    "dense_germanquad_ndcg10": {
+      "value": 0.8857504605906706,
+      "min": 0.88,
+      "pass": true
+    },
+    "dense_dt_test_ndcg10": {
+      "value": 0.9442777883635152,
+      "min": 0.95,
+      "pass": false
+    },
+    "dense_gerdalir_ndcg10": {
+      "value": 0.10958224482523524,
+      "min": 0.1,
+      "pass": true
+    },
+    "reranker_germanquad_delta": {
+      "value": -0.0397,
+      "min": 0.0,
+      "pass": false
+    },
+    "matryoshka_256_retention": {
+      "value": 0.9719,
+      "min": 0.95,
+      "pass": true
+    }
+  },
+  "recommendations": [
+    "dense_dt_test_ndcg10: 0.9442777883635152 < target 0.95 — scale/diversify v2 data or retrain.",
+    "reranker_germanquad_delta: -0.0397 < target 0.0 — scale/diversify v2 data or retrain.",
+    "reranker promotion gate FAILED (degrades a held-out set) — do not promote; train on more diverse candidate lists."
+  ],
+  "warnings": []
+}

@@ -1,0 +1,20 @@
+{
+  "status": "fail",
+  "dt_test": {
+    "first_stage": 0.9503255217482516,
+    "reranked": 0.9851277180654713,
+    "delta": 0.0348
+  },
+  "germanquad": {
+    "first_stage": 0.8861606090543086,
+    "reranked": 0.8465032542594634,
+    "delta": -0.0397,
+    "target": 0.02,
+    "target_met": false
+  },
+  "additional": [],
+  "checks": {
+    "dt_test_delta_nonneg": true,
+    "germanquad_delta_nonneg": false
+  }
+}

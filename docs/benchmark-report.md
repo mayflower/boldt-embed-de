@@ -232,6 +232,66 @@ The bidirectional patch is persisted-on-load (re-applied at eval), so these numb
 genuinely bidirectional encoder, not a causal one. Run cards: `outputs/run-cards/real-mntp.json`,
 `real-train-embedder-bi*.json`, `real-eval-bi*-*.json`.
 
+### 6h. v2 data-scale-generalization — EXECUTED (2026-06-11/12, RTX A6000)
+
+The v2 experiment asks: **does scaling teacher-validated training data and adding domain
+diversity improve generalization** (esp. out-of-domain legal) over the §6e/§6g v1 students?
+
+**Data (real, leakage-filtered, PII-scrubbed).** A **44,336-candidate** multi-domain set
+(`scripts/acquire_v2_sources.py` → `build_v2_candidates.py`): real HF sources — `dt_de_dpr`
+(wiki), `ger_backtrans_paraphrase` (web: TED/news/Europarl), `swim_ir_de` (wiki) — plus the
+real adversarial stress set, plus **honestly-synthetic query families generated over REAL
+Wikipedia passages** for the domains with no licensed corpus on disk (faq/admin/legal-adjacent/
+cross-lingual; documents are real, only query phrasing is templated). Manifest-gated, dedup'd,
+PII-dropped (48 rows: ipv4/phone), leakage-filtered vs GermanQuAD+DT-test contexts (20 rows).
+Both 8B Qwen3 teachers scored all 44,336 pairs; the reranker-threshold≥2.0 filter kept
+**22,181 teacher-validated positives** (~2.4× v1). **Honest finding from the teacher filter:**
+the real sources validated at 95–99% but the *synthetic-query* domains mostly did **not**
+(admin 4.8%, faq 5.7% ≥2.0) — templated queries over wiki passages are weak matches, so the
+effective training set is web+wiki-dominated.
+
+**Causal student (same recipe as §6e, 600 steps on the larger set), nDCG@10:**
+
+| Held-out set | base | v1 causal (§6e) | **v2 causal** | v2 success min | e5-base |
+|---|---:|---:|---:|---:|---:|
+| GermanQuAD | 0.288 | 0.883 | **0.886** | 0.88 ✓ | 0.939 |
+| DT-test | 0.223 | 0.950 | **0.944** | 0.95 ✗ | 0.994 |
+| GerDaLIR (legal, OOD) | 0.003 | 0.078 | **0.110** | 0.10 ✓ | 0.134 |
+
+**Headline (honest):** more teacher-validated data + domain diversity left **in-domain flat**
+(GermanQuAD +0.003, DT-test −0.006 — within noise) but **improved OOD legal generalization
++41% relative (0.078 → 0.110)**, crossing the 0.10 target and narrowing the e5 gap (58%→72%
+of e5). This is the v2 goal realized, with the cost that the synthetic in-domain queries did
+not survive teacher validation. Matryoshka 256-d retention **0.972** (≥0.95 ✓).
+
+**Bidirectional (bi+MNTP, 600 MNTP + 600 contrastive steps), nDCG@10:** 0.815 / 0.870 / 0.096
+— **underperforms v2 causal on all three.** v2's MNTP texts include noisier multi-domain
+documents than v1's clean wiki; causal stays the production default.
+
+**Reranker (mixed loss over distribution-aware candidate lists), lift over a fixed first stage:**
+
+| Held-out set | first stage | + v1 reranker (§6f) | + **v2 reranker** |
+|---|---:|---:|---:|
+| DT-test (in-domain) | 0.950 | 0.990 (+0.040) | 0.985 (**+0.035**) |
+| GermanQuAD (diff. style) | 0.886 | 0.532 (**−0.354**) | 0.847 (**−0.040**) |
+
+**The v2 reranker fix worked but is incomplete:** multi-source candidate lists cut the
+cross-distribution GermanQuAD degradation **~9×** (−0.354 → −0.040), yet it is still negative,
+so the **promotion gate FAILS** (`check_reranker_promotion_gate.py`) and the reranker stays
+*not recommended*. Likely cause: the capped candidate-list pool inherits the weak synthetic
+positives (pos teacher-median 5.0 ≤ neg median 5.7), so labels are noisy.
+
+**Verdict (`summarize_v2_results.py`): MIXED — 3/5 criteria, reranker gate fail.** Release gate
+`validate_release_2026.py --require-v2-artifacts` is **red** (reranker promotion) — **not
+release-ready**, by design. Run cards: `outputs/run-cards/v2-*.json`; artifacts under
+`outputs/v2-generalization/` (`V2_RESULTS.md`, `eval/dense_*.json`, `reranker-lift-*-v2.json`,
+`real_matryoshka_germanquad.json`).
+
+**Known v2 inefficiencies surfaced (impl-repo follow-ups):** pure-Python `data.find_leakage`
+and `negative_mining_2026.bm25_rank` (rebuilds the index per query) are O(n·m) and do not scale
+to the full candidate set — leakage was filtered against GermanQuAD+DT only, and hard-neg /
+reranker-list mining was run over a domain-balanced ~3.5k subset (logged, not silently capped).
+
 ## 7. Matryoshka truncation analysis
 Storage scales linearly with dim (fp32): 1024→4096 B, 512→2048 B, 256→1024 B, 128→512 B,
 64→256 B/vector. The HashingEncoder by-dim retrieval (toy) stays near-perfect down to 64 dims

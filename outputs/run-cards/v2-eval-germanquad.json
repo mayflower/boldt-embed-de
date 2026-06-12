@@ -1,0 +1,34 @@
+{
+  "run_id": "v2-eval-germanquad",
+  "run_type": "eval",
+  "command": "scripts/run_baseline_benchmarks.py",
+  "commit": "1a05590191d9573c84054069f4029bae34bbff22",
+  "date": "2026-06-11T20:07:25.190618+00:00",
+  "hardware": "Linux-6.11.0-1013-gcp-x86_64-with-glibc2.39",
+  "gpu": null,
+  "python": "3.12.13",
+  "torch": "2.6.0+cu124",
+  "transformers": "5.9.0",
+  "sentence_transformers": "5.5.1",
+  "input_artifacts": [
+    "data/processed/eval/germanquad_corpus.jsonl",
+    "data/processed/eval/germanquad_queries.jsonl",
+    "data/processed/eval/germanquad_qrels.jsonl"
+  ],
+  "output_artifacts": [
+    "outputs/v2-generalization/eval/dense_germanquad.json"
+  ],
+  "model": null,
+  "dataset": "germanquad",
+  "metrics": {
+    "ndcg@10": 0.2879650789364867,
+    "mrr@10": 0.25563492063492066,
+    "recall@10": 0.39066666666666666,
+    "map@10": 0.25563492063492066,
+    "ndcg@100": 0.31716056978827634,
+    "mrr@100": 0.2614597059579836,
+    "recall@100": 0.5293333333333333,
+    "map@100": 0.2614597059579836
+  },
+  "notes": "baseline benchmark, 3 models, mode=local"
+}

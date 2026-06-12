@@ -79,6 +79,45 @@
       "expected_fields": {"query": "query", "document": "document"}
     },
     {
+      "source_id": "synthetic_faq_v2",
+      "display_name": "German FAQ-style synthetic queries over real passages (v2)",
+      "source_type": "synthetic",
+      "domain": "faq",
+      "license": "synthetic-inherits-source",
+      "allowed_for_training": true,
+      "public_benchmark": false,
+      "eval_only": false,
+      "notes": "FAQ/colloquial query families (synthetic_queries.py, families=faq) generated over REAL German Wikipedia passages (dt_de_dpr). Documents are real; only the query phrasing is synthetic. License inherited from the seed passages (CC-BY-SA-4.0). Teacher pass drops low-scoring pairs.",
+      "loader": {"kind": "jsonl", "path_or_id": "data/raw/v2/synthetic_faq_v2.jsonl"},
+      "expected_fields": {"query": "query", "document": "document"}
+    },
+    {
+      "source_id": "synthetic_legal_v2",
+      "display_name": "German legal-adjacent synthetic queries over real passages (v2)",
+      "source_type": "synthetic",
+      "domain": "legal_adjacency_no_eval_overlap",
+      "license": "synthetic-inherits-source",
+      "allowed_for_training": true,
+      "public_benchmark": false,
+      "eval_only": false,
+      "notes": "Legal/admin query families (synthetic_queries.py, families=admin) generated over REAL German Wikipedia passages that mention legal markers (Gesetz/Verordnung/Paragraph/BGB/SGB). NOT GerDaLIR; leakage-filtered against the eval corpora. Documents real; query phrasing synthetic.",
+      "loader": {"kind": "jsonl", "path_or_id": "data/raw/v2/synthetic_legal_v2.jsonl"},
+      "expected_fields": {"query": "query", "document": "document"}
+    },
+    {
+      "source_id": "synthetic_cross_lingual_v2",
+      "display_name": "English-query / German-document synthetic pairs (v2)",
+      "source_type": "synthetic",
+      "domain": "cross_lingual_de_en",
+      "license": "synthetic-inherits-source",
+      "allowed_for_training": true,
+      "public_benchmark": false,
+      "eval_only": false,
+      "notes": "Cross-lingual query family (synthetic_queries.py, families=cross_lingual_de_en): English question over a REAL German Wikipedia passage. Documents real; query phrasing synthetic. License inherited from the seed passages.",
+      "loader": {"kind": "jsonl", "path_or_id": "data/raw/v2/synthetic_cross_lingual_v2.jsonl"},
+      "expected_fields": {"query": "query", "document": "document"}
+    },
+    {
       "source_id": "mmarco_de",
       "display_name": "unicamp-dl/mmarco (german) — FUTURE",
       "source_type": "hf_dataset",

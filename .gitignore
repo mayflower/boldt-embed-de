@@ -41,3 +41,8 @@ mteb_results/
 outputs/teacher-cache/
 
 .DS_Store
+
+# v2 run: large intermediate data + teacher-cache shards (keep small *.json summaries/reports)
+outputs/**/teacher-cache/*.jsonl
+outputs/v2-generalization/*.jsonl
+outputs/v2-generalization/*.log

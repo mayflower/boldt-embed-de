@@ -1,0 +1,34 @@
+{
+  "run_id": "v2-eval-dt_test",
+  "run_type": "eval",
+  "command": "scripts/run_baseline_benchmarks.py",
+  "commit": "1a05590191d9573c84054069f4029bae34bbff22",
+  "date": "2026-06-11T20:08:56.149530+00:00",
+  "hardware": "Linux-6.11.0-1013-gcp-x86_64-with-glibc2.39",
+  "gpu": null,
+  "python": "3.12.13",
+  "torch": "2.6.0+cu124",
+  "transformers": "5.9.0",
+  "sentence_transformers": "5.5.1",
+  "input_artifacts": [
+    "data/processed/eval/dt_test_corpus.jsonl",
+    "data/processed/eval/dt_test_queries.jsonl",
+    "data/processed/eval/dt_test_qrels.jsonl"
+  ],
+  "output_artifacts": [
+    "outputs/v2-generalization/eval/dense_dt_test.json"
+  ],
+  "model": null,
+  "dataset": "dt_test",
+  "metrics": {
+    "ndcg@10": 0.22260695311181372,
+    "mrr@10": 0.19505753968253967,
+    "recall@10": 0.312,
+    "map@10": 0.19505753968253967,
+    "ndcg@100": 0.26973112398664545,
+    "mrr@100": 0.20352136929521816,
+    "recall@100": 0.546,
+    "map@100": 0.20352136929521816
+  },
+  "notes": "baseline benchmark, 3 models, mode=local"
+}

@@ -1,0 +1,18 @@
+{
+  "admit": {
+    "blocked_unknown_source": 0,
+    "blocked_not_allowed_for_training": 0,
+    "blocked_missing_fields": 0,
+    "admitted": 62385
+  },
+  "domains": {
+    "admin": 7500,
+    "cross_lingual_de_en": 2500,
+    "faq": 7500,
+    "german_stress": 761,
+    "legal_adjacency_no_eval_overlap": 6075,
+    "web": 12500,
+    "wiki_non_eval": 7500
+  },
+  "total": 44336
+}

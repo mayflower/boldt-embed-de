@@ -1,0 +1,24 @@
+{
+  "run_id": "v2-matryoshka-gq",
+  "run_type": "eval",
+  "command": "scripts/eval_matryoshka_sweep.py",
+  "commit": "1a05590191d9573c84054069f4029bae34bbff22",
+  "date": "2026-06-11T20:23:55.232515+00:00",
+  "hardware": "Linux-6.11.0-1013-gcp-x86_64-with-glibc2.39",
+  "gpu": null,
+  "python": "3.12.13",
+  "torch": "2.6.0+cu124",
+  "transformers": "5.9.0",
+  "sentence_transformers": "5.5.1",
+  "input_artifacts": [],
+  "output_artifacts": [
+    "outputs/v2-generalization/real_matryoshka_germanquad.json"
+  ],
+  "model": "boldt-modern-causal-v2",
+  "dataset": "germanquad",
+  "metrics": {
+    "ndcg@10_dim256": 0.8603,
+    "ndcg@10_dim1024": 0.8852
+  },
+  "notes": ""
+}

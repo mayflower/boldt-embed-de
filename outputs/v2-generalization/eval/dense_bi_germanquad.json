@@ -1,0 +1,35 @@
+{
+  "status": "ok",
+  "mode": "local",
+  "task": "germanquad",
+  "n_queries": 1500,
+  "n_corpus": 474,
+  "run_metadata": {
+    "command": "scripts/run_baseline_benchmarks.py",
+    "commit": "1a05590191d9573c84054069f4029bae34bbff22",
+    "python": "3.12.13",
+    "platform": "Linux-6.11.0-1013-gcp-x86_64-with-glibc2.39",
+    "torch": "2.6.0+cu124",
+    "transformers": "5.9.0",
+    "sentence_transformers": "5.5.1",
+    "mteb": null
+  },
+  "results": [
+    {
+      "model": "outputs/v2-generalization/checkpoints/boldt-modern-bi-mntp-v2",
+      "task": "germanquad",
+      "backend": "local_boldt",
+      "split": "test",
+      "metrics": {
+        "ndcg@10": 0.8148961190270061,
+        "mrr@10": 0.7741285714285714,
+        "recall@10": 0.94,
+        "map@10": 0.7741285714285714,
+        "ndcg@100": 0.8275518045758158,
+        "mrr@100": 0.7770898345126587,
+        "recall@100": 0.9953333333333333,
+        "map@100": 0.7770898345126587
+      }
+    }
+  ]
+}
