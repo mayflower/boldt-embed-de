@@ -127,6 +127,52 @@ def training_sources(entries: List[SourceEntry]) -> List[SourceEntry]:
     return [e for e in entries if e.allowed_for_training]
 
 
+def license_origin_for(license_str: str | None) -> str:
+    """Where a row's license came from: a manifest source carrying a concrete license
+    (``manifest``) vs a synthetic source whose license is inherited from its seed passages
+    (``inherited``, e.g. the manifest marker ``synthetic-inherits-source``)."""
+    return "inherited" if "inherit" in (license_str or "").lower() else "manifest"
+
+
+def candidate_provenance(entry: SourceEntry, row: Dict[str, Any] | None = None) -> Dict[str, Any]:
+    """Full, explicit provenance for a candidate row built from a manifest source.
+
+    The manifest is authoritative for ``allowed_for_training`` and the *kind* of license.
+    For inherited (synthetic) sources we prefer a CONCRETE inherited license carried on the
+    raw row (set by the generator from the seed passage) over the bare ``...-inherits-source``
+    marker, and record ``inherited_from_source_id`` when the row knows its seed.
+
+    Always returns: source_id, source, license, license_origin, allowed_for_training. Adds
+    license_url and inherited_from_source_id only when known. (domain is set by the caller.)
+    """
+    row = row or {}
+    meta = row.get("metadata") if isinstance(row.get("metadata"), dict) else {}
+    origin = license_origin_for(entry.license)
+    if origin == "inherited":
+        row_lic = row.get("license")
+        concrete = (row_lic if isinstance(row_lic, str) and row_lic.strip()
+                    and "inherit" not in row_lic.lower() else None)
+        license_ = concrete or entry.license
+    else:
+        license_ = entry.license
+    prov: Dict[str, Any] = {
+        "source_id": entry.source_id,
+        "source": entry.source_id,
+        "license": license_,
+        "license_origin": origin,
+        "allowed_for_training": bool(entry.allowed_for_training),
+    }
+    url = row.get("license_url") or meta.get("license_url") or entry.raw.get("license_url")
+    if url:
+        prov["license_url"] = url
+    if origin == "inherited":
+        ifrom = (row.get("inherited_from_source_id") or meta.get("inherited_from_source_id")
+                 or meta.get("source_passage_source") or row.get("source_passage_source"))
+        if ifrom:
+            prov["inherited_from_source_id"] = ifrom
+    return prov
+
+
 def render_markdown(entries: List[SourceEntry]) -> str:
     lines = ["# v2 data sources", "",
              "| source_id | domain | license | train? | eval_only | public_bench |",

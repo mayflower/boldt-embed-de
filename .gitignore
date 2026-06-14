@@ -46,3 +46,10 @@ outputs/teacher-cache/
 outputs/**/teacher-cache/*.jsonl
 outputs/v2-generalization/*.jsonl
 outputs/v2-generalization/*.log
+
+# v3 run: large intermediate data (keep small *.json/*.md reports + run cards)
+outputs/v3-real-domain/*.jsonl
+outputs/v3-real-domain/*.log
+outputs/v3-real-domain/leakage/*.jsonl
+outputs/v3-real-domain/leakage/eval_index.json
+outputs/v3-real-domain/bm25_v3.json

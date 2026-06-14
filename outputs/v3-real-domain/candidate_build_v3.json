@@ -1,0 +1,136 @@
+{
+  "totals": {
+    "admitted_pairs": 42683,
+    "selected_pairs": 24761,
+    "passages": 0,
+    "real_domains_with_pairs": [
+      "faq_real"
+    ]
+  },
+  "dropped_by_reason": {
+    "blocked_source": 4,
+    "no_data": 0,
+    "missing_fields": 0,
+    "unknown_license": 0,
+    "dedup": 334,
+    "pii": 80,
+    "leakage": 0
+  },
+  "blocked_sources": [
+    {
+      "source_id": "admin_real_local",
+      "domain": "admin_real",
+      "reason": "license_unverified"
+    },
+    {
+      "source_id": "legal_adjacency_real_local",
+      "domain": "legal_adjacency_real_no_eval_overlap",
+      "reason": "license_unverified"
+    },
+    {
+      "source_id": "mmarco_de",
+      "domain": "web",
+      "reason": "license_unverified"
+    },
+    {
+      "source_id": "clips_mqa_de",
+      "domain": "faq_real",
+      "reason": "license_unverified"
+    }
+  ],
+  "quota": {
+    "by_domain": {
+      "admin_real": {
+        "target": 6000,
+        "total": 0,
+        "real": 0,
+        "synthetic": 0,
+        "counted_toward_target": 0,
+        "achieved": false
+      },
+      "cross_lingual_de_en": {
+        "target": 2000,
+        "total": 0,
+        "real": 0,
+        "synthetic": 0,
+        "counted_toward_target": 0,
+        "achieved": false
+      },
+      "faq_real": {
+        "target": 6000,
+        "total": 6000,
+        "real": 6000,
+        "synthetic": 0,
+        "counted_toward_target": 6000,
+        "achieved": true
+      },
+      "german_stress": {
+        "target": 2000,
+        "total": 761,
+        "real": 0,
+        "synthetic": 761,
+        "counted_toward_target": 761,
+        "achieved": false
+      },
+      "legal_adjacency_real_no_eval_overlap": {
+        "target": 6000,
+        "total": 0,
+        "real": 0,
+        "synthetic": 0,
+        "counted_toward_target": 0,
+        "achieved": false
+      },
+      "web": {
+        "target": 10000,
+        "total": 10000,
+        "real": 10000,
+        "synthetic": 0,
+        "counted_toward_target": 10000,
+        "achieved": true
+      },
+      "wiki_non_eval": {
+        "target": 8000,
+        "total": 8000,
+        "real": 8000,
+        "synthetic": 0,
+        "counted_toward_target": 8000,
+        "achieved": true
+      }
+    },
+    "missed": [
+      {
+        "domain": "admin_real",
+        "target": 6000,
+        "counted": 0,
+        "real_domain": true
+      },
+      {
+        "domain": "cross_lingual_de_en",
+        "target": 2000,
+        "counted": 0,
+        "real_domain": false
+      },
+      {
+        "domain": "german_stress",
+        "target": 2000,
+        "counted": 761,
+        "real_domain": false
+      },
+      {
+        "domain": "legal_adjacency_real_no_eval_overlap",
+        "target": 6000,
+        "counted": 0,
+        "real_domain": true
+      }
+    ]
+  },
+  "domain_counts_selected": {
+    "faq_real": 6000,
+    "german_stress": 761,
+    "web": 10000,
+    "wiki_non_eval": 8000
+  },
+  "passages_by_domain": {},
+  "status": "ok",
+  "leakage_index_used": true
+}

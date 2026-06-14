@@ -1,0 +1,526 @@
+{
+  "status": "pass",
+  "thresholds": {
+    "embedder": 2.0,
+    "reranker": 4.0,
+    "per_domain_embedder": {},
+    "per_domain_reranker": {}
+  },
+  "sweep_overall": {
+    "total_positives": 24761,
+    "by_threshold": {
+      "-2": {
+        "accepted": 24397,
+        "rate": 0.9853
+      },
+      "0": {
+        "accepted": 23235,
+        "rate": 0.9384
+      },
+      "1": {
+        "accepted": 22884,
+        "rate": 0.9242
+      },
+      "2": {
+        "accepted": 22736,
+        "rate": 0.9182
+      },
+      "3": {
+        "accepted": 22380,
+        "rate": 0.9038
+      },
+      "4": {
+        "accepted": 21676,
+        "rate": 0.8754
+      },
+      "5": {
+        "accepted": 20804,
+        "rate": 0.8402
+      }
+    }
+  },
+  "sweep_by_domain": {
+    "faq_real": {
+      "total_positives": 6000,
+      "by_threshold": {
+        "-2": {
+          "accepted": 5720,
+          "rate": 0.9533
+        },
+        "0": {
+          "accepted": 4636,
+          "rate": 0.7727
+        },
+        "1": {
+          "accepted": 4333,
+          "rate": 0.7222
+        },
+        "2": {
+          "accepted": 4248,
+          "rate": 0.708
+        },
+        "3": {
+          "accepted": 4007,
+          "rate": 0.6678
+        },
+        "4": {
+          "accepted": 3520,
+          "rate": 0.5867
+        },
+        "5": {
+          "accepted": 3207,
+          "rate": 0.5345
+        }
+      }
+    },
+    "german_stress": {
+      "total_positives": 761,
+      "by_threshold": {
+        "-2": {
+          "accepted": 761,
+          "rate": 1.0
+        },
+        "0": {
+          "accepted": 758,
+          "rate": 0.9961
+        },
+        "1": {
+          "accepted": 755,
+          "rate": 0.9921
+        },
+        "2": {
+          "accepted": 750,
+          "rate": 0.9855
+        },
+        "3": {
+          "accepted": 744,
+          "rate": 0.9777
+        },
+        "4": {
+          "accepted": 733,
+          "rate": 0.9632
+        },
+        "5": {
+          "accepted": 676,
+          "rate": 0.8883
+        }
+      }
+    },
+    "web": {
+      "total_positives": 10000,
+      "by_threshold": {
+        "-2": {
+          "accepted": 9961,
+          "rate": 0.9961
+        },
+        "0": {
+          "accepted": 9940,
+          "rate": 0.994
+        },
+        "1": {
+          "accepted": 9917,
+          "rate": 0.9917
+        },
+        "2": {
+          "accepted": 9879,
+          "rate": 0.9879
+        },
+        "3": {
+          "accepted": 9810,
+          "rate": 0.981
+        },
+        "4": {
+          "accepted": 9684,
+          "rate": 0.9684
+        },
+        "5": {
+          "accepted": 9430,
+          "rate": 0.943
+        }
+      }
+    },
+    "wiki_non_eval": {
+      "total_positives": 8000,
+      "by_threshold": {
+        "-2": {
+          "accepted": 7955,
+          "rate": 0.9944
+        },
+        "0": {
+          "accepted": 7901,
+          "rate": 0.9876
+        },
+        "1": {
+          "accepted": 7879,
+          "rate": 0.9849
+        },
+        "2": {
+          "accepted": 7859,
+          "rate": 0.9824
+        },
+        "3": {
+          "accepted": 7819,
+          "rate": 0.9774
+        },
+        "4": {
+          "accepted": 7739,
+          "rate": 0.9674
+        },
+        "5": {
+          "accepted": 7491,
+          "rate": 0.9364
+        }
+      }
+    }
+  },
+  "sweep_by_source": {
+    "dt_de_dpr": {
+      "total_positives": 8000,
+      "by_threshold": {
+        "-2": {
+          "accepted": 7955,
+          "rate": 0.9944
+        },
+        "0": {
+          "accepted": 7901,
+          "rate": 0.9876
+        },
+        "1": {
+          "accepted": 7879,
+          "rate": 0.9849
+        },
+        "2": {
+          "accepted": 7859,
+          "rate": 0.9824
+        },
+        "3": {
+          "accepted": 7819,
+          "rate": 0.9774
+        },
+        "4": {
+          "accepted": 7739,
+          "rate": 0.9674
+        },
+        "5": {
+          "accepted": 7491,
+          "rate": 0.9364
+        }
+      }
+    },
+    "faq_real_local": {
+      "total_positives": 6000,
+      "by_threshold": {
+        "-2": {
+          "accepted": 5720,
+          "rate": 0.9533
+        },
+        "0": {
+          "accepted": 4636,
+          "rate": 0.7727
+        },
+        "1": {
+          "accepted": 4333,
+          "rate": 0.7222
+        },
+        "2": {
+          "accepted": 4248,
+          "rate": 0.708
+        },
+        "3": {
+          "accepted": 4007,
+          "rate": 0.6678
+        },
+        "4": {
+          "accepted": 3520,
+          "rate": 0.5867
+        },
+        "5": {
+          "accepted": 3207,
+          "rate": 0.5345
+        }
+      }
+    },
+    "ger_backtrans_paraphrase": {
+      "total_positives": 10000,
+      "by_threshold": {
+        "-2": {
+          "accepted": 9961,
+          "rate": 0.9961
+        },
+        "0": {
+          "accepted": 9940,
+          "rate": 0.994
+        },
+        "1": {
+          "accepted": 9917,
+          "rate": 0.9917
+        },
+        "2": {
+          "accepted": 9879,
+          "rate": 0.9879
+        },
+        "3": {
+          "accepted": 9810,
+          "rate": 0.981
+        },
+        "4": {
+          "accepted": 9684,
+          "rate": 0.9684
+        },
+        "5": {
+          "accepted": 9430,
+          "rate": 0.943
+        }
+      }
+    },
+    "synthetic_adversarial": {
+      "total_positives": 761,
+      "by_threshold": {
+        "-2": {
+          "accepted": 761,
+          "rate": 1.0
+        },
+        "0": {
+          "accepted": 758,
+          "rate": 0.9961
+        },
+        "1": {
+          "accepted": 755,
+          "rate": 0.9921
+        },
+        "2": {
+          "accepted": 750,
+          "rate": 0.9855
+        },
+        "3": {
+          "accepted": 744,
+          "rate": 0.9777
+        },
+        "4": {
+          "accepted": 733,
+          "rate": 0.9632
+        },
+        "5": {
+          "accepted": 676,
+          "rate": 0.8883
+        }
+      }
+    }
+  },
+  "sweep_by_license": {
+    "CC-BY-4.0": {
+      "total_positives": 6000,
+      "by_threshold": {
+        "-2": {
+          "accepted": 5720,
+          "rate": 0.9533
+        },
+        "0": {
+          "accepted": 4636,
+          "rate": 0.7727
+        },
+        "1": {
+          "accepted": 4333,
+          "rate": 0.7222
+        },
+        "2": {
+          "accepted": 4248,
+          "rate": 0.708
+        },
+        "3": {
+          "accepted": 4007,
+          "rate": 0.6678
+        },
+        "4": {
+          "accepted": 3520,
+          "rate": 0.5867
+        },
+        "5": {
+          "accepted": 3207,
+          "rate": 0.5345
+        }
+      }
+    },
+    "CC-BY-SA-4.0": {
+      "total_positives": 18000,
+      "by_threshold": {
+        "-2": {
+          "accepted": 17916,
+          "rate": 0.9953
+        },
+        "0": {
+          "accepted": 17841,
+          "rate": 0.9912
+        },
+        "1": {
+          "accepted": 17796,
+          "rate": 0.9887
+        },
+        "2": {
+          "accepted": 17738,
+          "rate": 0.9854
+        },
+        "3": {
+          "accepted": 17629,
+          "rate": 0.9794
+        },
+        "4": {
+          "accepted": 17423,
+          "rate": 0.9679
+        },
+        "5": {
+          "accepted": 16921,
+          "rate": 0.9401
+        }
+      }
+    },
+    "synthetic-inherits-source": {
+      "total_positives": 761,
+      "by_threshold": {
+        "-2": {
+          "accepted": 761,
+          "rate": 1.0
+        },
+        "0": {
+          "accepted": 758,
+          "rate": 0.9961
+        },
+        "1": {
+          "accepted": 755,
+          "rate": 0.9921
+        },
+        "2": {
+          "accepted": 750,
+          "rate": 0.9855
+        },
+        "3": {
+          "accepted": 744,
+          "rate": 0.9777
+        },
+        "4": {
+          "accepted": 733,
+          "rate": 0.9632
+        },
+        "5": {
+          "accepted": 676,
+          "rate": 0.8883
+        }
+      }
+    }
+  },
+  "embedder_accepted": 22736,
+  "reranker_accepted": 21676,
+  "embedder_accepted_by_domain": {
+    "faq_real": 4248,
+    "german_stress": 750,
+    "web": 9879,
+    "wiki_non_eval": 7859
+  },
+  "reranker_accepted_by_domain": {
+    "faq_real": 3520,
+    "german_stress": 733,
+    "web": 9684,
+    "wiki_non_eval": 7739
+  },
+  "median_reranker_embedder_accepted": 7.1875,
+  "median_reranker_reranker_accepted": 7.25,
+  "suspicious_positive_rate": 0.0818,
+  "suspicious_positive_count": 2025,
+  "license_unknown_rows": 0,
+  "low_score_positives": [
+    {
+      "query": "Wo darf ich mit dem Wohnmobil übernachten?",
+      "domain": "faq_real",
+      "source": "faq_real_local",
+      "reranker_score": -8.5
+    },
+    {
+      "query": "Thema am 16. August war",
+      "domain": "faq_real",
+      "source": "faq_real_local",
+      "reranker_score": -8.1875
+    },
+    {
+      "query": "Themen am 2. Oktober waren",
+      "domain": "faq_real",
+      "source": "faq_real_local",
+      "reranker_score": -7.78125
+    },
+    {
+      "query": "HS | 12.10. - 25.10. | Herbstferien",
+      "domain": "faq_real",
+      "source": "faq_real_local",
+      "reranker_score": -7.40625
+    },
+    {
+      "query": "Wo wurde Anton Höfle geboren?",
+      "domain": "wiki_non_eval",
+      "source": "dt_de_dpr",
+      "reranker_score": -7.3125
+    },
+    {
+      "query": "In welchem Jahr wurde Käthe Dahlem geboren?",
+      "domain": "wiki_non_eval",
+      "source": "dt_de_dpr",
+      "reranker_score": -7.25
+    },
+    {
+      "query": "Ich musste eine Analyse über die in der Welt verwendete Energie machen.",
+      "domain": "web",
+      "source": "ger_backtrans_paraphrase",
+      "reranker_score": -7.03125
+    },
+    {
+      "query": "Diese Christen, wer sind diese Christen?",
+      "domain": "web",
+      "source": "ger_backtrans_paraphrase",
+      "reranker_score": -7.0
+    },
+    {
+      "query": "Wo befindet sich die Kriegsgräberstätte Hofkirchen?",
+      "domain": "wiki_non_eval",
+      "source": "dt_de_dpr",
+      "reranker_score": -6.96875
+    },
+    {
+      "query": "Was ist die Staatliche Führungsakademie für Ernährung, Landwirtschaft und Forste",
+      "domain": "wiki_non_eval",
+      "source": "dt_de_dpr",
+      "reranker_score": -6.75
+    }
+  ],
+  "high_score_rejected": [],
+  "gates": [
+    {
+      "gate": "license_unknown_rows_zero",
+      "domain": null,
+      "status": "pass",
+      "detail": "0 unknown-license rows"
+    },
+    {
+      "gate": "real_domain_min_accepted",
+      "domain": "faq_real",
+      "status": "pass",
+      "detail": "embedder-accepted=4248 (min 0)"
+    },
+    {
+      "gate": "real_domain_min_accepted",
+      "domain": "admin_real",
+      "status": "pass",
+      "detail": "embedder-accepted=0 (min 0)"
+    },
+    {
+      "gate": "real_domain_min_accepted",
+      "domain": "legal_adjacency_real_no_eval_overlap",
+      "status": "pass",
+      "detail": "embedder-accepted=0 (min 0)"
+    },
+    {
+      "gate": "suspicious_positive_rate",
+      "domain": null,
+      "status": "pass",
+      "detail": "suspicious_rate=0.0818 (max 0.5)"
+    }
+  ],
+  "failing_gates": []
+}

@@ -32,12 +32,34 @@ One JSON object per scored pair:
 {
   "query_id": "q1", "doc_id": "d1",
   "query": "...", "document": "...",
-  "label": null, "source": "synthetic", "domain": "admin", "positive": true,
+  "label": null, "positive": true,
+  "source_id": "local_admin_v2", "source": "local_admin_v2", "domain": "admin",
+  "license": "CC-BY-4.0", "license_origin": "manifest", "allowed_for_training": true,
+  "pair_hash": "p1",
   "embedding_teacher_model": "Qwen/Qwen3-Embedding-8B", "embedding_score": 0.78,
   "reranker_teacher_model": "Qwen/Qwen3-Reranker-8B",  "reranker_score": 3.91,
   "score_version": "teacher-cache-v1", "created_at": "2026-06-09T12:00:00+00:00"
 }
 ```
+
+### Provenance fields (carried verbatim from the candidate)
+
+`make_cache_row` copies these from the candidate so the cache **never loses provenance**
+(the v2 bug: licenses were dropped here, so every summary row collapsed to `"unknown"`):
+
+- **`source_id` / `source`** — the manifest `source_id` the row was admitted under.
+- **`domain`** — training domain (web / wiki_non_eval / faq / admin / …).
+- **`license`** — the concrete license. For synthetic *inherited* sources this is the seed
+  passage's real license (e.g. `CC-BY-SA-4.0`), falling back to the `…-inherits-source` marker.
+- **`license_url`** *(optional)* — present only when the manifest/row provides it.
+- **`license_origin`** — `manifest` (license read from the source entry) or `inherited`
+  (synthetic data inheriting its seed passage's license).
+- **`inherited_from_source_id`** *(optional)* — for `inherited` rows, the seed source.
+- **`allowed_for_training`** — the manifest's training-permission bit, carried per row.
+- **`pair_hash`** — used for near-duplicate detection in the summary.
+
+Provenance is derived once by `source_manifest.candidate_provenance(entry, row)` so the manifest
+stays the single source of truth.
 
 - **`embedding_score`** — cosine similarity between the teacher query and document
   embeddings (both L2-normalized).
@@ -109,6 +131,32 @@ missing-score counts, **suspicious low-scoring positives** (a generated query th
 match to its passage = a bad pair), and near-duplicate counts. `--filter-output` keeps positives
 with reranker score ≥ threshold (low-scoring positives go to the review file with a
 `filtering_reason`); negatives are kept for hard-negative mining.
+
+### License / training-permission gates (provenance)
+
+The summary also reports, per cache:
+
+- **`by_license`** and **`by_license_origin`** — license histograms (real licenses, not
+  `"unknown"`).
+- **`unknown_license_rows`** — rows whose license is missing/empty/`"unknown"`. **Must be 0**
+  before training/release.
+- **`disallowed_for_training_rows`** — rows whose source has `allowed_for_training=false`
+  (e.g. a public benchmark that leaked into the candidate set). **Must be 0.**
+- **`synthetic_inherits_source`** — count of inherited-license rows + a breakdown by the seed
+  source they inherit from (`by_inherited_from_source_id`).
+
+Turn these into hard failures:
+
+```bash
+python scripts/summarize_teacher_cache.py --input <cache> --output <summary> \
+  --fail-on-unknown-license --fail-on-disallowed-training-source   # exit 1 if either > 0
+```
+
+The release gate enforces the same invariant: `validate_release_2026.py --require-v2-artifacts`
+(or `--require-v3-artifacts`) **fails** if any teacher-cache summary under the results dir has
+unknown-license rows > 0. (Historical aside: the original v2 cache summary reported
+`by_license {"unknown": 44336}` because `make_cache_row` dropped the license — fixed; the v2
+summary was re-derived license-clean with `scripts/backfill_teacher_cache_license.py`.)
 
 ## Do not commit caches
 

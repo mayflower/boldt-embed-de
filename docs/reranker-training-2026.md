@@ -107,3 +107,39 @@ python scripts/check_reranker_promotion_gate.py \
 
 A model card may only call the reranker "recommended" once this gate passes (enforced by the
 v2 release gate, Prompt 12).
+
+## v3: high-precision labels, source-balanced lists, neutral-or-better gate
+
+v2 cut the GermanQuAD degradation from −0.354 to −0.040 but still failed promotion. The residual
+cause: the reranker trained on the **same noisy positives** as the embedder (pos teacher-median ≤
+neg median). v3 fixes the inputs and hardens the gate.
+
+**Inputs.** Positives come from the *calibrated* `qwen3_v3.filtered_reranker.jsonl` (stricter
+teacher threshold, `docs/teacher-calibration.md`). Candidates come from multiple first stages —
+BM25 (full-corpus index), student dense (causal v2/v3), e5/teacher dense, teacher-reranker-mined —
+so the reranker doesn't overfit one candidate distribution. Build with
+`scripts/build_reranker_candidates_v3.py` (`--bm25-results/--dense-results/--e5-results/
+--teacher-reranker-results`); it reports the candidate-source distribution and `lists_with_min_sources`.
+GermanQuAD-style lists are built only from **non-eval** sources — the builder never reads eval corpora.
+
+**Labels (`reranker_modern.v3_label`).**
+- **positive**: teacher reranker `>= positive_threshold` (default **4.0** — high precision).
+- **negative**: teacher reranker `<= positive_threshold − neg_margin` (default 2.0) — a *clear* negative.
+- **uncertain**: in between → `label=null`. Uncertain candidates feed **listwise soft targets
+  only**, never hard BCE negatives (`candidate_lists_to_pointwise` skips them).
+
+**Loss (mixed default).** Pointwise BCE on confident labels only; pairwise margin only where the
+teacher margin is strong (`--pairwise-min-teacher-margin`, e.g. 2.0); listwise KL over the **full**
+candidate list (including uncertain) toward the teacher softmax.
+
+**Training summary** (`reranker_training_summary`, written to `reranker_training_summary.json`):
+positive/negative teacher-score separation by domain, uncertain count, candidate-source
+distribution, synthetic-vs-real share, and `high_precision_positives`.
+
+**Gate (`check_reranker_promotion_gate.py`).** Fails if:
+- GermanQuAD delta `< 0.0` **or** DT-test delta `< 0.0` (neutral-or-better — catches v2's −0.040);
+- any evaluated domain drops by more than `--catastrophic-degradation` (default 0.02);
+- the reranker trained on **low-precision positives** (`--training-summary` →
+  `high_precision_positives=false`) without `--allow-low-precision-positives`.
+
+A −0.001 GermanQuAD delta still **fails** — v2's small degradation can no longer pass.

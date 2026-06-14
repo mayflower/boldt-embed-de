@@ -22,16 +22,18 @@ from boldt_embed import source_manifest as sm  # noqa: E402
 from boldt_embed.v2_experiment_config import load_v2_experiment_config  # noqa: E402
 
 
-def _v2_candidate(query, document, source_id, domain, license_, extra_meta=None):
+def _v2_candidate(query, document, entry, domain, row=None):
+    """Build a candidate row with FULL, explicit provenance derived from the manifest entry
+    (source_id/source/license/license_url?/license_origin/inherited_from_source_id?/
+    allowed_for_training). This is what later carries license through to the teacher cache."""
     q = dp.normalize_text(str(query)); d = dp.normalize_text(str(document))
-    meta = {"source_id": source_id}
-    if extra_meta:
-        meta.update(extra_meta)
+    prov = sm.candidate_provenance(entry, row)
+    meta = {"source_id": prov["source_id"]}
     return {
         "query_id": "q" + dp.stable_text_hash(q), "doc_id": "d" + dp.stable_text_hash(d),
-        "query": q, "document": d, "positive": True, "source": source_id, "domain": domain,
-        "license": license_, "text_hash": dp.stable_text_hash(d),
-        "pair_hash": dp.stable_pair_id(q, d), "metadata": meta,
+        "query": q, "document": d, "positive": True, "domain": domain,
+        "text_hash": dp.stable_text_hash(d), "pair_hash": dp.stable_pair_id(q, d),
+        "metadata": meta, **prov,
     }
 
 
@@ -75,7 +77,7 @@ def main() -> int:
             if not (isinstance(q, str) and q.strip() and isinstance(d, str) and d.strip()):
                 report["blocked_missing_fields"] += 1; continue
             domain = str(row.get("domain") or entry.domain)
-            cands.append(_v2_candidate(q, d, sid, domain, entry.license))
+            cands.append(_v2_candidate(q, d, entry, domain, row=row))
     report["admitted"] = len(cands)
     print(f"[admit] {json.dumps(report, ensure_ascii=False)}")
 

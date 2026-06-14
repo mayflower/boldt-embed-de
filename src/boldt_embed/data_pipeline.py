@@ -185,3 +185,71 @@ def domain_counts(rows: Sequence[Dict[str, Any]]) -> Dict[str, int]:
     for r in rows:
         counts[str(r.get("domain", "unknown"))] = counts.get(str(r.get("domain", "unknown")), 0) + 1
     return dict(sorted(counts.items()))
+
+
+# --------------------------------------------------------------------- v3 candidate rows
+# v3 rows carry FULL provenance end-to-end (the v2 bug dropped license at the cache stage).
+def build_v3_candidate_row(query: str, document: str, *, source_id: str, domain: str,
+                           license: str, license_origin: str, allowed_for_training: bool,
+                           synthetic: bool, source_url: Optional[str] = None) -> Dict[str, Any]:
+    """A v3 (query, document) candidate with explicit provenance. ``synthetic`` is carried so
+    domain-quality can separate real vs synthetic; ``record_type='pair'``."""
+    q = normalize_text(str(query))
+    d = normalize_text(str(document))
+    row = {
+        "record_type": "pair",
+        "query_id": "q" + stable_text_hash(q), "doc_id": "d" + stable_text_hash(d),
+        "query": q, "document": d, "positive": True,
+        "source_id": source_id, "source": source_id, "domain": domain,
+        "license": license, "license_origin": license_origin,
+        "allowed_for_training": bool(allowed_for_training), "synthetic": bool(synthetic),
+        "text_hash": stable_text_hash(d), "pair_hash": stable_pair_id(q, d),
+    }
+    if source_url:
+        row["source_url"] = source_url
+    return row
+
+
+def build_v3_passage_record(document: str, *, source_id: str, domain: str, license: str,
+                            license_origin: str, allowed_for_training: bool, synthetic: bool,
+                            source_url: Optional[str] = None) -> Dict[str, Any]:
+    """A DOCUMENT-ONLY passage (no query). For document-only corpora we never fabricate a
+    query/doc pair — a later generator emits synthetic pairs and marks them. ``record_type=
+    'passage'``; no query_id/pair_hash."""
+    d = normalize_text(str(document))
+    row = {
+        "record_type": "passage",
+        "doc_id": "d" + stable_text_hash(d), "document": d,
+        "source_id": source_id, "source": source_id, "domain": domain,
+        "license": license, "license_origin": license_origin,
+        "allowed_for_training": bool(allowed_for_training), "synthetic": bool(synthetic),
+        "text_hash": stable_text_hash(d),
+    }
+    if source_url:
+        row["source_url"] = source_url
+    return row
+
+
+def quota_report(rows: Sequence[Dict[str, Any]], targets: Dict[str, int],
+                 real_domains: Sequence[str] = ()) -> Dict[str, Any]:
+    """Per-domain achieved-vs-target with real/synthetic split and a missed-quota list.
+    For real domains, only NON-synthetic pairs count toward the target (the v2 lesson)."""
+    real_domains = set(real_domains)
+    by_dom: Dict[str, Dict[str, int]] = {}
+    for r in rows:
+        dom = str(r.get("domain", "unknown"))
+        b = by_dom.setdefault(dom, {"total": 0, "real": 0, "synthetic": 0})
+        b["total"] += 1
+        b["synthetic" if r.get("synthetic") else "real"] += 1
+    out: Dict[str, Any] = {"by_domain": {}, "missed": []}
+    for dom, target in sorted(targets.items()):
+        b = by_dom.get(dom, {"total": 0, "real": 0, "synthetic": 0})
+        counted = b["real"] if dom in real_domains else b["total"]
+        achieved = counted >= target
+        out["by_domain"][dom] = {"target": target, "total": b["total"], "real": b["real"],
+                                 "synthetic": b["synthetic"], "counted_toward_target": counted,
+                                 "achieved": achieved}
+        if not achieved:
+            out["missed"].append({"domain": dom, "target": target, "counted": counted,
+                                  "real_domain": dom in real_domains})
+    return out

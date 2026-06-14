@@ -21,7 +21,21 @@
     "wiki_non_eval": 7500
   },
   "by_license": {
-    "unknown": 44336
+    "CC-BY-4.0": 7500,
+    "CC-BY-SA-4.0": 20000,
+    "synthetic-inherits-source": 16836
+  },
+  "by_license_origin": {
+    "inherited": 16836,
+    "manifest": 27500
+  },
+  "unknown_license_rows": 0,
+  "disallowed_for_training_rows": 0,
+  "synthetic_inherits_source": {
+    "rows": 16836,
+    "by_inherited_from_source_id": {
+      "unspecified": 16836
+    }
   },
   "embedding_score": {
     "n": 44336,

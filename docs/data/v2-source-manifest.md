@@ -34,6 +34,29 @@ A source is rejected (and `validate_data_sources_v2.py` exits non-zero) if:
 
 Net effect: **if a license is uncertain, `allowed_for_training` must be false.**
 
+## Provenance carried onto every candidate (and into the teacher cache)
+
+The manifest is the **single source of truth** for license provenance. When a candidate row is
+built, `source_manifest.candidate_provenance(entry, row)` stamps it with:
+
+| field | meaning |
+|---|---|
+| `source_id` / `source` | the manifest entry the row was admitted under |
+| `license` | concrete license — for `…-inherits-source` sources, the seed passage's real license (e.g. `CC-BY-SA-4.0`); else the entry's license |
+| `license_url` | optional, when known |
+| `license_origin` | `manifest` (concrete license on the source) or `inherited` (synthetic data inheriting its seed's license) |
+| `inherited_from_source_id` | for `inherited` rows, the seed source (when recorded) |
+| `allowed_for_training` | the entry's training-permission bit, per row |
+
+These fields are then carried **verbatim** through `build_v2_candidates.py` →
+`build_teacher_cache.py` (`make_cache_row`) → `summarize_teacher_cache.py`. This closes the v2
+bug where the teacher-cache summary reported `by_license {"unknown": N}` despite the manifest
+having real licenses (the license was being dropped when the cache row was built). The cache
+summary now reports `unknown_license_rows` / `disallowed_for_training_rows`, and both the
+summarizer (`--fail-on-unknown-license`, `--fail-on-disallowed-training-source`) and the release
+gate (`validate_release_2026.py --require-v2-artifacts|--require-v3-artifacts`) **fail** if
+either is > 0. See `docs/teacher-cache.md`.
+
 ## How to add new data safely
 
 1. Add an entry with the real `license` (and `license_url`). If you're not sure of the

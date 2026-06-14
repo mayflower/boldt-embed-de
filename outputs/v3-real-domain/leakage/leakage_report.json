@@ -1,0 +1,22 @@
+{
+  "status": "ok",
+  "candidates_path": "outputs/v3-real-domain/candidates_v3.jsonl",
+  "n_train_candidates": 24761,
+  "n_eval_texts": 7974,
+  "exact_hits": 0,
+  "exact_normalized_hits": 0,
+  "near_duplicate_hits": 0,
+  "total_flagged_candidates": 0,
+  "hits_by_eval_dataset": {},
+  "hits_by_source": {},
+  "hits_by_domain": {},
+  "hits_by_license": {},
+  "dropped_candidate_ids": [],
+  "jaccard_threshold": 0.9,
+  "scan_runtime_sec": 60.9244,
+  "jaccard_comparisons": 34509,
+  "blocked_pairs": 34509,
+  "naive_comparisons": 197444214,
+  "cleaned_candidates_path": "outputs/v3-real-domain/candidates_v3.clean.jsonl",
+  "n_candidates_after_drop": 24761
+}

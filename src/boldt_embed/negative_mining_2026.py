@@ -25,18 +25,25 @@ from __future__ import annotations
 
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 
-from .eval_harness import bm25_rank, cosine_rank
+from .bm25_index import BM25Index, build_bm25_index
+from .eval_harness import cosine_rank
 
 ScoreKey = Tuple[str, str]
 
 
 # ------------------------------------------------------------------- candidate pools
 def mine_bm25_candidates(queries: Sequence[Dict[str, Any]], corpus: Sequence[Dict[str, Any]],
-                         k: int = 50) -> Dict[str, List[str]]:
-    """Top-k BM25 doc ids per query. `queries`:[{query_id,query}], `corpus`:[{id,text}]."""
+                         k: int = 50, index: Optional[BM25Index] = None) -> Dict[str, List[str]]:
+    """Top-k BM25 doc ids per query. `queries`:[{query_id,query}], `corpus`:[{id,text}].
+
+    The BM25 inverted index is built **once** over the corpus (or a prebuilt ``index`` is
+    reused) and then queried per query — O(sum of query-term postings), not O(queries*corpus).
+    This is the v3 fix for the v2 O(n*m) bottleneck that forced a ~3.5k mining subset."""
+    if index is None:
+        index = build_bm25_index(corpus)
     out: Dict[str, List[str]] = {}
     for q in queries:
-        out[str(q["query_id"])] = bm25_rank(q["query"], corpus)[:k]
+        out[str(q["query_id"])] = [did for did, _ in index.search(q["query"], k)]
     return out
 
 

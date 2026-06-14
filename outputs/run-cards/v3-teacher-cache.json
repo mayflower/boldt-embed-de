@@ -1,0 +1,26 @@
+{
+  "run_id": "v3-teacher-cache",
+  "run_type": "teacher_cache",
+  "command": "scripts/build_teacher_cache.py",
+  "commit": "f4c8b029182e7ee9659dafb04901558e44092996",
+  "date": "2026-06-14T11:26:56.206585+00:00",
+  "hardware": "Linux-6.11.0-1013-gcp-x86_64-with-glibc2.39",
+  "gpu": null,
+  "python": "3.12.13",
+  "torch": "2.6.0+cu124",
+  "transformers": "5.9.0",
+  "sentence_transformers": "5.5.1",
+  "input_artifacts": [
+    "outputs/v3-real-domain/candidates_v3.clean.jsonl"
+  ],
+  "output_artifacts": [
+    "outputs/v3-real-domain/teacher-cache/qwen3_v3.manifest.json"
+  ],
+  "model": "Qwen/Qwen3-Embedding-8B + Qwen/Qwen3-Reranker-8B",
+  "dataset": "outputs/v3-real-domain/candidates_v3.clean.jsonl",
+  "metrics": {
+    "rows_written": 24761,
+    "n_shards": 2
+  },
+  "notes": "sharded mode=both shard_size=12500"
+}

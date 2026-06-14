@@ -1,0 +1,72 @@
+{
+  "mode": "dry-run",
+  "experiment_id": "v3-real-domain-generalization",
+  "stages": [
+    {
+      "name": "acquire_sources",
+      "gpu": false,
+      "gate": false,
+      "status": "planned"
+    },
+    {
+      "name": "build_leakage_index",
+      "gpu": false,
+      "gate": false,
+      "status": "planned"
+    },
+    {
+      "name": "build_candidates",
+      "gpu": false,
+      "gate": false,
+      "status": "planned"
+    },
+    {
+      "name": "full_leakage_scan",
+      "gpu": false,
+      "gate": false,
+      "status": "planned"
+    },
+    {
+      "name": "build_bm25_index",
+      "gpu": false,
+      "gate": false,
+      "status": "planned"
+    },
+    {
+      "name": "teacher_cache",
+      "gpu": true,
+      "gate": false,
+      "status": "planned"
+    },
+    {
+      "name": "summarize_cache",
+      "gpu": false,
+      "gate": false,
+      "status": "planned"
+    },
+    {
+      "name": "calibrate_thresholds",
+      "gpu": false,
+      "gate": false,
+      "status": "planned"
+    },
+    {
+      "name": "domain_quality_gate",
+      "gpu": false,
+      "gate": true,
+      "status": "planned"
+    },
+    {
+      "name": "mine_hard_negatives",
+      "gpu": false,
+      "gate": false,
+      "status": "planned"
+    },
+    {
+      "name": "release_gate",
+      "gpu": false,
+      "gate": true,
+      "status": "planned"
+    }
+  ]
+}

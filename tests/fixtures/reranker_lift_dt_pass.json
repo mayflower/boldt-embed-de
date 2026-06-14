@@ -1,1 +1,1 @@
-{"n_queries": 1000, "first_stage_ndcg@10": 0.9503, "oracle_ndcg@10": 0.994, "student_reranker_ndcg@10": 0.9895}
+{"first_stage_ndcg@10": 0.95, "student_reranker_ndcg@10": 0.99}

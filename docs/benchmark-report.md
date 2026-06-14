@@ -292,6 +292,35 @@ and `negative_mining_2026.bm25_rank` (rebuilds the index per query) are O(n·m) 
 to the full candidate set — leakage was filtered against GermanQuAD+DT only, and hard-neg /
 reranker-list mining was run over a domain-balanced ~3.5k subset (logged, not silently capped).
 
+### 6i. v3 real-domain (real FAQ) — EXECUTED (2026-06-14, RTX A6000)
+
+The v3 question: do **real** licensed domain corpora succeed where v2's synthetic queries failed?
+Sourced **real German FAQ** — `PaDaS-Lab/webfaq` (deu, CC-BY-4.0 verified) — and built a 24,761
+real candidate set (faq 6000 REAL + web 10000 + wiki 8000 + stress 761), 0 leakage hits, then
+ran the full pipeline (both 8B teachers → calibrate → causal student, 600 steps).
+
+**Headline finding — real FAQ passes teacher validation:**
+
+| domain | teacher accept ≥2.0 | v2 comparison |
+|---|---:|---|
+| **faq_real (real WebFAQ)** | **70.8%** | v2 SYNTHETIC faq: **5.7%** |
+| web / wiki / stress | 98.8 / 98.2 / 98.6% | — |
+
+The v2 admin/faq/legal failure was the **synthetic queries**, not the domain — real FAQ data
+validates ~12× better. Dense nDCG@10 (`outputs/v3-real-domain/eval/dense_*.json`):
+
+| Held-out set | base | v1 | v2 | **v3** | e5-base |
+|---|---:|---:|---:|---:|---:|
+| GermanQuAD | 0.288 | 0.883 | 0.886 | **0.885** | 0.939 |
+| DT-test | 0.223 | 0.950 | 0.944 | **0.970** | 0.994 |
+| GerDaLIR (legal OOD) | 0.003 | 0.078 | 0.110 | **0.089** | 0.153 |
+
+**Honest:** v3 gives the **best DT-test yet (0.970)** and flat GermanQuAD, but GerDaLIR (0.089)
+is **below v2 (0.110)** — v3 replaced v2's synthetic legal-adjacent data with FAQ, and FAQ does
+not transfer to legal. Verdict **`invalid_for_promotion`** (domain-quality gate): admin_real +
+legal_adjacency_real are still unsourced, and faq_real (4,248 accepted) is below the 5,000 floor.
+Real legal/admin pairs are the remaining blocker. Run cards: `outputs/run-cards/v3-*.json`.
+
 ## 7. Matryoshka truncation analysis
 Storage scales linearly with dim (fp32): 1024→4096 B, 512→2048 B, 256→1024 B, 128→512 B,
 64→256 B/vector. The HashingEncoder by-dim retrieval (toy) stays near-perfect down to 64 dims

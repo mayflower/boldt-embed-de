@@ -27,21 +27,38 @@ def main() -> int:
     ap.add_argument("--germanquad", required=True, help="reranker lift report JSON for GermanQuAD")
     ap.add_argument("--additional", nargs="*", default=None, help="extra lift reports (delta>=0 too)")
     ap.add_argument("--germanquad-target", type=float, default=0.02)
+    ap.add_argument("--catastrophic-degradation", type=float, default=0.02,
+                    help="any evaluated domain dropping by more than this is a catastrophic fail")
+    ap.add_argument("--training-summary", default=None,
+                    help="reranker training summary JSON; gate fails if positives are low-precision")
+    ap.add_argument("--allow-low-precision-positives", action="store_true",
+                    help="override the high-precision-positives requirement")
     ap.add_argument("--output", default=None)
     args = ap.parse_args()
 
+    cat = args.catastrophic_degradation
     dt_delta, dt_fs, dt_rr = _delta(args.dt_test)
     gq_delta, gq_fs, gq_rr = _delta(args.germanquad)
     checks = {
         "dt_test_delta_nonneg": dt_delta >= 0.0,
-        "germanquad_delta_nonneg": gq_delta >= 0.0,   # hard floor — the v1 lesson
+        "germanquad_delta_nonneg": gq_delta >= 0.0,           # hard floor — the v1/v2 lesson
+        "dt_test_not_catastrophic": dt_delta >= -cat,
+        "germanquad_not_catastrophic": gq_delta >= -cat,
     }
     extra = []
     for p in args.additional or []:
         dd, _, _ = _delta(p)
-        ok = dd >= 0.0
-        extra.append({"report": p, "delta": dd, "nonneg": ok})
-        checks[f"extra_{pathlib.Path(p).stem}_nonneg"] = ok
+        stem = pathlib.Path(p).stem
+        extra.append({"report": p, "delta": dd, "nonneg": dd >= 0.0, "not_catastrophic": dd >= -cat})
+        checks[f"extra_{stem}_nonneg"] = dd >= 0.0
+        checks[f"extra_{stem}_not_catastrophic"] = dd >= -cat
+    # high-precision-positives requirement (from the training summary), overridable.
+    high_precision = None
+    if args.training_summary and pathlib.Path(args.training_summary).exists():
+        ts = json.loads(pathlib.Path(args.training_summary).read_text(encoding="utf-8"))
+        high_precision = bool(ts.get("high_precision_positives", False)) and \
+            float(ts.get("positive_threshold", 0)) >= 4.0
+        checks["high_precision_positives"] = high_precision or args.allow_low_precision_positives
     passed = all(checks.values())
     result = {
         "status": "pass" if passed else "fail",
@@ -50,6 +67,8 @@ def main() -> int:
                        "target": args.germanquad_target,
                        "target_met": gq_delta >= args.germanquad_target},
         "additional": extra,
+        "catastrophic_degradation_threshold": cat,
+        "high_precision_positives": high_precision,
         "checks": checks,
     }
     print(json.dumps(result, ensure_ascii=False, indent=2))

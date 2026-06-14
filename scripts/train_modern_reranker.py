@@ -55,6 +55,10 @@ def main() -> int:
     ap.add_argument("--lr", type=float, default=2e-5)
     ap.add_argument("--temperature", type=float, default=1.0)
     ap.add_argument("--margin", type=float, default=0.2)
+    ap.add_argument("--positive-threshold", type=float, default=RM.V3_POSITIVE_THRESHOLD,
+                    help="high-precision positive threshold (for the training summary / gate)")
+    ap.add_argument("--pairwise-min-teacher-margin", type=float, default=None,
+                    help="v3: only build pairwise pairs when teacher pos-neg margin >= this")
     ap.add_argument("--lora", action="store_true")
     ap.add_argument("--bf16", action="store_true")
     ap.add_argument("--run-id", default=None, help="experiment run id (run card written on success)")
@@ -63,11 +67,14 @@ def main() -> int:
 
     cfg = load_reranker_config(args.config)
     # v2: candidate-list input (distribution-aware) takes precedence; else cache/hardneg rows.
+    training_summary = None
     if args.candidate_lists and pathlib.Path(args.candidate_lists).exists():
         cl_rows = list(dp.stream_jsonl(args.candidate_lists))
-        pointwise = RM.candidate_lists_to_pointwise(cl_rows)
-        pairwise = RM.candidate_lists_to_pairwise(cl_rows)
-        listwise = RM.candidate_lists_to_listwise(cl_rows, temperature=args.temperature)
+        pointwise = RM.candidate_lists_to_pointwise(cl_rows)          # skips label=null (uncertain)
+        pairwise = RM.candidate_lists_to_pairwise(
+            cl_rows, min_teacher_margin=args.pairwise_min_teacher_margin)
+        listwise = RM.candidate_lists_to_listwise(cl_rows, temperature=args.temperature)  # full list
+        training_summary = RM.reranker_training_summary(cl_rows, args.positive_threshold)
         source_desc = f"candidate-lists:{args.candidate_lists} ({len(cl_rows)} queries)"
     else:
         rows = _cache_rows_from_inputs(args.teacher_cache, args.hard_negatives)
@@ -84,7 +91,15 @@ def main() -> int:
             "base_model": cfg.model_name_or_path, "input": source_desc,
             "pointwise_examples": len(pointwise), "pairwise_examples": len(pairwise),
             "listwise_queries": len(listwise)}
+    if training_summary is not None:
+        plan["training_summary"] = training_summary
     print(f"[plan] {json.dumps(plan, ensure_ascii=False)}")
+
+    # Persist the training summary (gate reads high_precision_positives / positive_threshold).
+    if training_summary is not None:
+        sp = pathlib.Path(args.output).with_name("reranker_training_summary.json")
+        sp.parent.mkdir(parents=True, exist_ok=True)
+        sp.write_text(json.dumps(training_summary, ensure_ascii=False, indent=2), encoding="utf-8")
 
     if args.dry_run:
         assert "torch" not in sys.modules, "dry-run must not import torch"

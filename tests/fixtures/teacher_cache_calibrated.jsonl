@@ -1,0 +1,8 @@
+{"query_id": "q1", "doc_id": "d1", "query": "FAQ Frage 1", "document": "Antwort 1", "positive": true, "reranker_score": 5.0, "domain": "faq_real", "source": "faq_real_local", "synthetic": false}
+{"query_id": "q1", "doc_id": "d2", "query": "FAQ Frage 1", "document": "Irrelevant 2", "positive": false, "reranker_score": 1.0, "domain": "faq_real", "source": "faq_real_local", "synthetic": false}
+{"query_id": "q1", "doc_id": "d3", "query": "FAQ Frage 1", "document": "Halbrelevant 3", "positive": false, "reranker_score": 3.0, "domain": "faq_real", "source": "faq_real_local", "synthetic": false}
+{"query_id": "q2", "doc_id": "d4", "query": "Admin Frage 2", "document": "Antwort 4", "positive": true, "reranker_score": 4.5, "domain": "admin_real", "source": "admin_real_local", "synthetic": false}
+{"query_id": "q2", "doc_id": "d5", "query": "Admin Frage 2", "document": "Irrelevant 5", "positive": false, "reranker_score": 0.5, "domain": "admin_real", "source": "admin_real_local", "synthetic": false}
+{"query_id": "q2", "doc_id": "d6", "query": "Admin Frage 2", "document": "Halbrelevant 6", "positive": false, "reranker_score": 3.5, "domain": "admin_real", "source": "admin_real_local", "synthetic": false}
+{"query_id": "q3", "doc_id": "d7", "query": "Web Frage 3", "document": "Antwort 7", "positive": true, "reranker_score": 6.0, "domain": "web", "source": "ger_backtrans_paraphrase", "synthetic": false}
+{"query_id": "q3", "doc_id": "d8", "query": "Web Frage 3", "document": "Irrelevant 8", "positive": false, "reranker_score": -1.0, "domain": "web", "source": "ger_backtrans_paraphrase", "synthetic": false}

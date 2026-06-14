@@ -48,8 +48,17 @@ def main() -> int:
     ap.add_argument("--effective-batch-size", type=int, default=None,
                     help="logical contrastive batch via cached loss (informational)")
     ap.add_argument("--run-id", default=None, help="experiment run id (run card written on success)")
+    ap.add_argument("--require-leakage-report", default=None,
+                    help="path to a full leakage report (scripts/run_full_leakage_scan.py); refuse "
+                         "to train unless it exists and is clean or cleaned (v3 gate)")
     ap.add_argument("--dry-run", action="store_true")
     args = ap.parse_args()
+
+    # v3 gate: do not train on candidates that have not passed a full, clean leakage scan.
+    if args.require_leakage_report:
+        from boldt_embed.leakage_index import require_clean_leakage_report
+        require_clean_leakage_report(args.require_leakage_report)  # raises ValueError if not clean
+        print(f"[leakage] report OK: {args.require_leakage_report}")
 
     cfg = load_student_training_config(args.student_config)
     if args.base_model:

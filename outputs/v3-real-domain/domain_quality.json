@@ -1,0 +1,250 @@
+{
+  "status": "fail",
+  "reranker_threshold": 2.0,
+  "gates_config": {
+    "min_real_domain_accepted": {
+      "faq_real": 5000,
+      "admin_real": 5000,
+      "legal_adjacency_real_no_eval_overlap": 5000
+    },
+    "max_synthetic_share_for_real_domains": 0.25,
+    "max_effective_web_wiki_share": 0.65,
+    "min_teacher_acceptance_rate": 0.35
+  },
+  "totals": {
+    "raw_candidates": 24761,
+    "cache_rows": 24761,
+    "accepted_positives": 22736,
+    "license_unknown_rows": 0,
+    "disallowed_source_rows": 0,
+    "effective_web_wiki_share": 0.7802
+  },
+  "raw_by_domain": {
+    "faq_real": 6000,
+    "german_stress": 761,
+    "web": 10000,
+    "wiki_non_eval": 8000
+  },
+  "raw_by_source": {
+    "dt_de_dpr": 8000,
+    "faq_real_local": 6000,
+    "ger_backtrans_paraphrase": 10000,
+    "synthetic_adversarial": 761
+  },
+  "raw_by_license": {
+    "CC-BY-4.0": 6000,
+    "CC-BY-SA-4.0": 18000,
+    "synthetic-inherits-source": 761
+  },
+  "accepted_by_domain": {
+    "faq_real": 4248,
+    "german_stress": 750,
+    "web": 9879,
+    "wiki_non_eval": 7859
+  },
+  "accepted_by_source": {
+    "dt_de_dpr": 7859,
+    "faq_real_local": 4248,
+    "ger_backtrans_paraphrase": 9879,
+    "synthetic_adversarial": 750
+  },
+  "accepted_by_license": {
+    "CC-BY-4.0": 4248,
+    "CC-BY-SA-4.0": 17738,
+    "synthetic-inherits-source": 750
+  },
+  "per_domain": {
+    "faq_real": {
+      "raw": 6000,
+      "accepted": 4248,
+      "acceptance_rate": 0.708,
+      "synthetic_accepted": 0,
+      "real_accepted": 4248,
+      "synthetic_share": 0.0,
+      "effective_share": 0.1868,
+      "median_embedding_score": 0.7402,
+      "median_reranker_score": 5.9375,
+      "suspicious_positives": 1752
+    },
+    "german_stress": {
+      "raw": 761,
+      "accepted": 750,
+      "acceptance_rate": 0.9855,
+      "synthetic_accepted": 750,
+      "real_accepted": 0,
+      "synthetic_share": 1.0,
+      "effective_share": 0.033,
+      "median_embedding_score": 0.7812,
+      "median_reranker_score": 6.375,
+      "suspicious_positives": 11
+    },
+    "web": {
+      "raw": 10000,
+      "accepted": 9879,
+      "acceptance_rate": 0.9879,
+      "synthetic_accepted": 0,
+      "real_accepted": 9879,
+      "synthetic_share": 0.0,
+      "effective_share": 0.4345,
+      "median_embedding_score": 0.8359,
+      "median_reranker_score": 7.9375,
+      "suspicious_positives": 121
+    },
+    "wiki_non_eval": {
+      "raw": 8000,
+      "accepted": 7859,
+      "acceptance_rate": 0.9824,
+      "synthetic_accepted": 0,
+      "real_accepted": 7859,
+      "synthetic_share": 0.0,
+      "effective_share": 0.3457,
+      "median_embedding_score": 0.8008,
+      "median_reranker_score": 6.6875,
+      "suspicious_positives": 141
+    }
+  },
+  "gates": [
+    {
+      "gate": "license_unknown_rows_zero",
+      "domain": null,
+      "status": "pass",
+      "detail": "0 unknown-license rows"
+    },
+    {
+      "gate": "disallowed_source_rows_zero",
+      "domain": null,
+      "status": "pass",
+      "detail": "0 disallowed-source rows"
+    },
+    {
+      "gate": "real_domain_min_raw",
+      "domain": "faq_real",
+      "status": "pass",
+      "detail": "raw=6000 (min 5000)"
+    },
+    {
+      "gate": "real_domain_min_accepted",
+      "domain": "faq_real",
+      "status": "fail",
+      "detail": "accepted=4248 (min 5000)"
+    },
+    {
+      "gate": "real_domain_synthetic_share",
+      "domain": "faq_real",
+      "status": "pass",
+      "detail": "synthetic_share=0.0 (max 0.25)"
+    },
+    {
+      "gate": "real_domain_acceptance_rate",
+      "domain": "faq_real",
+      "status": "pass",
+      "detail": "acceptance_rate=0.708 (min 0.35)"
+    },
+    {
+      "gate": "real_domain_min_raw",
+      "domain": "admin_real",
+      "status": "fail",
+      "detail": "raw=0 (min 5000)"
+    },
+    {
+      "gate": "real_domain_min_accepted",
+      "domain": "admin_real",
+      "status": "fail",
+      "detail": "accepted=0 (min 5000)"
+    },
+    {
+      "gate": "real_domain_synthetic_share",
+      "domain": "admin_real",
+      "status": "pass",
+      "detail": "synthetic_share=0.0 (max 0.25)"
+    },
+    {
+      "gate": "real_domain_acceptance_rate",
+      "domain": "admin_real",
+      "status": "fail",
+      "detail": "acceptance_rate=0.0 (min 0.35)"
+    },
+    {
+      "gate": "real_domain_min_raw",
+      "domain": "legal_adjacency_real_no_eval_overlap",
+      "status": "fail",
+      "detail": "raw=0 (min 5000)"
+    },
+    {
+      "gate": "real_domain_min_accepted",
+      "domain": "legal_adjacency_real_no_eval_overlap",
+      "status": "fail",
+      "detail": "accepted=0 (min 5000)"
+    },
+    {
+      "gate": "real_domain_synthetic_share",
+      "domain": "legal_adjacency_real_no_eval_overlap",
+      "status": "pass",
+      "detail": "synthetic_share=0.0 (max 0.25)"
+    },
+    {
+      "gate": "real_domain_acceptance_rate",
+      "domain": "legal_adjacency_real_no_eval_overlap",
+      "status": "fail",
+      "detail": "acceptance_rate=0.0 (min 0.35)"
+    },
+    {
+      "gate": "effective_web_wiki_share",
+      "domain": null,
+      "status": "fail",
+      "detail": "web+wiki share=0.7802 (max 0.65)"
+    }
+  ],
+  "failing_gates": [
+    {
+      "gate": "real_domain_min_accepted",
+      "domain": "faq_real",
+      "status": "fail",
+      "detail": "accepted=4248 (min 5000)"
+    },
+    {
+      "gate": "real_domain_min_raw",
+      "domain": "admin_real",
+      "status": "fail",
+      "detail": "raw=0 (min 5000)"
+    },
+    {
+      "gate": "real_domain_min_accepted",
+      "domain": "admin_real",
+      "status": "fail",
+      "detail": "accepted=0 (min 5000)"
+    },
+    {
+      "gate": "real_domain_acceptance_rate",
+      "domain": "admin_real",
+      "status": "fail",
+      "detail": "acceptance_rate=0.0 (min 0.35)"
+    },
+    {
+      "gate": "real_domain_min_raw",
+      "domain": "legal_adjacency_real_no_eval_overlap",
+      "status": "fail",
+      "detail": "raw=0 (min 5000)"
+    },
+    {
+      "gate": "real_domain_min_accepted",
+      "domain": "legal_adjacency_real_no_eval_overlap",
+      "status": "fail",
+      "detail": "accepted=0 (min 5000)"
+    },
+    {
+      "gate": "real_domain_acceptance_rate",
+      "domain": "legal_adjacency_real_no_eval_overlap",
+      "status": "fail",
+      "detail": "acceptance_rate=0.0 (min 0.35)"
+    },
+    {
+      "gate": "effective_web_wiki_share",
+      "domain": null,
+      "status": "fail",
+      "detail": "web+wiki share=0.7802 (max 0.65)"
+    }
+  ],
+  "review_flags": [],
+  "can_claim_legal_transfer_from_data": false
+}

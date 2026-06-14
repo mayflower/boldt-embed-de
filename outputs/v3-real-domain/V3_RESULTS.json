@@ -1,0 +1,52 @@
+{
+  "verdict": "invalid_for_promotion",
+  "verdict_reason": "domain-quality gate fail: admin_real + legal_adjacency_real absent; faq_real accepted 4248 < 5000 floor; effective web+wiki share too high. Real FAQ added, but the 7-domain target is not met.",
+  "executed": true,
+  "real_data": {
+    "candidates": 24761,
+    "leakage_hits": 0,
+    "embedder_train_positives": 22736,
+    "reranker_train_positives": 21676,
+    "by_domain_raw": {
+      "web": 10000,
+      "wiki_non_eval": 8000,
+      "faq_real": 6000,
+      "german_stress": 761
+    }
+  },
+  "teacher_acceptance_by_domain_ge2": {
+    "faq_real": 0.708,
+    "web": 0.988,
+    "wiki_non_eval": 0.982,
+    "german_stress": 0.986
+  },
+  "key_finding": "REAL FAQ (WebFAQ, CC-BY-4.0) passes teacher validation at 70.8% (>=2.0) / 58.7% (>=4.0) vs v2 SYNTHETIC faq at 5.7%. The v2 failure was the synthetic queries, not the FAQ domain.",
+  "dense_ndcg10": {
+    "germanquad": {
+      "base": 0.288,
+      "v1": 0.883,
+      "v2": 0.886,
+      "v3": 0.8852,
+      "e5": 0.9389
+    },
+    "dt_test": {
+      "base": 0.223,
+      "v1": 0.95,
+      "v2": 0.944,
+      "v3": 0.9701,
+      "e5": 0.9936
+    },
+    "gerdalir": {
+      "base": 0.003,
+      "v1": 0.078,
+      "v2": 0.11,
+      "v3": 0.0893,
+      "e5": 0.153
+    }
+  },
+  "honest_reading": [
+    "DT-test 0.970 = best causal yet (v1 0.950, v2 0.944) — real FAQ + cleaner teacher-validated data helped in-domain.",
+    "GermanQuAD 0.885 flat (within noise of v1/v2).",
+    "GerDaLIR (legal OOD) 0.089 < v2 0.110: v3 dropped v2's synthetic legal-adjacent data and added FAQ instead; FAQ does not transfer to legal. Legal needs REAL legal pairs (still unsourced)."
+  ]
+}

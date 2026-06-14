@@ -11,12 +11,14 @@ import argparse
 import json
 import pathlib
 import sys
+import time
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
 from boldt_embed import data_pipeline as dp  # noqa: E402
 from boldt_embed import negative_mining_2026 as nm  # noqa: E402
+from boldt_embed.bm25_index import BM25Index, build_bm25_index  # noqa: E402
 
 
 def _build_corpus(positives, corpus_path):
@@ -43,17 +45,41 @@ def main() -> int:
     ap.add_argument("--negatives-per-query", type=int, default=8)
     ap.add_argument("--false-negative-margin", type=float, default=0.1)
     ap.add_argument("--first-stage-k", type=int, default=50)
+    ap.add_argument("--bm25-index", default=None,
+                    help="prebuilt BM25 index JSON (build_bm25_index.py); else built once here")
+    ap.add_argument("--max-queries", type=int, default=None,
+                    help="explicitly cap the number of mined queries — sets mining_cap_applied=true")
+    ap.add_argument("--require-full-corpus", action="store_true",
+                    help="fail if mining would be capped/subsampled")
     ap.add_argument("--dry-run", action="store_true")
     args = ap.parse_args()
 
     if not pathlib.Path(args.candidates).exists():
         print(f"ERROR: candidates not found: {args.candidates}", file=sys.stderr); return 2
-    positives = [r for r in dp.stream_jsonl(args.candidates) if r.get("positive", True)]
-    corpus_lookup = _build_corpus(positives, args.corpus)
+    positives_all = [r for r in dp.stream_jsonl(args.candidates) if r.get("positive", True)]
+    corpus_lookup = _build_corpus(positives_all, args.corpus)   # FULL negative pool
     corpus = list(corpus_lookup.values())
-    queries = [{"query_id": p["query_id"], "query": p["query"]} for p in positives]
 
-    pools = [("bm25", nm.mine_bm25_candidates(queries, corpus, k=args.first_stage_k))]
+    cap = args.max_queries
+    mining_cap_applied = bool(cap is not None and cap < len(positives_all))
+    if mining_cap_applied and args.require_full_corpus:
+        print("ERROR: --require-full-corpus set but --max-queries caps mining to "
+              f"{cap}/{len(positives_all)} queries.", file=sys.stderr)
+        return 2
+    positives = positives_all[:cap] if cap is not None else positives_all
+    queries = [{"query_id": p["query_id"], "query": p["query"]} for p in positives]
+    print(f"[reranker-lists] corpus={len(corpus)} queries={len(queries)}/{len(positives_all)} "
+          f"cap_applied={mining_cap_applied}")
+
+    t0 = time.monotonic()
+    if args.bm25_index and pathlib.Path(args.bm25_index).exists():
+        bm25 = BM25Index.load(args.bm25_index)
+        print(f"[bm25] loaded prebuilt index: {bm25.n_docs} docs")
+    else:
+        bm25 = build_bm25_index(corpus)   # built ONCE, not per query
+        print(f"[bm25] built index once: {bm25.n_docs} docs, {len(bm25.postings)} terms")
+    pools = [("bm25", nm.mine_bm25_candidates(queries, corpus, k=args.first_stage_k, index=bm25))]
+    bm25_runtime = round(time.monotonic() - t0, 4)
     if args.dense_embeddings and pathlib.Path(args.dense_embeddings).exists():
         emb = {str(r["id"]): r["embedding"] for r in dp.stream_jsonl(args.dense_embeddings)}
         q_emb = {q["query_id"]: emb[q["query_id"]] for q in queries if q["query_id"] in emb}
@@ -73,6 +99,8 @@ def main() -> int:
     rows, stats = nm.build_reranker_candidate_lists(
         positives, merged, corpus_lookup, teacher_scores,
         negatives_per_query=args.negatives_per_query, margin=args.false_negative_margin)
+    stats.update({"mining_corpus_size": len(corpus), "mining_query_count": len(queries),
+                  "mining_cap_applied": mining_cap_applied, "bm25_runtime_sec": bm25_runtime})
     print(f"[reranker-lists] {json.dumps(stats, ensure_ascii=False)}")
 
     if args.dry_run:
@@ -81,7 +109,9 @@ def main() -> int:
             print(json.dumps(rows[0], ensure_ascii=False))
         return 0
     n = dp.write_jsonl(args.output, rows)
-    print(f"[write] {n} candidate-list rows -> {args.output}")
+    report_path = pathlib.Path(args.output).with_suffix(".mining_report.json")
+    report_path.write_text(json.dumps(stats, ensure_ascii=False, indent=2), encoding="utf-8")
+    print(f"[write] {n} candidate-list rows -> {args.output}; report -> {report_path}")
     return 0
 
 

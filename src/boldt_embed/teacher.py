@@ -21,6 +21,12 @@ from typing import Any, Dict, Iterable, Iterator, List, Optional, Sequence, Tupl
 
 SCORE_VERSION = "teacher-cache-v1"
 
+# Provenance/identity fields carried verbatim candidate -> cache row (fixes the v2 bug where
+# license was dropped and every summary row collapsed to "unknown").
+PROVENANCE_FIELDS = ("source_id", "source", "domain", "license", "license_url",
+                     "license_origin", "inherited_from_source_id", "allowed_for_training",
+                     "pair_hash", "text_hash")
+
 # Minimum fields an *input* candidate row must carry to be scorable.
 CANDIDATE_REQUIRED = ("query_id", "doc_id", "query", "document")
 
@@ -113,15 +119,17 @@ def make_cache_row(candidate: Dict[str, Any], *, embedding_teacher_model: Option
                    reranker_teacher_model: Optional[str] = None,
                    reranker_score: Optional[float] = None,
                    created_at: Optional[str] = None) -> Dict[str, Any]:
-    """Build a fully-formed cache row from an input candidate + optional teacher scores."""
-    return {
+    """Build a fully-formed cache row from an input candidate + optional teacher scores.
+
+    Provenance fields (license, license_origin, allowed_for_training, ...) and pair_hash are
+    carried through VERBATIM from the candidate so the cache summary can report real licenses
+    instead of collapsing every row to "unknown" (the v2 provenance bug)."""
+    row = {
         "query_id": candidate["query_id"],
         "doc_id": candidate["doc_id"],
         "query": candidate["query"],
         "document": candidate["document"],
         "label": candidate.get("label"),
-        "source": candidate.get("source"),
-        "domain": candidate.get("domain"),
         "positive": candidate.get("positive"),
         "embedding_teacher_model": embedding_teacher_model,
         "embedding_score": embedding_score,
@@ -130,6 +138,14 @@ def make_cache_row(candidate: Dict[str, Any], *, embedding_teacher_model: Option
         "score_version": SCORE_VERSION,
         "created_at": created_at or _now_iso(),
     }
+    # Preserve provenance/identity fields when present on the candidate.
+    for key in PROVENANCE_FIELDS:
+        if key in candidate and candidate[key] is not None:
+            row[key] = candidate[key]
+    # `source`/`domain` always present (default None) for back-compat with older readers.
+    row.setdefault("source", candidate.get("source"))
+    row.setdefault("domain", candidate.get("domain"))
+    return row
 
 
 def shard_candidates(candidates: Sequence[Dict[str, Any]], shard_size: int
@@ -154,13 +170,31 @@ def _score_distribution(values: Sequence[Any]) -> Dict[str, Any]:
             "mean": round(statistics.mean(nums), 4), "max": round(max(nums), 4)}
 
 
+def _row_field(r: Dict[str, Any], key: str) -> Any:
+    """Read a field from the row or its nested metadata (cache rows may carry either)."""
+    v = r.get(key)
+    if v is None and isinstance(r.get("metadata"), dict):
+        v = r["metadata"].get(key)
+    return v
+
+
+def is_unknown_license(value: Any) -> bool:
+    """A license is 'unknown' if it is missing/empty or literally the word 'unknown'."""
+    if value is None:
+        return True
+    s = str(value).strip().lower()
+    return s == "" or s == "unknown"
+
+
 def summarize_cache(rows: Sequence[Dict[str, Any]], suspicious_low_n: int = 5) -> Dict[str, Any]:
-    """Quality report over a teacher cache (pure stdlib): counts by source/domain/license, score
-    distributions, missing-score counts, suspicious low-scoring positives, near-duplicate counts."""
+    """Quality report over a teacher cache (pure stdlib): counts by source/domain/license AND
+    license_origin, explicit unknown-license / disallowed-training row counts, the synthetic
+    (inherited-license) breakdown, score distributions, missing-score counts, suspicious
+    low-scoring positives, and near-duplicate counts."""
     def _counts(key):
         c: Dict[str, int] = {}
         for r in rows:
-            v = str(r.get(key) or (r.get("metadata") or {}).get(key) or "unknown")
+            v = str(_row_field(r, key) or "unknown")
             c[v] = c.get(v, 0) + 1
         return dict(sorted(c.items()))
 
@@ -168,12 +202,29 @@ def summarize_cache(rows: Sequence[Dict[str, Any]], suspicious_low_n: int = 5) -
     pos_rr = [(r.get("reranker_score"), r) for r in positives if r.get("reranker_score") is not None]
     pos_rr.sort(key=lambda kv: kv[0])
     pair_hashes = [r.get("pair_hash") for r in rows if r.get("pair_hash")]
+
+    unknown_license_rows = sum(1 for r in rows if is_unknown_license(_row_field(r, "license")))
+    disallowed_rows = sum(1 for r in rows if _row_field(r, "allowed_for_training") is False)
+    # synthetic / inherited-license rows, grouped by the seed source they inherit from.
+    inherited = [r for r in rows if _row_field(r, "license_origin") == "inherited"]
+    inh_by_seed: Dict[str, int] = {}
+    for r in inherited:
+        seed = str(_row_field(r, "inherited_from_source_id") or "unspecified")
+        inh_by_seed[seed] = inh_by_seed.get(seed, 0) + 1
+
     return {
         "total_rows": len(rows),
         "positives": len(positives),
         "by_source": _counts("source"),
         "by_domain": _counts("domain"),
         "by_license": _counts("license"),
+        "by_license_origin": _counts("license_origin"),
+        "unknown_license_rows": unknown_license_rows,
+        "disallowed_for_training_rows": disallowed_rows,
+        "synthetic_inherits_source": {
+            "rows": len(inherited),
+            "by_inherited_from_source_id": dict(sorted(inh_by_seed.items())),
+        },
         "embedding_score": _score_distribution([r.get("embedding_score") for r in rows]),
         "reranker_score": _score_distribution([r.get("reranker_score") for r in rows]),
         "missing_embedding_score": sum(1 for r in rows if r.get("embedding_score") is None),

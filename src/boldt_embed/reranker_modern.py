@@ -119,9 +119,14 @@ def candidate_lists_to_pointwise(rows: Sequence[Dict[str, Any]]) -> List[Dict[st
     return out
 
 
-def candidate_lists_to_pairwise(rows: Sequence[Dict[str, Any]], max_pairs_per_query: int = 8
+def candidate_lists_to_pairwise(rows: Sequence[Dict[str, Any]], max_pairs_per_query: int = 8,
+                                min_teacher_margin: Optional[float] = None
                                 ) -> List[Dict[str, Any]]:
-    """{query, positive, negative} pairs from candidate lists (label 1 × label 0)."""
+    """{query, positive, negative} pairs from candidate lists (label 1 × label 0).
+
+    With ``min_teacher_margin`` set (v3), a pair is emitted ONLY when both sides carry a teacher
+    score AND ``pos_score - neg_score >= margin`` — i.e. pairwise margin is applied only where the
+    teacher signal is strong, never on ambiguous pairs."""
     out = []
     for r in rows:
         pos = [c for c in r.get("candidates", []) if c.get("label") == 1]
@@ -129,6 +134,10 @@ def candidate_lists_to_pairwise(rows: Sequence[Dict[str, Any]], max_pairs_per_qu
         made = 0
         for p in pos:
             for n in neg:
+                if min_teacher_margin is not None:
+                    ps, ns = p.get("teacher_score"), n.get("teacher_score")
+                    if ps is None or ns is None or (float(ps) - float(ns)) < min_teacher_margin:
+                        continue
                 out.append({"query": r.get("query", ""), "positive": p.get("document", ""),
                             "negative": n.get("document", "")})
                 made += 1
@@ -137,6 +146,82 @@ def candidate_lists_to_pairwise(rows: Sequence[Dict[str, Any]], max_pairs_per_qu
             if made >= max_pairs_per_query:
                 break
     return out
+
+
+# ------------------------------------------------------------- v3: high-precision labeling
+V3_POSITIVE_THRESHOLD = 4.0     # teacher reranker score for a high-precision positive
+V3_NEG_MARGIN = 2.0             # a clear negative scores <= positive_threshold - margin
+
+
+def v3_label(teacher_score: Optional[float], positive_threshold: float = V3_POSITIVE_THRESHOLD,
+             neg_margin: float = V3_NEG_MARGIN) -> Optional[int]:
+    """High-precision label from a teacher reranker score: 1 (>= threshold), 0 (clearly below by
+    margin), or None (UNCERTAIN — used for listwise soft targets, never as a hard BCE negative)."""
+    if teacher_score is None:
+        return None
+    s = float(teacher_score)
+    if s >= positive_threshold:
+        return 1
+    if s <= positive_threshold - neg_margin:
+        return 0
+    return None
+
+
+def reranker_training_summary(rows: Sequence[Dict[str, Any]],
+                              positive_threshold: float = V3_POSITIVE_THRESHOLD) -> Dict[str, Any]:
+    """Pre-training visibility over candidate-list rows: positive/negative teacher-score
+    separation per domain, uncertain (label=null) count, candidate-source distribution, and the
+    synthetic-vs-real share."""
+    import statistics
+    pos_by_dom: Dict[str, List[float]] = {}
+    neg_by_dom: Dict[str, List[float]] = {}
+    uncertain = 0
+    src_dist: Dict[str, int] = {}
+    syn = real = 0
+    n_pos = n_neg = 0
+    for r in rows:
+        for c in r.get("candidates", []):
+            dom = str(c.get("domain") or r.get("domain") or "unknown")
+            ts = c.get("teacher_score")
+            lab = c.get("label")
+            if lab == 1:
+                n_pos += 1
+                if ts is not None:
+                    pos_by_dom.setdefault(dom, []).append(float(ts))
+            elif lab == 0:
+                n_neg += 1
+                if ts is not None:
+                    neg_by_dom.setdefault(dom, []).append(float(ts))
+            else:
+                uncertain += 1
+            for s in (c.get("candidate_source") or "unknown").split("+") if isinstance(
+                    c.get("candidate_source"), str) else [c.get("candidate_source") or "unknown"]:
+                src_dist[s] = src_dist.get(s, 0) + 1
+            if c.get("synthetic"):
+                syn += 1
+            else:
+                real += 1
+    sep = {}
+    for dom in sorted(set(pos_by_dom) | set(neg_by_dom)):
+        pm = round(statistics.median(pos_by_dom[dom]), 4) if pos_by_dom.get(dom) else None
+        nm = round(statistics.median(neg_by_dom[dom]), 4) if neg_by_dom.get(dom) else None
+        sep[dom] = {"pos_median": pm, "neg_median": nm,
+                    "separation": round(pm - nm, 4) if (pm is not None and nm is not None) else None}
+    total_cand = syn + real
+    min_pos = None
+    pos_scores = [s for v in pos_by_dom.values() for s in v]
+    if pos_scores:
+        min_pos = round(min(pos_scores), 4)
+    return {
+        "positives": n_pos, "negatives": n_neg, "uncertain": uncertain,
+        "separation_by_domain": sep,
+        "candidate_source_distribution": dict(sorted(src_dist.items())),
+        "synthetic_candidates": syn, "real_candidates": real,
+        "synthetic_share": round(syn / total_cand, 4) if total_cand else 0.0,
+        "positive_threshold": positive_threshold,
+        "min_positive_teacher_score": min_pos,
+        "high_precision_positives": (min_pos is None or min_pos >= positive_threshold),
+    }
 
 
 def candidate_lists_to_listwise(rows: Sequence[Dict[str, Any]], temperature: float = 1.0

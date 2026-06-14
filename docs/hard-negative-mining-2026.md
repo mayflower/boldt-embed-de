@@ -92,3 +92,22 @@ For v2, in addition to the embedder hard-negative file (`hardneg_v2.jsonl`, the 
 **multiple sources** (BM25 + dense student/e5/teacher), each with `teacher_score`,
 `candidate_source`, `domain`. Mixing sources is the fix for the v1 reranker's
 single-distribution overfit (see `docs/reranker-training-2026.md`).
+
+## v3: scalable BM25 (build the index once)
+
+v2 surfaced that the BM25 first stage re-tokenized the whole corpus per query (O(n·m)), so
+mining was capped to a ~3.5k subset. v3 builds an inverted index **once**
+(`src/boldt_embed/bm25_index.py`) so mining runs over the **full** corpus. Both mining scripts
+take `--bm25-index` (or build once internally), log `corpus=…/queries=…`, and emit
+`mining_corpus_size` / `mining_query_count` / `mining_cap_applied` / `bm25_runtime_sec` (printed
+and written to `<output>.mining_report.json`). Use `--require-full-corpus` to make any subsample
+(`--max-queries`) a hard failure, and gate promotion on `mining_cap_applied == false`. Full
+details: **`docs/scalable-mining.md`**.
+
+```bash
+# v3 mining over the full candidate set (build index once, fail if capped):
+python scripts/build_bm25_index.py --corpus candidates_v3.jsonl --output bm25_v3.json
+python scripts/mine_hard_negatives_2026.py --candidates candidates_v3.jsonl \
+  --teacher-cache teacher_cache_v3.jsonl --bm25-index bm25_v3.json \
+  --output hardneg_v3.jsonl --require-full-corpus
+```

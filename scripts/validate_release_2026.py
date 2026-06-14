@@ -151,6 +151,42 @@ def check_v2_artifacts(results_dir: Path) -> List[Issue]:
             if not (results_dir / a).exists()]
 
 
+def _summary_unknown_license_rows(summary: Dict[str, object]) -> int:
+    """Unknown-license count, tolerant of old (by_license only) and new (explicit) schemas."""
+    if "unknown_license_rows" in summary:
+        try:
+            return int(summary["unknown_license_rows"])  # type: ignore[arg-type]
+        except (TypeError, ValueError):
+            return 0
+    by_lic = summary.get("by_license") or {}
+    if isinstance(by_lic, dict):
+        return int(by_lic.get("unknown", 0) or 0)
+    return 0
+
+
+def check_teacher_cache_license(results_dir: Path) -> List[Issue]:
+    """Every teacher-cache summary under results_dir must have ZERO unknown-license rows.
+    This blocks the v2 provenance bug (`by_license {"unknown": N}`) from reaching release."""
+    issues: List[Issue] = []
+    summaries = sorted(results_dir.glob("**/*.summary.json"))
+    for sp in summaries:
+        try:
+            summary = json.loads(sp.read_text(encoding="utf-8"))
+        except Exception:
+            continue
+        if not isinstance(summary, dict) or "by_license" not in summary:
+            continue  # not a teacher-cache summary
+        n = _summary_unknown_license_rows(summary)
+        if n > 0:
+            issues.append(("teacher_cache_unknown_license",
+                           f"{sp.relative_to(results_dir)}: {n} unknown-license rows"))
+        if int((summary.get("disallowed_for_training_rows") or 0)) > 0:
+            issues.append(("teacher_cache_disallowed_training",
+                           f"{sp.relative_to(results_dir)}: "
+                           f"{summary['disallowed_for_training_rows']} disallowed-training rows"))
+    return issues
+
+
 # ------------------------------------------------------------------------- runner
 def git_tracked_files(root: Path) -> List[str]:
     try:
@@ -161,7 +197,8 @@ def git_tracked_files(root: Path) -> List[str]:
 
 
 def run_checks(root: Path = ROOT, results_dir: Path = None,
-               require_v2_artifacts: bool = False) -> Dict[str, object]:
+               require_v2_artifacts: bool = False,
+               require_v3_artifacts: bool = False) -> Dict[str, object]:
     tracked = git_tracked_files(root)
     results_dir = results_dir or (root / "outputs")
     checks: Dict[str, List[Issue]] = {
@@ -186,6 +223,9 @@ def run_checks(root: Path = ROOT, results_dir: Path = None,
                            if checklist.exists() else [("missing", "RELEASE_CHECKLIST.md")])
     if require_v2_artifacts:
         checks["v2_artifacts"] = check_v2_artifacts(results_dir)
+    # A v2- OR v3-readiness run must be license-clean: no unknown-license teacher-cache rows.
+    if require_v2_artifacts or require_v3_artifacts:
+        checks["teacher_cache_license"] = check_teacher_cache_license(results_dir)
     issues = [i for group in checks.values() for i in group]
     return {"status": "pass" if not issues else "fail", "issue_count": len(issues),
             "checks": {k: [list(i) for i in v] for k, v in checks.items()}}
@@ -207,9 +247,12 @@ def main() -> int:
     ap.add_argument("--results-dir", default=None, help="dir of v2 run artifacts (reranker lift, etc.)")
     ap.add_argument("--require-v2-artifacts", action="store_true",
                     help="RELEASE gate: also require all v2 run artifacts to exist")
+    ap.add_argument("--require-v3-artifacts", action="store_true",
+                    help="RELEASE gate: enforce license-clean teacher cache (zero unknown-license rows)")
     args = ap.parse_args()
     report = run_checks(results_dir=Path(args.results_dir) if args.results_dir else None,
-                        require_v2_artifacts=args.require_v2_artifacts)
+                        require_v2_artifacts=args.require_v2_artifacts,
+                        require_v3_artifacts=args.require_v3_artifacts)
     print(json.dumps(report, ensure_ascii=False, indent=2) if args.format == "json"
           else render_markdown(report))
     return 0 if report["status"] == "pass" else 1

@@ -1,0 +1,18 @@
+{
+  "prefix": "qwen3_v3",
+  "mode": "both",
+  "shard_size": 12500,
+  "n_shards": 2,
+  "shards": [
+    {
+      "index": 0,
+      "path": "outputs/v3-real-domain/teacher-cache/qwen3_v3.shard-00000.jsonl",
+      "rows": 12500
+    },
+    {
+      "index": 1,
+      "path": "outputs/v3-real-domain/teacher-cache/qwen3_v3.shard-00001.jsonl",
+      "rows": 12261
+    }
+  ]
+}

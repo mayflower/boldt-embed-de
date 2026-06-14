@@ -134,6 +134,15 @@ def main() -> int:
                                             _positives(r), (args.k,)))
         report[f"teacher_reranker_ndcg@{args.k}"] = RM.aggregate_rows(tr_rows).get(f"ndcg@{args.k}")
 
+    # v3: record the student-reranker lift delta + a catastrophic-degradation flag so the
+    # promotion gate and dashboards can read it directly from the lift report.
+    fs_v = report.get(f"first_stage_ndcg@{args.k}")
+    rr_v = report.get(f"student_reranker_ndcg@{args.k}")
+    if fs_v is not None and rr_v is not None:
+        delta = round(rr_v - fs_v, 4)
+        report["student_reranker_delta"] = delta
+        report["catastrophic_degradation"] = delta < -0.02
+        report["neutral_or_better"] = delta >= 0.0
     report["run_metadata"] = {"command": "scripts/eval_reranker_lift.py", "commit": _git_commit(),
                               "hardware": platform.platform(), "reranker": args.reranker}
     out = pathlib.Path(args.output)

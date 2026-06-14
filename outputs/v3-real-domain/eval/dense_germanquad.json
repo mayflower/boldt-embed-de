@@ -1,0 +1,67 @@
+{
+  "status": "ok",
+  "mode": "local",
+  "task": "germanquad",
+  "n_queries": 1500,
+  "n_corpus": 474,
+  "run_metadata": {
+    "command": "scripts/run_baseline_benchmarks.py",
+    "commit": "f4c8b029182e7ee9659dafb04901558e44092996",
+    "python": "3.12.13",
+    "platform": "Linux-6.11.0-1013-gcp-x86_64-with-glibc2.39",
+    "torch": "2.6.0+cu124",
+    "transformers": "5.9.0",
+    "sentence_transformers": "5.5.1",
+    "mteb": null
+  },
+  "results": [
+    {
+      "model": "Boldt/Boldt-DC-350M",
+      "task": "germanquad",
+      "backend": "local_boldt",
+      "split": "test",
+      "metrics": {
+        "ndcg@10": 0.2879650789364867,
+        "mrr@10": 0.25563492063492066,
+        "recall@10": 0.39066666666666666,
+        "map@10": 0.25563492063492066,
+        "ndcg@100": 0.31716056978827634,
+        "mrr@100": 0.2614597059579836,
+        "recall@100": 0.5293333333333333,
+        "map@100": 0.2614597059579836
+      }
+    },
+    {
+      "model": "outputs/v3-real-domain/checkpoints/boldt-modern-causal-v3",
+      "task": "germanquad",
+      "backend": "local_boldt",
+      "split": "test",
+      "metrics": {
+        "ndcg@10": 0.8851625750107249,
+        "mrr@10": 0.8557685185185185,
+        "recall@10": 0.974,
+        "map@10": 0.8557685185185185,
+        "ndcg@100": 0.8903303028511653,
+        "mrr@100": 0.8569749671514648,
+        "recall@100": 0.9966666666666667,
+        "map@100": 0.8569749671514648
+      }
+    },
+    {
+      "model": "intfloat/multilingual-e5-base",
+      "task": "germanquad",
+      "backend": "sentence_transformers",
+      "split": "test",
+      "metrics": {
+        "ndcg@10": 0.9388648472161265,
+        "mrr@10": 0.9236515873015874,
+        "recall@10": 0.984,
+        "map@10": 0.9236515873015874,
+        "ndcg@100": 0.9419399118161013,
+        "mrr@100": 0.9243423360242803,
+        "recall@100": 0.998,
+        "map@100": 0.9243423360242803
+      }
+    }
+  ]
+}

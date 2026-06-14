@@ -1,0 +1,39 @@
+{
+  "experiment_id": "v3-real-domain-generalization",
+  "goal": "replace weak synthetic admin/faq/legal query domains with real licensed domain corpora and scalable mining",
+  "public_benchmarks_eval_only": true,
+  "train_only_if_license_known": true,
+  "train_only_if_leakage_full_scan_complete": true,
+  "target_candidate_count_min": 100000,
+  "target_teacher_validated_positives_min": 50000,
+  "domain_targets": {
+    "web": 0.25,
+    "wiki_non_eval": 0.2,
+    "faq_real": 0.15,
+    "admin_real": 0.15,
+    "legal_adjacency_real_no_eval_overlap": 0.15,
+    "german_stress": 0.05,
+    "cross_lingual_de_en": 0.05
+  },
+  "success_criteria": {
+    "dense_germanquad_ndcg10_min": 0.886,
+    "dense_dt_test_ndcg10_min": 0.95,
+    "dense_gerdalir_ndcg10_min": 0.12,
+    "dense_gerdalir_ndcg10_stretch": 0.125,
+    "reranker_dt_test_delta_min": 0.0,
+    "reranker_germanquad_delta_min": 0.0,
+    "reranker_germanquad_delta_target": 0.02,
+    "matryoshka_256_retention_min": 0.95,
+    "license_unknown_rows_max": 0
+  },
+  "domain_quality_gates": {
+    "min_real_domain_accepted": {
+      "faq_real": 3,
+      "admin_real": 3,
+      "legal_adjacency_real_no_eval_overlap": 3
+    },
+    "max_synthetic_share_for_real_domains": 0.25,
+    "max_effective_web_wiki_share": 0.65,
+    "min_teacher_acceptance_rate": 0.35
+  }
+}
