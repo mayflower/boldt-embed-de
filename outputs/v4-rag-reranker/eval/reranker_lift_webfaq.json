@@ -1,0 +1,17 @@
+{
+  "eval_set": "webfaq",
+  "diagnostic": false,
+  "fixed_candidates": true,
+  "n_queries": 1576,
+  "n_queries_without_candidates": 0,
+  "first_stage_ndcg@10": 0.5945,
+  "reranked_ndcg@10": 0.8852,
+  "delta_ndcg@10": 0.2907,
+  "first_stage_mrr@10": 0.5768,
+  "reranked_mrr@10": 0.8492,
+  "positive_in_top_10_before": 0.6478,
+  "positive_in_top_10_after": 0.9956,
+  "answer_support_at_10": null,
+  "oracle_ndcg@10": 1.0,
+  "first_stage_recall_top_10": 0.6478
+}

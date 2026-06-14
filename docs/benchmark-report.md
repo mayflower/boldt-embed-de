@@ -332,6 +332,36 @@ candidate sets (WebFAQ-held-out + local RAG +0.03, GermanQuAD/DT-test neutral-or
 catastrophic degradation). See `docs/v4-rag-reranker-plan.md` and
 `configs/experiments/v4_rag_reranker.json`.
 
+**v4 promotion is mechanical.** `scripts/summarize_v4_rag_results.py` writes
+`outputs/v4-rag-reranker/V4_RAG_RESULTS.{md,json}` with the verdict (promoted / mixed /
+not_promoted), and `validate_release_2026.py --require-v4-rag-artifacts` requires the v4 config,
+WebFAQ eval split, fixed candidate lists, teacher-scored lists, lift reports, and the promotion
+gate — and forbids the reranker card from claiming "Recommended for German FAQ/RAG reranking"
+unless the gate report says pass. GerDaLIR is ignored by this track.
+
+### 6k. v4 RAG reranker — EXECUTED (2026-06-14, RTX A6000, `outputs/v4-rag-reranker`)
+
+Distilled `boldt-rag-reranker-v4` (350M, causal v3 backbone + fresh score head) from
+`Qwen/Qwen3-Reranker-8B`. Training supervision: **7,415** WebFAQ teacher-scored candidate lists
+(**147,582** pairs scored: 7,415 gold positives / 125,567 hard negatives / 14,600 uncertain),
+train↔eval leakage-disjoint by deterministic hash split. First stage = BM25 top-20; quality is
+**lift over the fixed candidate list** (nDCG@10 first-stage → +reranker):
+
+| eval set | first-stage nDCG@10 | + reranker | Δ | first-stage recall@10 / oracle | gate check |
+|---|--:|--:|--:|--:|:--|
+| **WebFAQ held-out** (in-domain) | 0.5945 | **0.8852** | **+0.2907** | 0.648 / 1.0 | pass (Δ ≥ +0.03, recall ≥ 0.5) |
+| GermanQuAD | 0.9058 | 0.8347 | **−0.0711** | 0.961 / 1.0 | **fail** (neutral & catastrophic) |
+| DT-test | 0.9774 | 0.9767 | −0.0007 | 0.992 / 1.0 | fail neutral (not catastrophic) |
+
+**Promotion gate: FAIL → not promoted (verdict: mixed).** The reranker is a **strong in-domain
+FAQ reranker** (+0.29 nDCG@10 on held-out WebFAQ) that **does not generalize**: GermanQuAD/DT-test
+first stages are already near-ceiling (positive_in_top_10 0.96–0.99, oracle 1.0), so a FAQ-tuned
+cross-encoder only churns near-perfect orderings — neutral at best (DT-test), harmful at worst
+(GermanQuAD −0.07). This repeats the v1/v2/v3 lesson: in-distribution lift ≠ general reranking.
+Next data needed to promote: diverse non-FAQ German question styles (QA-passage, long-doc) in the
+teacher-scored training mix, not only WebFAQ FAQ pairs. GerDaLIR/legal stays diagnostic-only and
+never gates this track.
+
 ## 7. Matryoshka truncation analysis
 Storage scales linearly with dim (fp32): 1024→4096 B, 512→2048 B, 256→1024 B, 128→512 B,
 64→256 B/vector. The HashingEncoder by-dim retrieval (toy) stays near-perfect down to 64 dims

@@ -44,6 +44,16 @@ lift ≥+0.03; GermanQuAD/DT-test neutral-or-better; no catastrophic degradation
 legal/admin domain gates are retired as a product target** — GerDaLIR (legal) is now a
 **diagnostic only**, not a release blocker. v1/v2/v3 are kept as historical/diagnostic.
 
+Promotion is **mechanically enforced**: the reranker model card may claim "Recommended for
+German FAQ/RAG reranking" only if the v4 promotion gate passes
+(`validate_release_2026.py --require-v4-rag-artifacts`); otherwise it stays *Experimental*. The
+run is summarized by `scripts/summarize_v4_rag_results.py` → `outputs/v4-rag-reranker/V4_RAG_RESULTS.{md,json}`.
+**v4 run EXECUTED (2026-06-14, RTX A6000):** distilled from Qwen3-Reranker-8B over 7,415 WebFAQ
+candidate lists. Lift over fixed BM25 top-20 (nDCG@10): **WebFAQ held-out +0.2907**, GermanQuAD
+**−0.0711**, DT-test −0.0007. **Promotion gate FAILED** (GermanQuAD degrades catastrophically;
+DT-test not neutral) → a strong in-domain FAQ reranker that does **not** generalize. The reranker
+stays **Experimental / not promoted**; see `outputs/v4-rag-reranker/V4_RAG_RESULTS.md`.
+
 Training data follows a strict **train≠eval** rule (`docs/data/training-datasets-research-2026.md`):
 benchmark datasets (GermanQuAD/GerDaLIR/MMTEB) are held out; training uses non-benchmark
 permissive corpora. No number is a quality claim unless produced by a saved command under

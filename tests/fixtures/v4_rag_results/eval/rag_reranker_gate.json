@@ -1,0 +1,13 @@
+{
+  "status": "pass",
+  "deltas": {
+    "webfaq": 0.05,
+    "germanquad": 0.0,
+    "dt_test": 0.01,
+    "gerdalir": -0.1
+  },
+  "diagnostic_sets": [
+    "gerdalir"
+  ],
+  "failing": []
+}

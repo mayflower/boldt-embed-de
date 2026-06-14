@@ -51,6 +51,23 @@ all **blocking** items pass.
       `benchmarks/mteb_german_tasks.json` (enforced by the gate's eval-leakage check).
 - [ ] Every reported v2 number has a run card.
 
+## v4 — German RAG reranker (active product track; run `validate_release_2026.py --require-v4-rag-artifacts`)
+- [x] v4 config exists (`configs/experiments/v4_rag_reranker.json`).
+- [x] WebFAQ held-out eval split exists; train/held-out are leakage-disjoint (deterministic hash split).
+- [x] Fixed candidate lists exist (`candidate_lists/rag_reranker_train_lists.jsonl`).
+- [x] Teacher-scored candidate lists exist (`teacher/rag_train_scored.jsonl`).
+- [x] Reranker lift reports exist (`eval/reranker_lift_*.json`) over FIXED candidate sets.
+- [x] Promotion gate report exists (`eval/rag_reranker_gate.json`).
+- [x] Reranker model card claims "Recommended for German FAQ/RAG reranking" **only if** the
+      promotion gate passes (WebFAQ/local lift ≥ +0.03, GermanQuAD/DT-test ≥ 0, no domain < −0.02).
+- [x] Card always states: not legal advice, not a dense retriever, candidate-lists-only, lift-over-first-stage.
+- [x] **No legal/admin corpus is required** for this track; GerDaLIR is diagnostic-only and never gates.
+
+**Run executed 2026-06-14 (RTX A6000) — promotion gate FAILED → NOT promoted.** WebFAQ held-out
++0.2907 (pass), GermanQuAD −0.0711 (fail neutral + catastrophic), DT-test −0.0007 (fail neutral).
+Card correctly stays *Experimental; not recommended for production reranking*. See
+`outputs/v4-rag-reranker/V4_RAG_RESULTS.md`.
+
 ## Non-blocking — hygiene
 - [ ] `make all` green; CI green on py3.10–3.12.
 - [ ] Working tree clean; release tagged.

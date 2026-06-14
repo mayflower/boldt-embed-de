@@ -1,0 +1,78 @@
+{
+  "status": "fail",
+  "checks": [
+    {
+      "check": "webfaq_delta",
+      "status": "pass",
+      "detail": "0.2907 (min 0.03)"
+    },
+    {
+      "check": "webfaq_first_stage_recall",
+      "status": "pass",
+      "detail": "0.6478 (min 0.5)"
+    },
+    {
+      "check": "germanquad_neutral_or_better",
+      "status": "fail",
+      "detail": "-0.0711 (min 0.0)"
+    },
+    {
+      "check": "dt_test_neutral_or_better",
+      "status": "fail",
+      "detail": "-0.0007 (min 0.0)"
+    },
+    {
+      "check": "dt_test_not_catastrophic",
+      "status": "pass",
+      "detail": "-0.0007 (min -0.02)"
+    },
+    {
+      "check": "dt_test_fixed_candidates",
+      "status": "pass",
+      "detail": "all eval sets must use fixed candidate lists"
+    },
+    {
+      "check": "germanquad_not_catastrophic",
+      "status": "fail",
+      "detail": "-0.0711 (min -0.02)"
+    },
+    {
+      "check": "germanquad_fixed_candidates",
+      "status": "pass",
+      "detail": "all eval sets must use fixed candidate lists"
+    },
+    {
+      "check": "webfaq_not_catastrophic",
+      "status": "pass",
+      "detail": "0.2907 (min -0.02)"
+    },
+    {
+      "check": "webfaq_fixed_candidates",
+      "status": "pass",
+      "detail": "all eval sets must use fixed candidate lists"
+    }
+  ],
+  "failing": [
+    {
+      "check": "germanquad_neutral_or_better",
+      "status": "fail",
+      "detail": "-0.0711 (min 0.0)"
+    },
+    {
+      "check": "dt_test_neutral_or_better",
+      "status": "fail",
+      "detail": "-0.0007 (min 0.0)"
+    },
+    {
+      "check": "germanquad_not_catastrophic",
+      "status": "fail",
+      "detail": "-0.0711 (min -0.02)"
+    }
+  ],
+  "diagnostic_sets": [],
+  "deltas": {
+    "dt_test": -0.0007,
+    "germanquad": -0.0711,
+    "webfaq": 0.2907
+  }
+}

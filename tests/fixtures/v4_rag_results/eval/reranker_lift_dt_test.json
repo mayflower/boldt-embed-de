@@ -1,0 +1,16 @@
+{
+  "eval_set": "dt_test",
+  "diagnostic": false,
+  "fixed_candidates": true,
+  "n_queries": 50,
+  "first_stage_ndcg@10": 0.8,
+  "reranked_ndcg@10": 0.81,
+  "delta_ndcg@10": 0.01,
+  "first_stage_mrr@10": 0.78,
+  "reranked_mrr@10": 0.81,
+  "positive_in_top_10_before": 0.95,
+  "positive_in_top_10_after": 0.95,
+  "answer_support_at_10": 0.95,
+  "oracle_ndcg@10": 0.99,
+  "first_stage_recall_top_10": 0.95
+}

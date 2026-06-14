@@ -31,7 +31,7 @@ def main() -> int:
     if not cp.exists():
         print(f"ERROR: corpus not found: {args.corpus}", file=sys.stderr)
         return 2
-    docs = [json.loads(l) for l in cp.read_text(encoding="utf-8").splitlines() if l.strip()]
+    docs = [json.loads(l) for l in cp.read_text(encoding="utf-8").split("\n") if l.strip()]
     t0 = time.monotonic()
     index = BM25Index(fold_umlauts=args.fold_umlauts).build(
         docs, text_field=args.text_field, id_field=args.id_field)

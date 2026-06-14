@@ -20,7 +20,7 @@ import json
 import subprocess
 import sys
 from pathlib import Path
-from typing import Dict, List, Sequence, Tuple
+from typing import Dict, List, Optional, Sequence, Tuple
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -46,6 +46,17 @@ V2_REQUIRED_ARTIFACTS = [
 EMBEDDER_EXTRA = ["## Matryoshka dimensions"]
 RERANKER_EXTRA = ["## Reranker lift"]
 NON_LEGAL_WARNING = "not legal advice"
+# v4 RAG reranker track (no legal/admin requirement). Paths are relative to --results-dir.
+V4_RAG_REQUIRED_ARTIFACTS = [
+    "eval/webfaq/queries.jsonl",                       # WebFAQ held-out eval split
+    "candidate_lists/rag_reranker_train_lists.jsonl",  # fixed candidate lists
+    "teacher/rag_train_scored.jsonl",                  # teacher-scored lists
+    "eval/reranker_lift_webfaq.json",                  # reranker lift reports
+    "eval/rag_reranker_gate.json",                     # promotion gate
+]
+V4_RAG_RECOMMENDED_PHRASE = "Recommended for German FAQ/RAG reranking"
+V4_RAG_CARD_DISCLAIMERS = ["not legal advice", "not a dense retriever",
+                           "candidate lists only", "lift over"]
 CARD_TYPES = {
     "Boldt-Embed-DE-350M-v1-causal.md": "embedder",
     "Boldt-Embed-DE-350M-v1-bi.md": "embedder",
@@ -151,6 +162,45 @@ def check_v2_artifacts(results_dir: Path) -> List[Issue]:
             if not (results_dir / a).exists()]
 
 
+def check_v4_rag_artifacts(root: Path, results_dir: Path) -> List[Issue]:
+    """v4 RAG-reranker readiness: config + WebFAQ eval split + fixed candidate lists +
+    teacher-scored lists + lift reports + promotion gate. NO legal/admin requirement."""
+    issues: List[Issue] = []
+    if not (root / "configs" / "experiments" / "v4_rag_reranker.json").exists():
+        issues.append(("missing_config", "configs/experiments/v4_rag_reranker.json"))
+    issues += [("missing_v4_rag_artifact", a) for a in V4_RAG_REQUIRED_ARTIFACTS
+               if not (results_dir / a).exists()]
+    return issues
+
+
+def _v4_gate_passed(results_dir: Path) -> Optional[bool]:
+    p = results_dir / "eval" / "rag_reranker_gate.json"
+    if not p.exists():
+        return None
+    try:
+        return json.loads(p.read_text(encoding="utf-8")).get("status") == "pass"
+    except Exception:
+        return None
+
+
+def check_v4_rag_card(root: Path, results_dir: Path) -> List[Issue]:
+    """The reranker card may claim the RAG recommendation ONLY if the v4 promotion gate passed,
+    and it must always carry the v4 disclaimers. Legal/admin are NOT required for this track."""
+    issues: List[Issue] = []
+    card = root / "model_cards" / "Boldt-Reranker-DE-350M-v1.md"
+    if not card.exists():
+        return [("missing_card", "Boldt-Reranker-DE-350M-v1.md")]
+    text = card.read_text(encoding="utf-8")
+    low = text.lower()
+    for phrase in V4_RAG_CARD_DISCLAIMERS:
+        if phrase.lower() not in low:
+            issues.append(("v4_card_missing_disclaimer", phrase))
+    if V4_RAG_RECOMMENDED_PHRASE in text and _v4_gate_passed(results_dir) is not True:
+        issues.append(("v4_card_recommended_without_passing_gate",
+                       "card claims the RAG recommendation but the v4 promotion gate did not pass"))
+    return issues
+
+
 def _summary_unknown_license_rows(summary: Dict[str, object]) -> int:
     """Unknown-license count, tolerant of old (by_license only) and new (explicit) schemas."""
     if "unknown_license_rows" in summary:
@@ -198,7 +248,8 @@ def git_tracked_files(root: Path) -> List[str]:
 
 def run_checks(root: Path = ROOT, results_dir: Path = None,
                require_v2_artifacts: bool = False,
-               require_v3_artifacts: bool = False) -> Dict[str, object]:
+               require_v3_artifacts: bool = False,
+               require_v4_rag_artifacts: bool = False) -> Dict[str, object]:
     tracked = git_tracked_files(root)
     results_dir = results_dir or (root / "outputs")
     checks: Dict[str, List[Issue]] = {
@@ -226,6 +277,12 @@ def run_checks(root: Path = ROOT, results_dir: Path = None,
     # A v2- OR v3-readiness run must be license-clean: no unknown-license teacher-cache rows.
     if require_v2_artifacts or require_v3_artifacts:
         checks["teacher_cache_license"] = check_teacher_cache_license(results_dir)
+    # v4 RAG reranker track: artifacts + card-vs-gate consistency. NO legal/admin requirement.
+    if require_v4_rag_artifacts:
+        v4_dir = results_dir if (results_dir / "eval" / "rag_reranker_gate.json").exists() \
+            else (root / "outputs" / "v4-rag-reranker")
+        checks["v4_rag_artifacts"] = check_v4_rag_artifacts(root, v4_dir)
+        checks["v4_rag_card"] = check_v4_rag_card(root, v4_dir)
     issues = [i for group in checks.values() for i in group]
     return {"status": "pass" if not issues else "fail", "issue_count": len(issues),
             "checks": {k: [list(i) for i in v] for k, v in checks.items()}}
@@ -249,10 +306,13 @@ def main() -> int:
                     help="RELEASE gate: also require all v2 run artifacts to exist")
     ap.add_argument("--require-v3-artifacts", action="store_true",
                     help="RELEASE gate: enforce license-clean teacher cache (zero unknown-license rows)")
+    ap.add_argument("--require-v4-rag-artifacts", action="store_true",
+                    help="RELEASE gate: v4 RAG reranker artifacts + card-vs-gate (no legal/admin requirement)")
     args = ap.parse_args()
     report = run_checks(results_dir=Path(args.results_dir) if args.results_dir else None,
                         require_v2_artifacts=args.require_v2_artifacts,
-                        require_v3_artifacts=args.require_v3_artifacts)
+                        require_v3_artifacts=args.require_v3_artifacts,
+                        require_v4_rag_artifacts=args.require_v4_rag_artifacts)
     print(json.dumps(report, ensure_ascii=False, indent=2) if args.format == "json"
           else render_markdown(report))
     return 0 if report["status"] == "pass" else 1

@@ -21,7 +21,7 @@ from boldt_embed import rag_eval_schema as R  # noqa: E402
 
 
 def _read(path):
-    return [json.loads(l) for l in pathlib.Path(path).read_text(encoding="utf-8").splitlines()
+    return [json.loads(l) for l in pathlib.Path(path).read_text(encoding="utf-8").split("\n")
             if l.strip()]
 
 

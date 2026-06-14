@@ -1,0 +1,100 @@
+{
+  "verdict": "mixed",
+  "gate_status": "fail",
+  "training_data": {
+    "webfaq_train_lists": 7415,
+    "teacher_scored_lists": 7415,
+    "hard_negatives": 125567,
+    "gold_positives": 7415,
+    "uncertain": 14600,
+    "excluded_eval_splits": [
+      "webfaq_heldout",
+      "germanquad",
+      "dt_test"
+    ]
+  },
+  "reranker_lift": {
+    "dt_test": {
+      "eval_set": "dt_test",
+      "diagnostic": false,
+      "first_stage_ndcg@10": 0.9774,
+      "reranked_ndcg@10": 0.9767,
+      "delta_ndcg@10": -0.0007,
+      "first_stage_mrr@10": 0.9727,
+      "reranked_mrr@10": 0.9692,
+      "positive_in_top_10_before": 0.992,
+      "positive_in_top_10_after": 0.999,
+      "answer_support_at_10": null,
+      "oracle_ndcg@10": 1.0,
+      "first_stage_recall_top_10": 0.992,
+      "fixed_candidates": true
+    },
+    "germanquad": {
+      "eval_set": "germanquad",
+      "diagnostic": false,
+      "first_stage_ndcg@10": 0.9058,
+      "reranked_ndcg@10": 0.8347,
+      "delta_ndcg@10": -0.0711,
+      "first_stage_mrr@10": 0.8874,
+      "reranked_mrr@10": 0.7911,
+      "positive_in_top_10_before": 0.9613,
+      "positive_in_top_10_after": 0.9693,
+      "answer_support_at_10": null,
+      "oracle_ndcg@10": 1.0,
+      "first_stage_recall_top_10": 0.9613,
+      "fixed_candidates": true
+    },
+    "webfaq": {
+      "eval_set": "webfaq",
+      "diagnostic": false,
+      "first_stage_ndcg@10": 0.5945,
+      "reranked_ndcg@10": 0.8852,
+      "delta_ndcg@10": 0.2907,
+      "first_stage_mrr@10": 0.5768,
+      "reranked_mrr@10": 0.8492,
+      "positive_in_top_10_before": 0.6478,
+      "positive_in_top_10_after": 0.9956,
+      "answer_support_at_10": null,
+      "oracle_ndcg@10": 1.0,
+      "first_stage_recall_top_10": 0.6478,
+      "fixed_candidates": true
+    }
+  },
+  "first_stage_recall": {
+    "dt_test": {
+      "positive_in_top_10": 0.992,
+      "oracle_ndcg@10": 1.0
+    },
+    "germanquad": {
+      "positive_in_top_10": 0.9613,
+      "oracle_ndcg@10": 1.0
+    },
+    "webfaq": {
+      "positive_in_top_10": 0.6478,
+      "oracle_ndcg@10": 1.0
+    }
+  },
+  "teacher_student": {
+    "dt_test": {
+      "boldt_reranker_v4_ndcg@10": 0.9767,
+      "qwen_teacher_ndcg@10": null
+    },
+    "germanquad": {
+      "boldt_reranker_v4_ndcg@10": 0.8347,
+      "qwen_teacher_ndcg@10": null
+    },
+    "webfaq": {
+      "boldt_reranker_v4_ndcg@10": 0.8852,
+      "qwen_teacher_ndcg@10": null
+    }
+  },
+  "failure_cases": {
+    "reranker_hurts": [
+      "dt_test",
+      "germanquad"
+    ],
+    "score_calibration_suspect": []
+  },
+  "decision": "Keep the reranker DISABLED for production; experimental only.",
+  "diagnostic_sets": []
+}

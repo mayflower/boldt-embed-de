@@ -24,7 +24,7 @@ def main() -> int:
     args = ap.parse_args()
 
     index = BM25Index.load(args.index)
-    queries = [json.loads(l) for l in pathlib.Path(args.queries).read_text("utf-8").splitlines()
+    queries = [json.loads(l) for l in pathlib.Path(args.queries).read_text("utf-8").split("\n")
                if l.strip()]
     t0 = time.monotonic()
     results = index.batch_search([q.get("query", "") for q in queries], args.top_k)

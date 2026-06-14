@@ -1,0 +1,127 @@
+{
+  "mode": "full",
+  "experiment_id": "v4-rag-reranker",
+  "stages": [
+    {
+      "name": "build_webfaq_eval",
+      "gpu": false,
+      "gate": false,
+      "status": "ok"
+    },
+    {
+      "name": "build_webfaq_train",
+      "gpu": false,
+      "gate": false,
+      "status": "ok"
+    },
+    {
+      "name": "bm25_index_train",
+      "gpu": false,
+      "gate": false,
+      "status": "ok"
+    },
+    {
+      "name": "bm25_search_train",
+      "gpu": false,
+      "gate": false,
+      "status": "ok"
+    },
+    {
+      "name": "build_train_candidate_lists",
+      "gpu": false,
+      "gate": false,
+      "status": "ok"
+    },
+    {
+      "name": "teacher_score_train",
+      "gpu": true,
+      "gate": false,
+      "status": "ok"
+    },
+    {
+      "name": "train_rag_reranker",
+      "gpu": true,
+      "gate": false,
+      "status": "ok"
+    },
+    {
+      "name": "bm25_index_webfaq",
+      "gpu": false,
+      "gate": false,
+      "status": "ok"
+    },
+    {
+      "name": "bm25_search_webfaq",
+      "gpu": false,
+      "gate": false,
+      "status": "ok"
+    },
+    {
+      "name": "candidate_lists_webfaq",
+      "gpu": false,
+      "gate": false,
+      "status": "ok"
+    },
+    {
+      "name": "lift_webfaq",
+      "gpu": true,
+      "gate": false,
+      "status": "ok"
+    },
+    {
+      "name": "bm25_index_germanquad",
+      "gpu": false,
+      "gate": false,
+      "status": "ok"
+    },
+    {
+      "name": "bm25_search_germanquad",
+      "gpu": false,
+      "gate": false,
+      "status": "ok"
+    },
+    {
+      "name": "candidate_lists_germanquad",
+      "gpu": false,
+      "gate": false,
+      "status": "ok"
+    },
+    {
+      "name": "lift_germanquad",
+      "gpu": true,
+      "gate": false,
+      "status": "ok"
+    },
+    {
+      "name": "bm25_index_dt_test",
+      "gpu": false,
+      "gate": false,
+      "status": "ok"
+    },
+    {
+      "name": "bm25_search_dt_test",
+      "gpu": false,
+      "gate": false,
+      "status": "ok"
+    },
+    {
+      "name": "candidate_lists_dt_test",
+      "gpu": false,
+      "gate": false,
+      "status": "ok"
+    },
+    {
+      "name": "lift_dt_test",
+      "gpu": true,
+      "gate": false,
+      "status": "ok"
+    },
+    {
+      "name": "promotion_gate",
+      "gpu": false,
+      "gate": true,
+      "status": "failed(rc=1)"
+    }
+  ],
+  "verdict": "failed"
+}

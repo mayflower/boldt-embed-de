@@ -67,7 +67,7 @@ class DataReport:
 
 def load_jsonl(path: str | Path) -> List[dict]:
     records: List[dict] = []
-    for i, line in enumerate(Path(path).read_text(encoding="utf-8").splitlines(), 1):
+    for i, line in enumerate(Path(path).read_text(encoding="utf-8").split("\n"), 1):
         if not line.strip():
             continue
         try:

@@ -21,7 +21,7 @@ from boldt_embed import rag_candidates as RC  # noqa: E402
 
 def _read(path):
     p = pathlib.Path(path)
-    return [json.loads(l) for l in p.read_text(encoding="utf-8").splitlines() if l.strip()] if p.exists() else []
+    return [json.loads(l) for l in p.read_text(encoding="utf-8").split("\n") if l.strip()] if p.exists() else []
 
 
 def _results_map(path):

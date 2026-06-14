@@ -19,7 +19,7 @@ def _read(path):
     p = pathlib.Path(path)
     if not p.exists():
         return None
-    return [json.loads(l) for l in p.read_text(encoding="utf-8").splitlines() if l.strip()]
+    return [json.loads(l) for l in p.read_text(encoding="utf-8").split("\n") if l.strip()]
 
 
 def main() -> int:

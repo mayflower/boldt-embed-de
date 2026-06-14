@@ -53,3 +53,10 @@ outputs/v3-real-domain/*.log
 outputs/v3-real-domain/leakage/*.jsonl
 outputs/v3-real-domain/leakage/eval_index.json
 outputs/v3-real-domain/bm25_v3.json
+
+# v4 RAG reranker run: large intermediate data (weights via *.safetensors/checkpoints/ above).
+# Small json/md summaries, gate, lift reports, run card, and *.report.json ARE tracked.
+outputs/v4-rag-reranker/*.log
+outputs/v4-rag-reranker/**/*.jsonl
+outputs/v4-rag-reranker/first_stage/*.json
+outputs/v4-rag-reranker/teacher/rag_teacher_summary.json

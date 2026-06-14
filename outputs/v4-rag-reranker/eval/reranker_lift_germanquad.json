@@ -1,0 +1,17 @@
+{
+  "eval_set": "germanquad",
+  "diagnostic": false,
+  "fixed_candidates": true,
+  "n_queries": 1500,
+  "n_queries_without_candidates": 0,
+  "first_stage_ndcg@10": 0.9058,
+  "reranked_ndcg@10": 0.8347,
+  "delta_ndcg@10": -0.0711,
+  "first_stage_mrr@10": 0.8874,
+  "reranked_mrr@10": 0.7911,
+  "positive_in_top_10_before": 0.9613,
+  "positive_in_top_10_after": 0.9693,
+  "answer_support_at_10": null,
+  "oracle_ndcg@10": 1.0,
+  "first_stage_recall_top_10": 0.9613
+}

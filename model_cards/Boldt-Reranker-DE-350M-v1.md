@@ -124,6 +124,40 @@ degradation) passes on v2 — enforced by the release gate.
   (0.886→0.532). Do not deploy as a general reranker until the v2 promotion gate passes.
 - **Not legal advice** (see Limitations); use only as a re-ranking stage over a shortlist.
 
+## v4 RAG reranking (German FAQ/RAG)
+
+The current product target is a German **RAG reranker** evaluated as **lift over fixed
+first-stage candidate lists** (WebFAQ held-out + local RAG must lift; GermanQuAD/DT-test
+neutral-or-better). GerDaLIR (legal) is **diagnostic only** and never gates this track.
+
+**Status: Experimental; not recommended for production reranking.** This status flips to the
+recommended-RAG wording **only** when the v4 promotion gate
+(`scripts/check_rag_reranker_promotion_gate.py`) passes — mechanically enforced by
+`validate_release_2026.py --require-v4-rag-artifacts` (the card may carry the recommended phrase
+only if the gate report says pass).
+
+**Measured (2026-06-14, RTX A6000 — `outputs/v4-rag-reranker`, see `V4_RAG_RESULTS.md`):**
+distilled from `Qwen/Qwen3-Reranker-8B` over 7,415 WebFAQ teacher-scored candidate lists
+(147,582 pairs: 7,415 gold / 125,567 hard-neg / 14,600 uncertain). Lift over **fixed** BM25
+top-20 (nDCG@10):
+
+| eval set | first stage | + reranker | Δ | gate check |
+|---|--:|--:|--:|:--|
+| WebFAQ held-out (in-domain) | 0.5945 | 0.8852 | **+0.2907** | pass |
+| GermanQuAD | 0.9058 | 0.8347 | **−0.0711** | **fail** (neutral & catastrophic) |
+| DT-test | 0.9774 | 0.9767 | −0.0007 | fail (neutral; not catastrophic) |
+
+**Gate: FAIL → not promoted.** A strong in-domain FAQ reranker that does **not** generalize:
+GermanQuAD/DT-test first stages are already near-ceiling (positive_in_top_10 0.96–0.99, oracle
+1.0), so the FAQ-tuned reranker only churns near-perfect orderings and loses ground. Keep
+disabled for production; usable only for WebFAQ-style FAQ shortlists, as an experiment.
+
+Always true of this reranker:
+- it is **not a dense retriever** — it does not search a corpus;
+- use it **over candidate lists only** (re-rank a fixed first-stage top-k, not first-stage retrieval);
+- it is **evaluated as lift over first-stage candidates** (nDCG@10 delta), not standalone;
+- relevance scoring over German text (incl. legal/admin) is **not legal advice**.
+
 ## License
 - **Code:** Apache-2.0. **Base weights:** apache-2.0 (verified 2026-05-28).
 - **Derivative weights:** intended apache-2.0, contingent on training-data licenses (ADR-004).

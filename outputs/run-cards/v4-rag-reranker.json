@@ -1,0 +1,27 @@
+{
+  "run_id": "v4-rag-reranker",
+  "run_type": "train_reranker",
+  "command": "scripts/train_rag_reranker_v4.py",
+  "commit": "9220309d0592d3eb0cd489f16b35bee8c9d249ea",
+  "date": "2026-06-14T17:57:27.613469+00:00",
+  "hardware": "Linux-6.11.0-1013-gcp-x86_64-with-glibc2.39",
+  "gpu": null,
+  "python": "3.12.13",
+  "torch": "2.6.0+cu124",
+  "transformers": "5.9.0",
+  "sentence_transformers": "5.5.1",
+  "input_artifacts": [
+    "outputs/v4-rag-reranker/teacher/rag_train_scored.jsonl"
+  ],
+  "output_artifacts": [
+    "outputs/v4-rag-reranker/checkpoints/boldt-rag-reranker-v4"
+  ],
+  "model": "Boldt/Boldt-DC-350M",
+  "dataset": "outputs/v4-rag-reranker/teacher/rag_train_scored.jsonl",
+  "metrics": {
+    "objective": "mixed_listwise",
+    "lists": 7415,
+    "gold_positives": 7415
+  },
+  "notes": "v4 RAG reranker loss=mixed_listwise"
+}

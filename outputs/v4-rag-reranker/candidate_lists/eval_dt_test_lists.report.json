@@ -1,0 +1,36 @@
+{
+  "mode": "eval",
+  "n_queries_in": 1000,
+  "n_lists_out": 1000,
+  "candidates_per_query": {
+    "min": 20,
+    "max": 21,
+    "mean": 20.01
+  },
+  "positive_in_top_k_rate": 0.994,
+  "candidate_source_distribution": {
+    "bm25": 20000,
+    "manual": 6
+  },
+  "domains": {
+    "unknown": 1000
+  },
+  "missing_positive_queries": [
+    "dt2528",
+    "dt596",
+    "dt2145",
+    "dt1660",
+    "dt4111",
+    "dt4918"
+  ],
+  "n_missing_positive": 6,
+  "injected_positive_queries": [
+    "dt2528",
+    "dt596",
+    "dt2145",
+    "dt1660",
+    "dt4111",
+    "dt4918"
+  ],
+  "top_k": 20
+}
