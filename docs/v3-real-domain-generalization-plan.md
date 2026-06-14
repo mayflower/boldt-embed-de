@@ -1,7 +1,13 @@
 # v3 — Real-Domain-Generalization Plan
 
-**Status:** planning only. **No new training has been run for v3.** This document encodes the
-v2 lessons as explicit gates and lays out the v3 track. Config:
+> **Status: HISTORICAL / DIAGNOSTIC (not deleted).** The active product target is now the v4
+> German RAG reranker — see `docs/v4-rag-reranker-plan.md`. v3 is kept for its diagnostic value:
+> a real-FAQ run **was executed** (2026-06-14) and showed **real WebFAQ FAQ validates at 70.8%**
+> teacher acceptance (vs v2 synthetic 5.7%), with the **best causal DT-test yet (0.970)** — see
+> `docs/benchmark-report.md` §6i/§6j and `outputs/v3-real-domain/V3_RESULTS.md`. v3's
+> **legal/admin domains are no longer release blockers**; legal eval is diagnostic only in v4.
+
+This document encodes the v2 lessons as explicit gates and lays out the v3 track. Config:
 `configs/experiments/v3_real_domain_generalization.json` (validated by
 `boldt_embed.v3_experiment_config`).
 

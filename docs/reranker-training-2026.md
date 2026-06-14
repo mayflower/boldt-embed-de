@@ -143,3 +143,39 @@ distribution, synthetic-vs-real share, and `high_precision_positives`.
   `high_precision_positives=false`) without `--allow-low-precision-positives`.
 
 A −0.001 GermanQuAD delta still **fails** — v2's small degradation can no longer pass.
+
+## v4: listwise-primary RAG reranker (`train_rag_reranker_v4.py`)
+
+v4 trains a German **RAG** reranker on teacher-scored candidate lists
+(`scripts/score_rag_candidate_lists.py` → `rag_train_scored.jsonl`), with **listwise distillation
+as the PRIMARY objective** so pointwise BCE cannot dominate on noisy labels.
+
+**Objectives (`--loss mixed_listwise`, `plan_rag_reranker_loss`):**
+- **Listwise KL** over the per-list teacher distribution — prefers the precomputed
+  `teacher_softmax_target`, else softmax of `teacher_score`; runs first and carries weight 1.0.
+- **Pairwise margin** — gold positive > hard negative, only on a strong teacher margin
+  (`--pairwise-min-teacher-margin`, default 2.0).
+- **Pointwise BCE** — **restricted to high-confidence gold** (label 1 AND
+  `high_precision_positive`) + clear hard negatives (label 0). Uncertain candidates
+  (teacher-only positives + too-close) and low-confidence golds are **excluded** — BCE never sees
+  noisy labels (weight 0.2).
+- **Optional MSE** to `teacher_score` (`--with-mse`).
+
+**Balanced sampling:** `domain_balanced_list_sampler` caps lists per domain (and per list source)
+deterministically so no domain/source dominates.
+
+**Leakage:** never trains on GermanQuAD/DT-test labels or the WebFAQ held-out split — the input
+is the train split, and `--eval-query-ids` hard-fails if any eval query_id appears in training.
+
+**Reporting** (`rag_reranker_training_report`, written to `rag_reranker_training_report.json`):
+loss-by-component plan, examples by domain/source, gold positives, hard negatives, uncertain,
+teacher-only positives, teacher-score separation, + a run card.
+
+```bash
+python scripts/train_rag_reranker_v4.py \
+  --candidate-lists outputs/v4-rag-reranker/teacher/rag_train_scored.jsonl \
+  --output outputs/v4-rag-reranker/checkpoints/boldt-rag-reranker-v4 \
+  --loss mixed_listwise --bf16 --gradient-checkpointing --epochs 1 --batch-size 8 \
+  --run-id v4-rag-reranker
+```
+

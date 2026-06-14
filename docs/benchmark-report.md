@@ -321,6 +321,17 @@ not transfer to legal. Verdict **`invalid_for_promotion`** (domain-quality gate)
 legal_adjacency_real are still unsourced, and faq_real (4,248 accepted) is below the 5,000 floor.
 Real legal/admin pairs are the remaining blocker. Run cards: `outputs/run-cards/v3-*.json`.
 
+### 6j. Track transition → v4 RAG reranker (2026-06-14)
+
+**v3's legal/admin domain gates are no longer the active product target; v4 optimizes RAG
+reranker quality.** v3 stays as **historical/diagnostic** — its dense causal student is the
+current best causal retriever (DT-test 0.970), and its finding (real FAQ validates at 70.8% vs
+synthetic 5.7%) is the basis for v4. From here, **GerDaLIR (legal) is a DIAGNOSTIC only**, never
+a release blocker. The active target is a German **RAG reranker** that lifts fixed first-stage
+candidate sets (WebFAQ-held-out + local RAG +0.03, GermanQuAD/DT-test neutral-or-better, no
+catastrophic degradation). See `docs/v4-rag-reranker-plan.md` and
+`configs/experiments/v4_rag_reranker.json`.
+
 ## 7. Matryoshka truncation analysis
 Storage scales linearly with dim (fp32): 1024→4096 B, 512→2048 B, 256→1024 B, 128→512 B,
 64→256 B/vector. The HashingEncoder by-dim retrieval (toy) stays near-perfect down to 64 dims

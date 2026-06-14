@@ -1,0 +1,18 @@
+{
+  "experiment_id": "v4-rag-reranker",
+  "goal": "train and gate a German RAG reranker over fixed first-stage candidate sets",
+  "legal_eval_is_diagnostic_only": true,
+  "public_benchmarks_eval_only": true,
+  "dense_default": "outputs/v3-real-domain/checkpoints/boldt-modern-causal-v3",
+  "teacher_reranker": "Qwen/Qwen3-Reranker-8B",
+  "candidate_sources": ["bm25", "v3_dense", "e5_dense", "qwen_dense", "webfaq_hard_negatives"],
+  "train_domains": ["faq_real", "web", "wiki_non_eval", "german_stress"],
+  "eval_sets": ["webfaq_heldout", "germanquad", "dt_test", "local_rag"],
+  "success_criteria": {
+    "webfaq_reranker_delta_ndcg10_min": 0.03,
+    "germanquad_reranker_delta_ndcg10_min": 0.0,
+    "dt_test_reranker_delta_ndcg10_min": 0.0,
+    "local_rag_reranker_delta_ndcg10_min": 0.03,
+    "catastrophic_degradation_max": -0.02
+  }
+}

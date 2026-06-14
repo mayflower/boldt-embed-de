@@ -25,23 +25,24 @@ Two layers:
 long-context capability beyond 2048.
 
 **Honest scale & status (read this):** the 2026 teacher→student workflow has been **executed**
-(Qwen3-Embedding-8B + Qwen3-Reranker-8B teachers; 3,764 multi-domain, non-benchmark German
-candidates), but this is **not release-ready**. Measured held-out nDCG@10 (`docs/benchmark-report.md`
-§6e–§6g, run cards under `outputs/run-cards/`):
-- **Causal student** (current best): GermanQuAD **0.883**, DT-test **0.950**, GerDaLIR (legal,
-  OOD) **0.0782** — competitive in-domain with `multilingual-e5-base` (0.939 / 0.994 / 0.1343),
-  which still leads, especially OOD legal.
-- **Bidirectional + MNTP:** executed (MNTP is essential — without it quality collapses); bi+MNTP
-  **beats causal in-domain** (DT-test 0.967) but causal keeps a slight OOD edge.
-- **Reranker:** lifts DT-test 0.950→**0.990** but **degrades GermanQuAD 0.886→0.532** — competent
-  in-distribution, **not yet robustly general**.
+across v1→v2→v3 (Qwen3-Embedding-8B + Qwen3-Reranker-8B teachers; real, non-benchmark German
+data). Measured held-out nDCG@10 (`docs/benchmark-report.md` §6e–§6j, run cards under
+`outputs/run-cards/`):
+- **Dense causal v3 — current best causal retriever:** GermanQuAD **0.885**, **DT-test 0.970
+  (best causal to date)**, GerDaLIR (legal, OOD) **0.089**. Trained on real teacher-validated
+  data including **real WebFAQ FAQ** (which validated at **70.8%** teacher acceptance vs v2
+  synthetic FAQ **5.7%**). `multilingual-e5-base` (0.939 / 0.994 / 0.153) still leads, esp. OOD.
+- **Reranker — still NOT promoted:** v2 reduced GermanQuAD degradation −0.354→−0.040 but it
+  remains negative, so the promotion gate (`check_reranker_promotion_gate.py`) blocks it. A
+  reranker may only be called "recommended" once that gate passes.
+- **Bidirectional + MNTP:** executed (MNTP essential); competitive but causal keeps the edge.
 - **Matryoshka:** 256-d retains ~97% of 1024-d quality on GermanQuAD.
-- **Not release-ready:** needs v2 data scale, broader eval, licensing/provenance, and reranker
-  generalization. See `RELEASE_CHECKLIST.md` / `docs/audit/final-audit.md`.
 
-**Next improvement target — `v2-data-scale-generalization`:** 50k–250k teacher-validated
-multi-domain candidates, causal vs bi+MNTP retrain, reranker trained on diverse candidate lists,
-held-out eval.
+**Next active target — `v4-rag-reranker`** (`docs/v4-rag-reranker-plan.md`): train + gate a
+German **RAG reranker** over fixed first-stage candidate sets (WebFAQ-held-out + local RAG must
+lift ≥+0.03; GermanQuAD/DT-test neutral-or-better; no catastrophic degradation). **v3's
+legal/admin domain gates are retired as a product target** — GerDaLIR (legal) is now a
+**diagnostic only**, not a release blocker. v1/v2/v3 are kept as historical/diagnostic.
 
 Training data follows a strict **train≠eval** rule (`docs/data/training-datasets-research-2026.md`):
 benchmark datasets (GermanQuAD/GerDaLIR/MMTEB) are held out; training uses non-benchmark

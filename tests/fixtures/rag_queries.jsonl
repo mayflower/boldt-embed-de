@@ -1,0 +1,3 @@
+{"query_id": "q1", "query": "Wie hoch darf die Mietkaution sein?", "answer": "hoechstens drei Nettokaltmieten", "positive_doc_ids": ["d1"], "domain": "faq_real", "source": "webfaq", "metadata": {"requires_answer_support": true, "answer_type": "faq"}}
+{"query_id": "q2", "query": "Wie lang ist die Kuendigungsfrist?", "positive_doc_ids": ["d2"], "domain": "faq_real", "source": "webfaq", "metadata": {"requires_answer_support": true, "answer_type": "fact"}}
+{"query_id": "q3", "query": "An welchem Fluss liegt Regensburg?", "positive_doc_ids": ["d3"], "domain": "wiki_non_eval", "source": "dt", "metadata": {"requires_answer_support": false, "answer_type": "fact"}}

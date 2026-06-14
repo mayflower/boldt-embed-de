@@ -224,6 +224,142 @@ def reranker_training_summary(rows: Sequence[Dict[str, Any]],
     }
 
 
+# ------------------------------------------------- v4 RAG: listwise-primary supervision
+_RAG_RERANKER_LOSS_COMPONENTS = {
+    "listwise": ["KLDivLoss(listwise)"],
+    "mixed_listwise": ["KLDivLoss(listwise)", "MarginRankingLoss",
+                       "BCEWithLogitsLoss(high_confidence_gold_only)"],
+}
+
+
+def plan_rag_reranker_loss(loss: str, with_mse: bool = False) -> Dict[str, Any]:
+    """v4 loss plan. ``mixed_listwise`` makes **listwise distillation the PRIMARY objective**;
+    pointwise BCE is restricted to high-confidence gold + hard negatives so it cannot dominate on
+    noisy labels; pairwise margin only on strong teacher margins. Optional MSE to teacher_score."""
+    components = list(_RAG_RERANKER_LOSS_COMPONENTS.get(loss, []))
+    if with_mse and loss in _RAG_RERANKER_LOSS_COMPONENTS:
+        components.append("MSELoss(teacher_score)")
+    weights = {"listwise": 1.0} if loss == "listwise" else {
+        "listwise": 1.0, "pairwise": 0.5, "pointwise_bce": 0.2, "mse": 0.2 if with_mse else 0.0}
+    return {"loss": loss, "components": components, "weights": weights,
+            "primary": "listwise", "pointwise_bce_high_confidence_only": True}
+
+
+def scored_lists_to_listwise(rows: Sequence[Dict[str, Any]], temperature: float = 1.0
+                             ) -> List[Dict[str, Any]]:
+    """Listwise batches over the FULL candidate list, preferring the precomputed
+    ``teacher_softmax_target`` (from rag_teacher_scoring); else softmax of teacher_score."""
+    out = []
+    for r in rows:
+        cands = r.get("candidates", [])
+        if len(cands) < 2:
+            continue
+        docs = [c.get("document") or c.get("text", "") for c in cands]
+        tgt = [c.get("teacher_softmax_target") for c in cands]
+        if all(t is not None for t in tgt) and abs(sum(tgt) - 1.0) < 1e-3:
+            target = [float(t) for t in tgt]
+        else:
+            scores = [c.get("teacher_score") for c in cands]
+            target = softmax([float(s) if s is not None else -1e9 for s in scores], temperature)
+        out.append({"query": r.get("query", ""), "documents": docs, "target": target})
+    return out
+
+
+def scored_lists_to_pointwise_high_confidence(rows: Sequence[Dict[str, Any]]
+                                              ) -> List[Dict[str, Any]]:
+    """Pointwise BCE examples from CONFIDENT labels only: high-precision gold positives (label 1
+    AND high_precision_positive) and clear hard negatives (label 0). Uncertain (label null) and
+    non-high-precision golds are EXCLUDED — BCE never sees noisy labels."""
+    out = []
+    for r in rows:
+        for c in r.get("candidates", []):
+            doc = c.get("document") or c.get("text", "")
+            if c.get("label") == 1 and c.get("high_precision_positive") is True:
+                out.append({"query": r.get("query", ""), "document": doc, "label": 1.0})
+            elif c.get("label") == 0:
+                out.append({"query": r.get("query", ""), "document": doc, "label": 0.0})
+    return out
+
+
+def scored_lists_to_mse(rows: Sequence[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """(query, document, teacher_score) regression targets for the optional MSE head."""
+    out = []
+    for r in rows:
+        for c in r.get("candidates", []):
+            ts = c.get("teacher_score")
+            if ts is not None:
+                out.append({"query": r.get("query", ""),
+                            "document": c.get("document") or c.get("text", ""),
+                            "label": float(ts)})
+    return out
+
+
+def domain_balanced_list_sampler(rows: Sequence[Dict[str, Any]], max_per_domain: Optional[int] = None,
+                                 max_per_source: Optional[int] = None, seed: int = 0
+                                 ) -> List[Dict[str, Any]]:
+    """Deterministically cap candidate-list rows per domain (and per list-level source), so a
+    large domain/source cannot dominate training. Returns rows in sorted-domain order."""
+    import random as _random
+    by_dom: Dict[str, List[Dict[str, Any]]] = {}
+    for r in rows:
+        by_dom.setdefault(str(r.get("domain", "unknown")), []).append(r)
+    out: List[Dict[str, Any]] = []
+    src_counts: Dict[str, int] = {}
+    for dom in sorted(by_dom):
+        group = list(by_dom[dom])
+        _random.Random(seed).shuffle(group)
+        if max_per_domain is not None:
+            group = group[:max_per_domain]
+        for r in group:
+            if max_per_source is not None:
+                s = str(r.get("source", "unknown"))
+                if src_counts.get(s, 0) >= max_per_source:
+                    continue
+                src_counts[s] = src_counts.get(s, 0) + 1
+            out.append(r)
+    return out
+
+
+def rag_reranker_training_report(rows: Sequence[Dict[str, Any]],
+                                 positive_threshold: float = V3_POSITIVE_THRESHOLD) -> Dict[str, Any]:
+    """Visibility before v4 training: examples by domain/source, gold / hard-negative / uncertain
+    counts, and teacher-score separation (pos vs neg medians)."""
+    by_dom: Dict[str, int] = {}
+    by_source: Dict[str, int] = {}
+    gold = hard_neg = uncertain = teacher_only = 0
+    pos_scores: List[float] = []
+    neg_scores: List[float] = []
+    for r in rows:
+        by_dom[str(r.get("domain", "unknown"))] = by_dom.get(str(r.get("domain", "unknown")), 0) + 1
+        for c in r.get("candidates", []):
+            by_source[str(c.get("candidate_source") or "unknown")] = \
+                by_source.get(str(c.get("candidate_source") or "unknown"), 0) + 1
+            ts = c.get("teacher_score")
+            if c.get("uncertain"):
+                uncertain += 1
+                # a teacher-only positive is a non-gold the teacher scores >= threshold
+                if c.get("label") is None and ts is not None and float(ts) >= positive_threshold:
+                    teacher_only += 1
+            if c.get("label") == 1:
+                gold += 1
+                if ts is not None:
+                    pos_scores.append(float(ts))
+            elif c.get("label") == 0:
+                hard_neg += 1
+                if ts is not None:
+                    neg_scores.append(float(ts))
+    pm = round(sorted(pos_scores)[len(pos_scores) // 2], 4) if pos_scores else None
+    nm = round(sorted(neg_scores)[len(neg_scores) // 2], 4) if neg_scores else None
+    return {
+        "lists": len(rows), "examples_by_domain": dict(sorted(by_dom.items())),
+        "candidates_by_source": dict(sorted(by_source.items())),
+        "gold_positives": gold, "hard_negatives": hard_neg, "uncertain": uncertain,
+        "teacher_only_positives": teacher_only,
+        "teacher_score_separation": {"pos_median": pm, "neg_median": nm,
+                                     "separation": round(pm - nm, 4) if (pm is not None and nm is not None) else None},
+    }
+
+
 def candidate_lists_to_listwise(rows: Sequence[Dict[str, Any]], temperature: float = 1.0
                                 ) -> List[Dict[str, Any]]:
     """Per-query listwise batch: target = softmax of teacher_scores when present, else the
