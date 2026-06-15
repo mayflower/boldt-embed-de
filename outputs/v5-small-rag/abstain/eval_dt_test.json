@@ -1,0 +1,47 @@
+{
+  "policy": "combined_policy",
+  "params": {
+    "fs_gap_threshold": 15.068491,
+    "rr_gap_threshold": 0.28125,
+    "alpha": 0.5,
+    "max_displacement_rank": 10
+  },
+  "n_queries": 1000,
+  "first_stage_ndcg@10": 0.977444,
+  "always_rerank_ndcg@10": 0.998562,
+  "policy_ndcg@10": 0.995434,
+  "delta_vs_first_stage": 0.01799,
+  "delta_vs_always_rerank": -0.003128,
+  "abstain_rate": 0.418,
+  "rerank_rate": 0.582,
+  "catastrophic_drop_rate": 0.0,
+  "actions": {
+    "rerank_top_k": 570,
+    "keep_first_stage": 418,
+    "conservative_blend": 12
+  },
+  "medium_hard_delta": 0.461271,
+  "by_bucket": {
+    "hard": {
+      "n": 17,
+      "first_stage_ndcg@10": 0.189302,
+      "policy_ndcg@10": 0.731384,
+      "delta": 0.542082
+    },
+    "medium": {
+      "n": 22,
+      "first_stage_ndcg@10": 0.601173,
+      "policy_ndcg@10": 1.0,
+      "delta": 0.398827
+    },
+    "no_room": {
+      "n": 961,
+      "first_stage_ndcg@10": 1.0,
+      "policy_ndcg@10": 1.0,
+      "delta": 0.0
+    }
+  },
+  "always_rerank_delta_vs_first_stage": 0.021118,
+  "always_rerank_catastrophic_drop_rate": 0.0,
+  "eval_set": "dt_test_scored"
+}

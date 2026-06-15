@@ -57,6 +57,19 @@ V4_RAG_REQUIRED_ARTIFACTS = [
 V4_RAG_RECOMMENDED_PHRASE = "Recommended for German FAQ/RAG reranking"
 V4_RAG_CARD_DISCLAIMERS = ["not legal advice", "not a dense retriever",
                            "candidate lists only", "lift over"]
+
+# v5 small-RAG: the reranker may be recommended ONLY with the abstention policy AND only if the
+# v5 abstain gate passes. always-rerank must NEVER be recommended.
+V5_SMALL_RAG_REQUIRED_ARTIFACTS = [
+    "V5_RESULTS.json",                 # honest run summary
+    "eval/v5_rag_lift_gate.json",      # raw (always-rerank) hardness gate
+    "abstain/fit_report.json",         # policy fit (dev only)
+    "abstain/eval_webfaq.json",        # policy eval — primary
+    "abstain/eval_germanquad.json",    # policy eval — guardrail
+    "abstain/eval_dt_test.json",       # policy eval — guardrail
+    "abstain/gate.json",               # policy promotion gate
+]
+V5_RECOMMENDED_PHRASE = "Recommended for German RAG reranking with the abstention policy"
 CARD_TYPES = {
     "Boldt-Embed-DE-350M-v1-causal.md": "embedder",
     "Boldt-Embed-DE-350M-v1-bi.md": "embedder",
@@ -201,6 +214,49 @@ def check_v4_rag_card(root: Path, results_dir: Path) -> List[Issue]:
     return issues
 
 
+def check_v5_small_rag_artifacts(root: Path) -> List[Issue]:
+    """v5 small-RAG readiness: config + run summary + raw gate + abstain fit/eval/gate artifacts.
+    No legal/admin requirement; guardrails are eval-only."""
+    issues: List[Issue] = []
+    if not (root / "configs" / "experiments" / "v5_small_rag.json").exists():
+        issues.append(("missing_config", "configs/experiments/v5_small_rag.json"))
+    v5 = root / "outputs" / "v5-small-rag"
+    issues += [("missing_v5_small_rag_artifact", a) for a in V5_SMALL_RAG_REQUIRED_ARTIFACTS
+               if not (v5 / a).exists()]
+    return issues
+
+
+def _v5_abstain_gate_passed(root: Path) -> Optional[bool]:
+    p = root / "outputs" / "v5-small-rag" / "abstain" / "gate.json"
+    if not p.exists():
+        return None
+    try:
+        return json.loads(p.read_text(encoding="utf-8")).get("status") == "pass"
+    except Exception:
+        return None
+
+
+def check_v5_small_rag_card(root: Path) -> List[Issue]:
+    """The reranker card may claim the v5 abstention recommendation ONLY if the v5 abstain gate
+    passed, and must NEVER recommend always-rerank."""
+    issues: List[Issue] = []
+    card = root / "model_cards" / "Boldt-Reranker-DE-350M-v1.md"
+    if not card.exists():
+        return [("missing_card", "Boldt-Reranker-DE-350M-v1.md")]
+    text = card.read_text(encoding="utf-8")
+    if V5_RECOMMENDED_PHRASE in text and _v5_abstain_gate_passed(root) is not True:
+        issues.append(("v5_card_recommended_without_passing_gate",
+                       "card claims the v5 abstention recommendation but the v5 gate did not pass"))
+    low = text.lower()
+    if "always-rerank" in low and "recommend" in low:
+        # crude co-occurrence guard: never recommend always-rerank
+        for line in low.splitlines():
+            if "always-rerank" in line and "recommend" in line and "not" not in line and "never" not in line:
+                issues.append(("v5_card_recommends_always_rerank", line.strip()[:80]))
+                break
+    return issues
+
+
 def _summary_unknown_license_rows(summary: Dict[str, object]) -> int:
     """Unknown-license count, tolerant of old (by_license only) and new (explicit) schemas."""
     if "unknown_license_rows" in summary:
@@ -249,7 +305,8 @@ def git_tracked_files(root: Path) -> List[str]:
 def run_checks(root: Path = ROOT, results_dir: Path = None,
                require_v2_artifacts: bool = False,
                require_v3_artifacts: bool = False,
-               require_v4_rag_artifacts: bool = False) -> Dict[str, object]:
+               require_v4_rag_artifacts: bool = False,
+               require_v5_small_rag_artifacts: bool = False) -> Dict[str, object]:
     tracked = git_tracked_files(root)
     results_dir = results_dir or (root / "outputs")
     checks: Dict[str, List[Issue]] = {
@@ -283,6 +340,10 @@ def run_checks(root: Path = ROOT, results_dir: Path = None,
             else (root / "outputs" / "v4-rag-reranker")
         checks["v4_rag_artifacts"] = check_v4_rag_artifacts(root, v4_dir)
         checks["v4_rag_card"] = check_v4_rag_card(root, v4_dir)
+    # v5 small-RAG track: artifacts + abstention-policy card-vs-gate consistency.
+    if require_v5_small_rag_artifacts:
+        checks["v5_small_rag_artifacts"] = check_v5_small_rag_artifacts(root)
+        checks["v5_small_rag_card"] = check_v5_small_rag_card(root)
     issues = [i for group in checks.values() for i in group]
     return {"status": "pass" if not issues else "fail", "issue_count": len(issues),
             "checks": {k: [list(i) for i in v] for k, v in checks.items()}}
@@ -308,11 +369,14 @@ def main() -> int:
                     help="RELEASE gate: enforce license-clean teacher cache (zero unknown-license rows)")
     ap.add_argument("--require-v4-rag-artifacts", action="store_true",
                     help="RELEASE gate: v4 RAG reranker artifacts + card-vs-gate (no legal/admin requirement)")
+    ap.add_argument("--require-v5-small-rag-artifacts", action="store_true",
+                    help="RELEASE gate: v5 small-RAG artifacts + abstention-policy card-vs-gate")
     args = ap.parse_args()
     report = run_checks(results_dir=Path(args.results_dir) if args.results_dir else None,
                         require_v2_artifacts=args.require_v2_artifacts,
                         require_v3_artifacts=args.require_v3_artifacts,
-                        require_v4_rag_artifacts=args.require_v4_rag_artifacts)
+                        require_v4_rag_artifacts=args.require_v4_rag_artifacts,
+                        require_v5_small_rag_artifacts=args.require_v5_small_rag_artifacts)
     print(json.dumps(report, ensure_ascii=False, indent=2) if args.format == "json"
           else render_markdown(report))
     return 0 if report["status"] == "pass" else 1
