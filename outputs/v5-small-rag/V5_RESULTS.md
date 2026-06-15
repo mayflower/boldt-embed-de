@@ -23,7 +23,20 @@
 - GermanQuAD: -0.0711 -> -0.028452 (degradation reduced, still fails)
 - DT-test: -0.0007 -> 0.021118 (now positive)
 
-## Interpretation
+## Conservative reranker (rank-preservation loss) — real measured progress
+
+| approach | GermanQuAD overall | GermanQuAD catastrophic | WebFAQ overall | DT-test overall | gate |
+|---|--:|--:|--:|--:|:--|
+| raw_v5 | -0.028452 | 0.169333 | 0.166548 | 0.021118 | fail |
+| abstain_only | -0.001553 | 0.103333 | 0.128456 | 0.01799 | fail |
+| conservative_only | 0.009421 | 0.122 | 0.137925 | 0.021205 | fail |
+| conservative_plus_abstain | 0.024292 | 0.074 | 0.097458 | 0.019332 | fail |
+
+_Conservative-only gate fails: ['germanquad_catastrophic_rate']. Conservative+abstain gate fails: ['germanquad_catastrophic', 'dt_test_beats_always_rerank']. NOT promoted._
+
+Real measured progress. Conservative training (rank-preservation penalty on high-first-stage-confidence lists) reduces near-ceiling churn: GermanQuAD overall -0.0285 -> +0.0094 (conservative) / +0.0243 (conservative+abstain) and catastrophic 0.169 -> 0.122 / 0.074, while WebFAQ (+0.0975) and DT-test (+0.0193) stay healthy. NOT promoted: the remaining failure is catastrophic tail risk on near-ceiling GermanQuAD lists (0.074 > 0.03 bar). Next step: a bounded / top-preserving rerank policy.
+
+## Interpretation (raw v5)
 
 v5 is better than v4 but still NOT promotable. Multi-domain training (FAQ share 0.217) lifts every set strongly where there is real headroom (medium+hard buckets), and both guardrails improved over v4 (GermanQuAD -0.0711->-0.0285, DT-test -0.0007->+0.0211). But the gate FAILS: on GermanQuAD the reranker over-reorders near-ceiling first-stage lists (84% no_room), netting -0.0285 and 16.9% catastrophic per-query drops. Next step: rerank-or-abstain calibration on confident first stages.
 

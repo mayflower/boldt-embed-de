@@ -688,6 +688,50 @@ def train_listwise_distilled_reranker(cfg, batches, output_dir, *, epochs=1, max
             "num_queries": len(batches), "final_loss": losses[-1] if losses else None}
 
 
+def train_conservative_listwise_reranker(cfg, batches, output_dir, *, lambda_preserve=0.2,
+                                         epochs=1, max_length=256, lr=2e-5, temperature=1.0,
+                                         justify_margin=2.0, bf16=True,
+                                         gradient_checkpointing=True, use_lora=False,
+                                         device=None):
+    """Listwise-KL distillation + a rank-preservation penalty applied ONLY to high-first-stage-
+    confidence lists (``batch['high_confidence']``). The penalty discourages teacher-unjustified
+    inversions of the first-stage order, directly targeting near-ceiling churn. ML-only."""
+    import torch
+
+    from .rank_preservation_loss import rank_preservation_loss
+    device = device or ("cuda" if torch.cuda.is_available() else "cpu")
+    model, tok = _load_cross_encoder(cfg.model_name_or_path, device, bf16,
+                                     gradient_checkpointing, use_lora)
+    opt = torch.optim.AdamW(model.parameters(), lr=lr)
+    kl = torch.nn.KLDivLoss(reduction="batchmean")
+    model.train()
+    losses, preserve_losses, n_high_conf = [], [], 0
+    for _ in range(epochs):
+        for b in batches:
+            enc = _encode_pairs(tok, [(b["query"], d) for d in b["documents"]],
+                                cfg.input_template, max_length, device)
+            logits = model(**enc).logits.squeeze(-1)
+            student_logp = torch.log_softmax(logits / max(temperature, 1e-6), dim=0)
+            target = torch.tensor(b["target"], dtype=torch.float32, device=device)
+            loss = kl(student_logp.unsqueeze(0), target.unsqueeze(0))
+            if b.get("high_confidence") and lambda_preserve > 0:
+                ts = torch.tensor(b["teacher_scores"], dtype=torch.float32, device=device)
+                pres = rank_preservation_loss(logits, b["first_stage_ranks"], ts,
+                                              justify_margin=justify_margin)
+                loss = loss + lambda_preserve * pres
+                preserve_losses.append(float(pres.item()))
+                n_high_conf += 1
+            opt.zero_grad(); loss.backward(); opt.step()
+            losses.append(float(loss.item()))
+    model.save_pretrained(output_dir); tok.save_pretrained(output_dir)
+    return {"status": "ok", "objective": "conservative_listwise", "output_dir": output_dir,
+            "num_queries": len(batches), "high_confidence_lists": n_high_conf,
+            "lambda_preserve": lambda_preserve,
+            "final_loss": losses[-1] if losses else None,
+            "mean_preservation_loss": (round(sum(preserve_losses) / len(preserve_losses), 6)
+                                       if preserve_losses else None)}
+
+
 def score_with_student_reranker(model_path, pairs, template, *, max_length=256,
                                 batch_size=64, device=None) -> List[float]:
     """Score (query, document) pairs with a trained student cross-encoder. ML-only."""

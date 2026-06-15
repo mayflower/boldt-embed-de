@@ -62,8 +62,16 @@ Hardness-aware gate (`outputs/v5-small-rag/V5_RESULTS.md`): WebFAQ +0.1665 (prim
 +0.0211 (pass), **GermanQuAD −0.0285 with 16.9% catastrophic drops → FAIL**. It improves on v4
 (GermanQuAD −0.0711→−0.0285, DT-test −0.0007→+0.0211) and lifts every set strongly where there is
 headroom, but **the promotion gate FAILS**. The v5 reranker is **Experimental — not recommended for
-production reranking.** Failure mode: over-reranking near-ceiling first-stage lists; **next step is
-rerank-or-abstain calibration** (skip/identity when the first stage is already confident).
+production reranking.** Failure mode: over-reranking near-ceiling first-stage lists.
+
+**v5 mitigations — EXECUTED:** (1) a production-feasible **rerank-or-abstain** policy (features-only,
+fit on dev) and (2) a **conservative reranker** trained with a **rank-preservation loss** on
+high-first-stage-confidence lists (`boldt-rag-reranker-v5-conservative`). Both reduce near-ceiling
+GermanQuAD churn — combined, GermanQuAD goes from **−0.0285 (raw) → +0.0243** overall and
+catastrophic **0.169 → 0.074**, with WebFAQ +0.0975 / DT-test +0.0193. **Real measured progress, but
+the gate still FAILS** (residual catastrophic 0.074 > 0.03 on near-ceiling GermanQuAD lists). The
+**v5 conservative reranker remains Experimental — not recommended.** **Next step: a bounded /
+top-preserving rerank policy** (hard-cap how far the reranker may move a confident first-stage top-k).
 
 Training data follows a strict **train≠eval** rule (`docs/data/training-datasets-research-2026.md`):
 benchmark datasets (GermanQuAD/GerDaLIR/MMTEB) are held out; training uses non-benchmark

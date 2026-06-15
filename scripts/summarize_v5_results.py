@@ -81,6 +81,42 @@ def main() -> int:
         "status": "EXPERIMENTAL - NOT recommended for production reranking",
     }
 
+    # ---- conservative-reranker comparison (real files) ----
+    def _hg(gatefile, name):
+        g = _load(gatefile) or {}
+        s = {x["eval_set"]: x for x in g.get("eval_sets", [])}.get(name, {})
+        return {"overall": s.get("overall_delta_ndcg@10"), "catastrophic": s.get("catastrophic_rate")}
+
+    def _ab(dirpath, name):
+        r = _load(pathlib.Path(dirpath) / f"eval_{name}.json") or {}
+        return {"overall": r.get("delta_vs_first_stage"), "catastrophic": r.get("catastrophic_drop_rate")}
+
+    cons = V5 / "conservative"
+    NAMES = ("webfaq", "germanquad", "dt_test")
+    cons_gate = _load(cons / "v5_rag_lift_gate.json") or {}
+    cabst_gate = _load(cons / "abstain" / "gate.json") or {}
+    result["approaches"] = {
+        "raw_v5": {n: _hg(V5 / "eval" / "v5_rag_lift_gate.json", n) for n in NAMES},
+        "abstain_only": {n: _ab(V5 / "abstain", n) for n in NAMES},
+        "conservative_only": {n: _hg(cons / "v5_rag_lift_gate.json", n) for n in NAMES},
+        "conservative_plus_abstain": {n: _ab(cons / "abstain", n) for n in NAMES},
+    }
+    result["conservative_gate"] = {
+        "conservative_only": {
+            "status": cons_gate.get("gate", {}).get("status", "fail"),
+            "failing": [c["check"] for c in cons_gate.get("gate", {}).get("failing", [])]},
+        "conservative_plus_abstain": {
+            "status": cabst_gate.get("status", "fail"),
+            "failing": [c["check"] for c in cabst_gate.get("failing", [])]},
+    }
+    result["conservative_interpretation"] = (
+        "Real measured progress. Conservative training (rank-preservation penalty on high-first-"
+        "stage-confidence lists) reduces near-ceiling churn: GermanQuAD overall -0.0285 -> +0.0094 "
+        "(conservative) / +0.0243 (conservative+abstain) and catastrophic 0.169 -> 0.122 / 0.074, "
+        "while WebFAQ (+0.0975) and DT-test (+0.0193) stay healthy. NOT promoted: the remaining "
+        "failure is catastrophic tail risk on near-ceiling GermanQuAD lists (0.074 > 0.03 bar). "
+        "Next step: a bounded / top-preserving rerank policy.")
+
     (V5).mkdir(parents=True, exist_ok=True)
     (V5 / "V5_RESULTS.json").write_text(json.dumps(result, ensure_ascii=False, indent=2),
                                         encoding="utf-8")
@@ -119,8 +155,23 @@ def main() -> int:
            f"- GermanQuAD: {cmp['germanquad_delta']['v4']} -> {cmp['germanquad_delta']['v5']} "
            "(degradation reduced, still fails)",
            f"- DT-test: {cmp['dt_test_delta']['v4']} -> {cmp['dt_test_delta']['v5']} "
-           "(now positive)", "",
-           "## Interpretation", "", result["interpretation"], ""]
+           "(now positive)", ""]
+    a = result["approaches"]
+    cg = result["conservative_gate"]
+    md += ["## Conservative reranker (rank-preservation loss) — real measured progress", "",
+           "| approach | GermanQuAD overall | GermanQuAD catastrophic | WebFAQ overall | "
+           "DT-test overall | gate |", "|---|--:|--:|--:|--:|:--|"]
+    statusmap = {"raw_v5": "fail", "abstain_only": "fail",
+                 "conservative_only": cg["conservative_only"]["status"],
+                 "conservative_plus_abstain": cg["conservative_plus_abstain"]["status"]}
+    for key in ("raw_v5", "abstain_only", "conservative_only", "conservative_plus_abstain"):
+        ap = a[key]
+        md.append(f"| {key} | {ap['germanquad']['overall']} | {ap['germanquad']['catastrophic']} | "
+                  f"{ap['webfaq']['overall']} | {ap['dt_test']['overall']} | {statusmap[key]} |")
+    md += ["", f"_Conservative-only gate fails: {cg['conservative_only']['failing']}. "
+           f"Conservative+abstain gate fails: {cg['conservative_plus_abstain']['failing']}. "
+           "NOT promoted._", "", result["conservative_interpretation"], "",
+           "## Interpretation (raw v5)", "", result["interpretation"], ""]
     (V5 / "V5_RESULTS.md").write_text("\n".join(md) + "\n", encoding="utf-8")
     print(f"[v5-summary] verdict={result['verdict']} gate={result['gate_status']} "
           f"-> {V5}/V5_RESULTS.md, V5_RESULTS.json")

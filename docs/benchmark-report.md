@@ -414,6 +414,30 @@ drops — beyond even the lenient −0.005 near-ceiling tolerance. The reranker 
 not recommended**; next step is **rerank-or-abstain calibration** on confident first stages. See
 `outputs/v5-small-rag/V5_RESULTS.md`.
 
+### 6n. v5 conservative reranker (rank-preservation loss) — EXECUTED (2026-06-15, RTX A6000)
+
+Trained a conservative reranker (`boldt-rag-reranker-v5-conservative`) that adds a **rank-
+preservation penalty** on high-first-stage-confidence lists (listwise-KL primary +
+`lambda_preserve=0.2 * rank_preservation_loss`; 2,265/5,658 = 40% high-confidence; no new teacher
+calls). Scored the SAME fixed eval lists (77k pairs) and ran the SAME hardness gate + abstention
+eval. GermanQuAD, apples-to-apples:
+
+| approach | GermanQuAD overall | GermanQuAD catastrophic | WebFAQ overall | DT-test overall |
+|---|--:|--:|--:|--:|
+| v5 raw (always-rerank) | −0.0285 | 0.169 | +0.1665 | +0.0211 |
+| abstain only | −0.0016 | 0.103 | +0.1285 | +0.0180 |
+| conservative only | **+0.0094** | 0.122 | +0.1379 | +0.0212 |
+| conservative + abstain | **+0.0243** | **0.074** | +0.0975 | +0.0193 |
+
+**Real measured progress, NOT promoted.** The rank-preservation objective turns GermanQuAD overall
+**positive** (−0.0285 → +0.0094 / +0.0243) and reduces catastrophic drops (0.169 → 0.122 → 0.074),
+while WebFAQ and DT-test stay healthy. The gate **still fails**: the remaining failure is a
+**catastrophic tail risk on near-ceiling GermanQuAD lists** — conservative-only trips
+`germanquad_catastrophic` (0.122 > 0.05) and conservative+abstain trips it (0.074 > 0.03) plus
+marginally `dt_test_beats_always_rerank`. The original −0.07 regression is now a small residual
+tail. The reranker stays **Experimental / not recommended**; next lever is a bounded / top-
+preserving rerank policy. See `outputs/v5-small-rag/V5_RESULTS.md`.
+
 ## 7. Matryoshka truncation analysis
 Storage scales linearly with dim (fp32): 1024→4096 B, 512→2048 B, 256→1024 B, 128→512 B,
 64→256 B/vector. The HashingEncoder by-dim retrieval (toy) stays near-perfect down to 64 dims

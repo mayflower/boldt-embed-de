@@ -1,0 +1,2470 @@
+{
+  "policy": "combined_policy",
+  "best_params": {
+    "fs_gap_threshold": 15.068491,
+    "rr_gap_threshold": 0.250977,
+    "alpha": 0.5,
+    "max_displacement_rank": 10
+  },
+  "dev_metrics": {
+    "policy": "combined_policy",
+    "params": {
+      "fs_gap_threshold": 15.068491,
+      "rr_gap_threshold": 0.250977,
+      "alpha": 0.5,
+      "max_displacement_rank": 10
+    },
+    "n_queries": 660,
+    "first_stage_ndcg@10": 0.61317,
+    "always_rerank_ndcg@10": 0.754265,
+    "policy_ndcg@10": 0.717365,
+    "delta_vs_first_stage": 0.104195,
+    "delta_vs_always_rerank": -0.0369,
+    "abstain_rate": 0.198485,
+    "rerank_rate": 0.801515,
+    "catastrophic_drop_rate": 0.007576,
+    "actions": {
+      "rerank_top_k": 508,
+      "keep_first_stage": 131,
+      "conservative_blend": 21
+    },
+    "medium_hard_delta": null,
+    "by_bucket": {}
+  },
+  "fit_on": "dev_only",
+  "n_trials": 441,
+  "trials": [
+    {
+      "params": {
+        "fs_gap_threshold": 0.481459,
+        "rr_gap_threshold": 0.250977,
+        "alpha": 1.0,
+        "max_displacement_rank": 3
+      },
+      "dev_ndcg": 0.624245,
+      "dev_delta": 0.011075,
+      "abstain_rate": 0.956061,
+      "catastrophic": 0.00303
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 0.481459,
+        "rr_gap_threshold": 0.250977,
+        "alpha": 1.0,
+        "max_displacement_rank": 5
+      },
+      "dev_ndcg": 0.625937,
+      "dev_delta": 0.012767,
+      "abstain_rate": 0.948485,
+      "catastrophic": 0.00303
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 0.481459,
+        "rr_gap_threshold": 0.250977,
+        "alpha": 1.0,
+        "max_displacement_rank": 10
+      },
+      "dev_ndcg": 0.627347,
+      "dev_delta": 0.014177,
+      "abstain_rate": 0.942424,
+      "catastrophic": 0.00303
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 0.481459,
+        "rr_gap_threshold": 0.250977,
+        "alpha": 0.7,
+        "max_displacement_rank": 3
+      },
+      "dev_ndcg": 0.625959,
+      "dev_delta": 0.012789,
+      "abstain_rate": 0.937879,
+      "catastrophic": 0.00303
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 0.481459,
+        "rr_gap_threshold": 0.250977,
+        "alpha": 0.7,
+        "max_displacement_rank": 5
+      },
+      "dev_ndcg": 0.627452,
+      "dev_delta": 0.014282,
+      "abstain_rate": 0.937879,
+      "catastrophic": 0.00303
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 0.481459,
+        "rr_gap_threshold": 0.250977,
+        "alpha": 0.7,
+        "max_displacement_rank": 10
+      },
+      "dev_ndcg": 0.628105,
+      "dev_delta": 0.014935,
+      "abstain_rate": 0.937879,
+      "catastrophic": 0.00303
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 0.481459,
+        "rr_gap_threshold": 0.250977,
+        "alpha": 0.5,
+        "max_displacement_rank": 3
+      },
+      "dev_ndcg": 0.626974,
+      "dev_delta": 0.013804,
+      "abstain_rate": 0.937879,
+      "catastrophic": 0.00303
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 0.481459,
+        "rr_gap_threshold": 0.250977,
+        "alpha": 0.5,
+        "max_displacement_rank": 5
+      },
+      "dev_ndcg": 0.627908,
+      "dev_delta": 0.014738,
+      "abstain_rate": 0.937879,
+      "catastrophic": 0.00303
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 0.481459,
+        "rr_gap_threshold": 0.250977,
+        "alpha": 0.5,
+        "max_displacement_rank": 10
+      },
+      "dev_ndcg": 0.628561,
+      "dev_delta": 0.015391,
+      "abstain_rate": 0.937879,
+      "catastrophic": 0.00303
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 0.481459,
+        "rr_gap_threshold": 0.921875,
+        "alpha": 1.0,
+        "max_displacement_rank": 3
+      },
+      "dev_ndcg": 0.622784,
+      "dev_delta": 0.009614,
+      "abstain_rate": 0.971212,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 0.481459,
+        "rr_gap_threshold": 0.921875,
+        "alpha": 1.0,
+        "max_displacement_rank": 5
+      },
+      "dev_ndcg": 0.623998,
+      "dev_delta": 0.010828,
+      "abstain_rate": 0.966667,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 0.481459,
+        "rr_gap_threshold": 0.921875,
+        "alpha": 1.0,
+        "max_displacement_rank": 10
+      },
+      "dev_ndcg": 0.624755,
+      "dev_delta": 0.011585,
+      "abstain_rate": 0.963636,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 0.481459,
+        "rr_gap_threshold": 0.921875,
+        "alpha": 0.7,
+        "max_displacement_rank": 3
+      },
+      "dev_ndcg": 0.624498,
+      "dev_delta": 0.011328,
+      "abstain_rate": 0.960606,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 0.481459,
+        "rr_gap_threshold": 0.921875,
+        "alpha": 0.7,
+        "max_displacement_rank": 5
+      },
+      "dev_ndcg": 0.625513,
+      "dev_delta": 0.012343,
+      "abstain_rate": 0.960606,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 0.481459,
+        "rr_gap_threshold": 0.921875,
+        "alpha": 0.7,
+        "max_displacement_rank": 10
+      },
+      "dev_ndcg": 0.625513,
+      "dev_delta": 0.012343,
+      "abstain_rate": 0.960606,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 0.481459,
+        "rr_gap_threshold": 0.921875,
+        "alpha": 0.5,
+        "max_displacement_rank": 3
+      },
+      "dev_ndcg": 0.625057,
+      "dev_delta": 0.011887,
+      "abstain_rate": 0.960606,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 0.481459,
+        "rr_gap_threshold": 0.921875,
+        "alpha": 0.5,
+        "max_displacement_rank": 5
+      },
+      "dev_ndcg": 0.625513,
+      "dev_delta": 0.012343,
+      "abstain_rate": 0.960606,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 0.481459,
+        "rr_gap_threshold": 0.921875,
+        "alpha": 0.5,
+        "max_displacement_rank": 10
+      },
+      "dev_ndcg": 0.625513,
+      "dev_delta": 0.012343,
+      "abstain_rate": 0.960606,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 0.481459,
+        "rr_gap_threshold": 1.588867,
+        "alpha": 1.0,
+        "max_displacement_rank": 3
+      },
+      "dev_ndcg": 0.620511,
+      "dev_delta": 0.007341,
+      "abstain_rate": 0.978788,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 0.481459,
+        "rr_gap_threshold": 1.588867,
+        "alpha": 1.0,
+        "max_displacement_rank": 5
+      },
+      "dev_ndcg": 0.621269,
+      "dev_delta": 0.008099,
+      "abstain_rate": 0.977273,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 0.481459,
+        "rr_gap_threshold": 1.588867,
+        "alpha": 1.0,
+        "max_displacement_rank": 10
+      },
+      "dev_ndcg": 0.622027,
+      "dev_delta": 0.008857,
+      "abstain_rate": 0.974242,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 0.481459,
+        "rr_gap_threshold": 1.588867,
+        "alpha": 0.7,
+        "max_displacement_rank": 3
+      },
+      "dev_ndcg": 0.622225,
+      "dev_delta": 0.009055,
+      "abstain_rate": 0.971212,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 0.481459,
+        "rr_gap_threshold": 1.588867,
+        "alpha": 0.7,
+        "max_displacement_rank": 5
+      },
+      "dev_ndcg": 0.622784,
+      "dev_delta": 0.009614,
+      "abstain_rate": 0.971212,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 0.481459,
+        "rr_gap_threshold": 1.588867,
+        "alpha": 0.7,
+        "max_displacement_rank": 10
+      },
+      "dev_ndcg": 0.622784,
+      "dev_delta": 0.009614,
+      "abstain_rate": 0.971212,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 0.481459,
+        "rr_gap_threshold": 1.588867,
+        "alpha": 0.5,
+        "max_displacement_rank": 3
+      },
+      "dev_ndcg": 0.622784,
+      "dev_delta": 0.009614,
+      "abstain_rate": 0.971212,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 0.481459,
+        "rr_gap_threshold": 1.588867,
+        "alpha": 0.5,
+        "max_displacement_rank": 5
+      },
+      "dev_ndcg": 0.622784,
+      "dev_delta": 0.009614,
+      "abstain_rate": 0.971212,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 0.481459,
+        "rr_gap_threshold": 1.588867,
+        "alpha": 0.5,
+        "max_displacement_rank": 10
+      },
+      "dev_ndcg": 0.622784,
+      "dev_delta": 0.009614,
+      "abstain_rate": 0.971212,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 0.481459,
+        "rr_gap_threshold": 2.09375,
+        "alpha": 1.0,
+        "max_displacement_rank": 3
+      },
+      "dev_ndcg": 0.617878,
+      "dev_delta": 0.004708,
+      "abstain_rate": 0.987879,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 0.481459,
+        "rr_gap_threshold": 2.09375,
+        "alpha": 1.0,
+        "max_displacement_rank": 5
+      },
+      "dev_ndcg": 0.618635,
+      "dev_delta": 0.005465,
+      "abstain_rate": 0.986364,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 0.481459,
+        "rr_gap_threshold": 2.09375,
+        "alpha": 1.0,
+        "max_displacement_rank": 10
+      },
+      "dev_ndcg": 0.619393,
+      "dev_delta": 0.006223,
+      "abstain_rate": 0.983333,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 0.481459,
+        "rr_gap_threshold": 2.09375,
+        "alpha": 0.7,
+        "max_displacement_rank": 3
+      },
+      "dev_ndcg": 0.619591,
+      "dev_delta": 0.006421,
+      "abstain_rate": 0.980303,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 0.481459,
+        "rr_gap_threshold": 2.09375,
+        "alpha": 0.7,
+        "max_displacement_rank": 5
+      },
+      "dev_ndcg": 0.620151,
+      "dev_delta": 0.006981,
+      "abstain_rate": 0.980303,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 0.481459,
+        "rr_gap_threshold": 2.09375,
+        "alpha": 0.7,
+        "max_displacement_rank": 10
+      },
+      "dev_ndcg": 0.620151,
+      "dev_delta": 0.006981,
+      "abstain_rate": 0.980303,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 0.481459,
+        "rr_gap_threshold": 2.09375,
+        "alpha": 0.5,
+        "max_displacement_rank": 3
+      },
+      "dev_ndcg": 0.620151,
+      "dev_delta": 0.006981,
+      "abstain_rate": 0.980303,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 0.481459,
+        "rr_gap_threshold": 2.09375,
+        "alpha": 0.5,
+        "max_displacement_rank": 5
+      },
+      "dev_ndcg": 0.620151,
+      "dev_delta": 0.006981,
+      "abstain_rate": 0.980303,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 0.481459,
+        "rr_gap_threshold": 2.09375,
+        "alpha": 0.5,
+        "max_displacement_rank": 10
+      },
+      "dev_ndcg": 0.620151,
+      "dev_delta": 0.006981,
+      "abstain_rate": 0.980303,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 0.481459,
+        "rr_gap_threshold": 2.625,
+        "alpha": 1.0,
+        "max_displacement_rank": 3
+      },
+      "dev_ndcg": 0.615244,
+      "dev_delta": 0.002074,
+      "abstain_rate": 0.993939,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 0.481459,
+        "rr_gap_threshold": 2.625,
+        "alpha": 1.0,
+        "max_displacement_rank": 5
+      },
+      "dev_ndcg": 0.616002,
+      "dev_delta": 0.002832,
+      "abstain_rate": 0.992424,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 0.481459,
+        "rr_gap_threshold": 2.625,
+        "alpha": 1.0,
+        "max_displacement_rank": 10
+      },
+      "dev_ndcg": 0.61676,
+      "dev_delta": 0.00359,
+      "abstain_rate": 0.989394,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 0.481459,
+        "rr_gap_threshold": 2.625,
+        "alpha": 0.7,
+        "max_displacement_rank": 3
+      },
+      "dev_ndcg": 0.616958,
+      "dev_delta": 0.003788,
+      "abstain_rate": 0.986364,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 0.481459,
+        "rr_gap_threshold": 2.625,
+        "alpha": 0.7,
+        "max_displacement_rank": 5
+      },
+      "dev_ndcg": 0.617517,
+      "dev_delta": 0.004347,
+      "abstain_rate": 0.986364,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 0.481459,
+        "rr_gap_threshold": 2.625,
+        "alpha": 0.7,
+        "max_displacement_rank": 10
+      },
+      "dev_ndcg": 0.617517,
+      "dev_delta": 0.004347,
+      "abstain_rate": 0.986364,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 0.481459,
+        "rr_gap_threshold": 2.625,
+        "alpha": 0.5,
+        "max_displacement_rank": 3
+      },
+      "dev_ndcg": 0.617517,
+      "dev_delta": 0.004347,
+      "abstain_rate": 0.986364,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 0.481459,
+        "rr_gap_threshold": 2.625,
+        "alpha": 0.5,
+        "max_displacement_rank": 5
+      },
+      "dev_ndcg": 0.617517,
+      "dev_delta": 0.004347,
+      "abstain_rate": 0.986364,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 0.481459,
+        "rr_gap_threshold": 2.625,
+        "alpha": 0.5,
+        "max_displacement_rank": 10
+      },
+      "dev_ndcg": 0.617517,
+      "dev_delta": 0.004347,
+      "abstain_rate": 0.986364,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 0.481459,
+        "rr_gap_threshold": 3.863281,
+        "alpha": 1.0,
+        "max_displacement_rank": 3
+      },
+      "dev_ndcg": 0.615244,
+      "dev_delta": 0.002074,
+      "abstain_rate": 0.995455,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 0.481459,
+        "rr_gap_threshold": 3.863281,
+        "alpha": 1.0,
+        "max_displacement_rank": 5
+      },
+      "dev_ndcg": 0.616002,
+      "dev_delta": 0.002832,
+      "abstain_rate": 0.993939,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 0.481459,
+        "rr_gap_threshold": 3.863281,
+        "alpha": 1.0,
+        "max_displacement_rank": 10
+      },
+      "dev_ndcg": 0.61676,
+      "dev_delta": 0.00359,
+      "abstain_rate": 0.990909,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 0.481459,
+        "rr_gap_threshold": 3.863281,
+        "alpha": 0.7,
+        "max_displacement_rank": 3
+      },
+      "dev_ndcg": 0.616958,
+      "dev_delta": 0.003788,
+      "abstain_rate": 0.987879,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 0.481459,
+        "rr_gap_threshold": 3.863281,
+        "alpha": 0.7,
+        "max_displacement_rank": 5
+      },
+      "dev_ndcg": 0.617517,
+      "dev_delta": 0.004347,
+      "abstain_rate": 0.987879,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 0.481459,
+        "rr_gap_threshold": 3.863281,
+        "alpha": 0.7,
+        "max_displacement_rank": 10
+      },
+      "dev_ndcg": 0.617517,
+      "dev_delta": 0.004347,
+      "abstain_rate": 0.987879,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 0.481459,
+        "rr_gap_threshold": 3.863281,
+        "alpha": 0.5,
+        "max_displacement_rank": 3
+      },
+      "dev_ndcg": 0.617517,
+      "dev_delta": 0.004347,
+      "abstain_rate": 0.987879,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 0.481459,
+        "rr_gap_threshold": 3.863281,
+        "alpha": 0.5,
+        "max_displacement_rank": 5
+      },
+      "dev_ndcg": 0.617517,
+      "dev_delta": 0.004347,
+      "abstain_rate": 0.987879,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 0.481459,
+        "rr_gap_threshold": 3.863281,
+        "alpha": 0.5,
+        "max_displacement_rank": 10
+      },
+      "dev_ndcg": 0.617517,
+      "dev_delta": 0.004347,
+      "abstain_rate": 0.987879,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 0.481459,
+        "rr_gap_threshold": 5.730469,
+        "alpha": 1.0,
+        "max_displacement_rank": 3
+      },
+      "dev_ndcg": 0.615244,
+      "dev_delta": 0.002074,
+      "abstain_rate": 0.99697,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 0.481459,
+        "rr_gap_threshold": 5.730469,
+        "alpha": 1.0,
+        "max_displacement_rank": 5
+      },
+      "dev_ndcg": 0.615244,
+      "dev_delta": 0.002074,
+      "abstain_rate": 0.99697,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 0.481459,
+        "rr_gap_threshold": 5.730469,
+        "alpha": 1.0,
+        "max_displacement_rank": 10
+      },
+      "dev_ndcg": 0.616002,
+      "dev_delta": 0.002832,
+      "abstain_rate": 0.995455,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 0.481459,
+        "rr_gap_threshold": 5.730469,
+        "alpha": 0.7,
+        "max_displacement_rank": 3
+      },
+      "dev_ndcg": 0.61676,
+      "dev_delta": 0.00359,
+      "abstain_rate": 0.992424,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 0.481459,
+        "rr_gap_threshold": 5.730469,
+        "alpha": 0.7,
+        "max_displacement_rank": 5
+      },
+      "dev_ndcg": 0.61676,
+      "dev_delta": 0.00359,
+      "abstain_rate": 0.992424,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 0.481459,
+        "rr_gap_threshold": 5.730469,
+        "alpha": 0.7,
+        "max_displacement_rank": 10
+      },
+      "dev_ndcg": 0.61676,
+      "dev_delta": 0.00359,
+      "abstain_rate": 0.992424,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 0.481459,
+        "rr_gap_threshold": 5.730469,
+        "alpha": 0.5,
+        "max_displacement_rank": 3
+      },
+      "dev_ndcg": 0.61676,
+      "dev_delta": 0.00359,
+      "abstain_rate": 0.992424,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 0.481459,
+        "rr_gap_threshold": 5.730469,
+        "alpha": 0.5,
+        "max_displacement_rank": 5
+      },
+      "dev_ndcg": 0.61676,
+      "dev_delta": 0.00359,
+      "abstain_rate": 0.992424,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 0.481459,
+        "rr_gap_threshold": 5.730469,
+        "alpha": 0.5,
+        "max_displacement_rank": 10
+      },
+      "dev_ndcg": 0.61676,
+      "dev_delta": 0.00359,
+      "abstain_rate": 0.992424,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 1.602395,
+        "rr_gap_threshold": 0.250977,
+        "alpha": 1.0,
+        "max_displacement_rank": 3
+      },
+      "dev_ndcg": 0.641227,
+      "dev_delta": 0.028057,
+      "abstain_rate": 0.869697,
+      "catastrophic": 0.00303
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 1.602395,
+        "rr_gap_threshold": 0.250977,
+        "alpha": 1.0,
+        "max_displacement_rank": 5
+      },
+      "dev_ndcg": 0.648659,
+      "dev_delta": 0.035489,
+      "abstain_rate": 0.851515,
+      "catastrophic": 0.00303
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 1.602395,
+        "rr_gap_threshold": 0.250977,
+        "alpha": 1.0,
+        "max_displacement_rank": 10
+      },
+      "dev_ndcg": 0.652928,
+      "dev_delta": 0.039758,
+      "abstain_rate": 0.840909,
+      "catastrophic": 0.00303
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 1.602395,
+        "rr_gap_threshold": 0.250977,
+        "alpha": 0.7,
+        "max_displacement_rank": 3
+      },
+      "dev_ndcg": 0.645935,
+      "dev_delta": 0.032765,
+      "abstain_rate": 0.821212,
+      "catastrophic": 0.00303
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 1.602395,
+        "rr_gap_threshold": 0.250977,
+        "alpha": 0.7,
+        "max_displacement_rank": 5
+      },
+      "dev_ndcg": 0.65261,
+      "dev_delta": 0.03944,
+      "abstain_rate": 0.821212,
+      "catastrophic": 0.00303
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 1.602395,
+        "rr_gap_threshold": 0.250977,
+        "alpha": 0.7,
+        "max_displacement_rank": 10
+      },
+      "dev_ndcg": 0.655364,
+      "dev_delta": 0.042194,
+      "abstain_rate": 0.821212,
+      "catastrophic": 0.00303
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 1.602395,
+        "rr_gap_threshold": 0.250977,
+        "alpha": 0.5,
+        "max_displacement_rank": 3
+      },
+      "dev_ndcg": 0.649963,
+      "dev_delta": 0.036793,
+      "abstain_rate": 0.821212,
+      "catastrophic": 0.00303
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 1.602395,
+        "rr_gap_threshold": 0.250977,
+        "alpha": 0.5,
+        "max_displacement_rank": 5
+      },
+      "dev_ndcg": 0.654567,
+      "dev_delta": 0.041397,
+      "abstain_rate": 0.821212,
+      "catastrophic": 0.00303
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 1.602395,
+        "rr_gap_threshold": 0.250977,
+        "alpha": 0.5,
+        "max_displacement_rank": 10
+      },
+      "dev_ndcg": 0.656864,
+      "dev_delta": 0.043694,
+      "abstain_rate": 0.821212,
+      "catastrophic": 0.00303
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 1.602395,
+        "rr_gap_threshold": 0.921875,
+        "alpha": 1.0,
+        "max_displacement_rank": 3
+      },
+      "dev_ndcg": 0.631715,
+      "dev_delta": 0.018545,
+      "abstain_rate": 0.916667,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 1.602395,
+        "rr_gap_threshold": 0.921875,
+        "alpha": 1.0,
+        "max_displacement_rank": 5
+      },
+      "dev_ndcg": 0.633925,
+      "dev_delta": 0.020755,
+      "abstain_rate": 0.909091,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 1.602395,
+        "rr_gap_threshold": 0.921875,
+        "alpha": 1.0,
+        "max_displacement_rank": 10
+      },
+      "dev_ndcg": 0.635441,
+      "dev_delta": 0.022271,
+      "abstain_rate": 0.904545,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 1.602395,
+        "rr_gap_threshold": 0.921875,
+        "alpha": 0.7,
+        "max_displacement_rank": 3
+      },
+      "dev_ndcg": 0.635863,
+      "dev_delta": 0.022693,
+      "abstain_rate": 0.893939,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 1.602395,
+        "rr_gap_threshold": 0.921875,
+        "alpha": 0.7,
+        "max_displacement_rank": 5
+      },
+      "dev_ndcg": 0.637317,
+      "dev_delta": 0.024147,
+      "abstain_rate": 0.893939,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 1.602395,
+        "rr_gap_threshold": 0.921875,
+        "alpha": 0.7,
+        "max_displacement_rank": 10
+      },
+      "dev_ndcg": 0.637317,
+      "dev_delta": 0.024147,
+      "abstain_rate": 0.893939,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 1.602395,
+        "rr_gap_threshold": 0.921875,
+        "alpha": 0.5,
+        "max_displacement_rank": 3
+      },
+      "dev_ndcg": 0.636962,
+      "dev_delta": 0.023792,
+      "abstain_rate": 0.893939,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 1.602395,
+        "rr_gap_threshold": 0.921875,
+        "alpha": 0.5,
+        "max_displacement_rank": 5
+      },
+      "dev_ndcg": 0.637856,
+      "dev_delta": 0.024686,
+      "abstain_rate": 0.893939,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 1.602395,
+        "rr_gap_threshold": 0.921875,
+        "alpha": 0.5,
+        "max_displacement_rank": 10
+      },
+      "dev_ndcg": 0.637856,
+      "dev_delta": 0.024686,
+      "abstain_rate": 0.893939,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 1.602395,
+        "rr_gap_threshold": 1.588867,
+        "alpha": 1.0,
+        "max_displacement_rank": 3
+      },
+      "dev_ndcg": 0.62635,
+      "dev_delta": 0.01318,
+      "abstain_rate": 0.94697,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 1.602395,
+        "rr_gap_threshold": 1.588867,
+        "alpha": 1.0,
+        "max_displacement_rank": 5
+      },
+      "dev_ndcg": 0.628105,
+      "dev_delta": 0.014935,
+      "abstain_rate": 0.942424,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 1.602395,
+        "rr_gap_threshold": 1.588867,
+        "alpha": 1.0,
+        "max_displacement_rank": 10
+      },
+      "dev_ndcg": 0.62962,
+      "dev_delta": 0.01645,
+      "abstain_rate": 0.937879,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 1.602395,
+        "rr_gap_threshold": 1.588867,
+        "alpha": 0.7,
+        "max_displacement_rank": 3
+      },
+      "dev_ndcg": 0.630499,
+      "dev_delta": 0.017329,
+      "abstain_rate": 0.928788,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 1.602395,
+        "rr_gap_threshold": 1.588867,
+        "alpha": 0.7,
+        "max_displacement_rank": 5
+      },
+      "dev_ndcg": 0.631496,
+      "dev_delta": 0.018326,
+      "abstain_rate": 0.928788,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 1.602395,
+        "rr_gap_threshold": 1.588867,
+        "alpha": 0.7,
+        "max_displacement_rank": 10
+      },
+      "dev_ndcg": 0.631496,
+      "dev_delta": 0.018326,
+      "abstain_rate": 0.928788,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 1.602395,
+        "rr_gap_threshold": 1.588867,
+        "alpha": 0.5,
+        "max_displacement_rank": 3
+      },
+      "dev_ndcg": 0.631597,
+      "dev_delta": 0.018427,
+      "abstain_rate": 0.928788,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 1.602395,
+        "rr_gap_threshold": 1.588867,
+        "alpha": 0.5,
+        "max_displacement_rank": 5
+      },
+      "dev_ndcg": 0.632035,
+      "dev_delta": 0.018865,
+      "abstain_rate": 0.928788,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 1.602395,
+        "rr_gap_threshold": 1.588867,
+        "alpha": 0.5,
+        "max_displacement_rank": 10
+      },
+      "dev_ndcg": 0.632035,
+      "dev_delta": 0.018865,
+      "abstain_rate": 0.928788,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 1.602395,
+        "rr_gap_threshold": 2.09375,
+        "alpha": 1.0,
+        "max_displacement_rank": 3
+      },
+      "dev_ndcg": 0.623064,
+      "dev_delta": 0.009894,
+      "abstain_rate": 0.966667,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 1.602395,
+        "rr_gap_threshold": 2.09375,
+        "alpha": 1.0,
+        "max_displacement_rank": 5
+      },
+      "dev_ndcg": 0.623821,
+      "dev_delta": 0.010651,
+      "abstain_rate": 0.965152,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 1.602395,
+        "rr_gap_threshold": 2.09375,
+        "alpha": 1.0,
+        "max_displacement_rank": 10
+      },
+      "dev_ndcg": 0.625337,
+      "dev_delta": 0.012167,
+      "abstain_rate": 0.960606,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 1.602395,
+        "rr_gap_threshold": 2.09375,
+        "alpha": 0.7,
+        "max_displacement_rank": 3
+      },
+      "dev_ndcg": 0.626653,
+      "dev_delta": 0.013483,
+      "abstain_rate": 0.951515,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 1.602395,
+        "rr_gap_threshold": 2.09375,
+        "alpha": 0.7,
+        "max_displacement_rank": 5
+      },
+      "dev_ndcg": 0.627212,
+      "dev_delta": 0.014042,
+      "abstain_rate": 0.951515,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 1.602395,
+        "rr_gap_threshold": 2.09375,
+        "alpha": 0.7,
+        "max_displacement_rank": 10
+      },
+      "dev_ndcg": 0.627212,
+      "dev_delta": 0.014042,
+      "abstain_rate": 0.951515,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 1.602395,
+        "rr_gap_threshold": 2.09375,
+        "alpha": 0.5,
+        "max_displacement_rank": 3
+      },
+      "dev_ndcg": 0.627752,
+      "dev_delta": 0.014582,
+      "abstain_rate": 0.951515,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 1.602395,
+        "rr_gap_threshold": 2.09375,
+        "alpha": 0.5,
+        "max_displacement_rank": 5
+      },
+      "dev_ndcg": 0.627752,
+      "dev_delta": 0.014582,
+      "abstain_rate": 0.951515,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 1.602395,
+        "rr_gap_threshold": 2.09375,
+        "alpha": 0.5,
+        "max_displacement_rank": 10
+      },
+      "dev_ndcg": 0.627752,
+      "dev_delta": 0.014582,
+      "abstain_rate": 0.951515,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 1.602395,
+        "rr_gap_threshold": 2.625,
+        "alpha": 1.0,
+        "max_displacement_rank": 3
+      },
+      "dev_ndcg": 0.617878,
+      "dev_delta": 0.004708,
+      "abstain_rate": 0.980303,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 1.602395,
+        "rr_gap_threshold": 2.625,
+        "alpha": 1.0,
+        "max_displacement_rank": 5
+      },
+      "dev_ndcg": 0.618635,
+      "dev_delta": 0.005465,
+      "abstain_rate": 0.978788,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 1.602395,
+        "rr_gap_threshold": 2.625,
+        "alpha": 1.0,
+        "max_displacement_rank": 10
+      },
+      "dev_ndcg": 0.620151,
+      "dev_delta": 0.006981,
+      "abstain_rate": 0.974242,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 1.602395,
+        "rr_gap_threshold": 2.625,
+        "alpha": 0.7,
+        "max_displacement_rank": 3
+      },
+      "dev_ndcg": 0.621467,
+      "dev_delta": 0.008297,
+      "abstain_rate": 0.966667,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 1.602395,
+        "rr_gap_threshold": 2.625,
+        "alpha": 0.7,
+        "max_displacement_rank": 5
+      },
+      "dev_ndcg": 0.622027,
+      "dev_delta": 0.008857,
+      "abstain_rate": 0.966667,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 1.602395,
+        "rr_gap_threshold": 2.625,
+        "alpha": 0.7,
+        "max_displacement_rank": 10
+      },
+      "dev_ndcg": 0.622027,
+      "dev_delta": 0.008857,
+      "abstain_rate": 0.966667,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 1.602395,
+        "rr_gap_threshold": 2.625,
+        "alpha": 0.5,
+        "max_displacement_rank": 3
+      },
+      "dev_ndcg": 0.622027,
+      "dev_delta": 0.008857,
+      "abstain_rate": 0.966667,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 1.602395,
+        "rr_gap_threshold": 2.625,
+        "alpha": 0.5,
+        "max_displacement_rank": 5
+      },
+      "dev_ndcg": 0.622027,
+      "dev_delta": 0.008857,
+      "abstain_rate": 0.966667,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 1.602395,
+        "rr_gap_threshold": 2.625,
+        "alpha": 0.5,
+        "max_displacement_rank": 10
+      },
+      "dev_ndcg": 0.622027,
+      "dev_delta": 0.008857,
+      "abstain_rate": 0.966667,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 1.602395,
+        "rr_gap_threshold": 3.863281,
+        "alpha": 1.0,
+        "max_displacement_rank": 3
+      },
+      "dev_ndcg": 0.617373,
+      "dev_delta": 0.004203,
+      "abstain_rate": 0.989394,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 1.602395,
+        "rr_gap_threshold": 3.863281,
+        "alpha": 1.0,
+        "max_displacement_rank": 5
+      },
+      "dev_ndcg": 0.61813,
+      "dev_delta": 0.00496,
+      "abstain_rate": 0.987879,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 1.602395,
+        "rr_gap_threshold": 3.863281,
+        "alpha": 1.0,
+        "max_displacement_rank": 10
+      },
+      "dev_ndcg": 0.619646,
+      "dev_delta": 0.006476,
+      "abstain_rate": 0.983333,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 1.602395,
+        "rr_gap_threshold": 3.863281,
+        "alpha": 0.7,
+        "max_displacement_rank": 3
+      },
+      "dev_ndcg": 0.620403,
+      "dev_delta": 0.007233,
+      "abstain_rate": 0.978788,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 1.602395,
+        "rr_gap_threshold": 3.863281,
+        "alpha": 0.7,
+        "max_displacement_rank": 5
+      },
+      "dev_ndcg": 0.620962,
+      "dev_delta": 0.007792,
+      "abstain_rate": 0.978788,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 1.602395,
+        "rr_gap_threshold": 3.863281,
+        "alpha": 0.7,
+        "max_displacement_rank": 10
+      },
+      "dev_ndcg": 0.620962,
+      "dev_delta": 0.007792,
+      "abstain_rate": 0.978788,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 1.602395,
+        "rr_gap_threshold": 3.863281,
+        "alpha": 0.5,
+        "max_displacement_rank": 3
+      },
+      "dev_ndcg": 0.620962,
+      "dev_delta": 0.007792,
+      "abstain_rate": 0.978788,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 1.602395,
+        "rr_gap_threshold": 3.863281,
+        "alpha": 0.5,
+        "max_displacement_rank": 5
+      },
+      "dev_ndcg": 0.620962,
+      "dev_delta": 0.007792,
+      "abstain_rate": 0.978788,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 1.602395,
+        "rr_gap_threshold": 3.863281,
+        "alpha": 0.5,
+        "max_displacement_rank": 10
+      },
+      "dev_ndcg": 0.620962,
+      "dev_delta": 0.007792,
+      "abstain_rate": 0.978788,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 1.602395,
+        "rr_gap_threshold": 5.730469,
+        "alpha": 1.0,
+        "max_displacement_rank": 3
+      },
+      "dev_ndcg": 0.616363,
+      "dev_delta": 0.003193,
+      "abstain_rate": 0.993939,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 1.602395,
+        "rr_gap_threshold": 5.730469,
+        "alpha": 1.0,
+        "max_displacement_rank": 5
+      },
+      "dev_ndcg": 0.616363,
+      "dev_delta": 0.003193,
+      "abstain_rate": 0.993939,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 1.602395,
+        "rr_gap_threshold": 5.730469,
+        "alpha": 1.0,
+        "max_displacement_rank": 10
+      },
+      "dev_ndcg": 0.61712,
+      "dev_delta": 0.00395,
+      "abstain_rate": 0.992424,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 1.602395,
+        "rr_gap_threshold": 5.730469,
+        "alpha": 0.7,
+        "max_displacement_rank": 3
+      },
+      "dev_ndcg": 0.618437,
+      "dev_delta": 0.005267,
+      "abstain_rate": 0.987879,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 1.602395,
+        "rr_gap_threshold": 5.730469,
+        "alpha": 0.7,
+        "max_displacement_rank": 5
+      },
+      "dev_ndcg": 0.618437,
+      "dev_delta": 0.005267,
+      "abstain_rate": 0.987879,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 1.602395,
+        "rr_gap_threshold": 5.730469,
+        "alpha": 0.7,
+        "max_displacement_rank": 10
+      },
+      "dev_ndcg": 0.618437,
+      "dev_delta": 0.005267,
+      "abstain_rate": 0.987879,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 1.602395,
+        "rr_gap_threshold": 5.730469,
+        "alpha": 0.5,
+        "max_displacement_rank": 3
+      },
+      "dev_ndcg": 0.618437,
+      "dev_delta": 0.005267,
+      "abstain_rate": 0.987879,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 1.602395,
+        "rr_gap_threshold": 5.730469,
+        "alpha": 0.5,
+        "max_displacement_rank": 5
+      },
+      "dev_ndcg": 0.618437,
+      "dev_delta": 0.005267,
+      "abstain_rate": 0.987879,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 1.602395,
+        "rr_gap_threshold": 5.730469,
+        "alpha": 0.5,
+        "max_displacement_rank": 10
+      },
+      "dev_ndcg": 0.618437,
+      "dev_delta": 0.005267,
+      "abstain_rate": 0.987879,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 3.262757,
+        "rr_gap_threshold": 0.250977,
+        "alpha": 1.0,
+        "max_displacement_rank": 3
+      },
+      "dev_ndcg": 0.656514,
+      "dev_delta": 0.043344,
+      "abstain_rate": 0.756061,
+      "catastrophic": 0.004545
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 3.262757,
+        "rr_gap_threshold": 0.250977,
+        "alpha": 1.0,
+        "max_displacement_rank": 5
+      },
+      "dev_ndcg": 0.66925,
+      "dev_delta": 0.05608,
+      "abstain_rate": 0.731818,
+      "catastrophic": 0.004545
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 3.262757,
+        "rr_gap_threshold": 0.250977,
+        "alpha": 1.0,
+        "max_displacement_rank": 10
+      },
+      "dev_ndcg": 0.679319,
+      "dev_delta": 0.066149,
+      "abstain_rate": 0.707576,
+      "catastrophic": 0.004545
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 3.262757,
+        "rr_gap_threshold": 0.250977,
+        "alpha": 0.7,
+        "max_displacement_rank": 3
+      },
+      "dev_ndcg": 0.663406,
+      "dev_delta": 0.050236,
+      "abstain_rate": 0.683333,
+      "catastrophic": 0.004545
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 3.262757,
+        "rr_gap_threshold": 0.250977,
+        "alpha": 0.7,
+        "max_displacement_rank": 5
+      },
+      "dev_ndcg": 0.675384,
+      "dev_delta": 0.062214,
+      "abstain_rate": 0.683333,
+      "catastrophic": 0.004545
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 3.262757,
+        "rr_gap_threshold": 0.250977,
+        "alpha": 0.7,
+        "max_displacement_rank": 10
+      },
+      "dev_ndcg": 0.682512,
+      "dev_delta": 0.069342,
+      "abstain_rate": 0.683333,
+      "catastrophic": 0.004545
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 3.262757,
+        "rr_gap_threshold": 0.250977,
+        "alpha": 0.5,
+        "max_displacement_rank": 3
+      },
+      "dev_ndcg": 0.67278,
+      "dev_delta": 0.05961,
+      "abstain_rate": 0.683333,
+      "catastrophic": 0.004545
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 3.262757,
+        "rr_gap_threshold": 0.250977,
+        "alpha": 0.5,
+        "max_displacement_rank": 5
+      },
+      "dev_ndcg": 0.67992,
+      "dev_delta": 0.06675,
+      "abstain_rate": 0.683333,
+      "catastrophic": 0.004545
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 3.262757,
+        "rr_gap_threshold": 0.250977,
+        "alpha": 0.5,
+        "max_displacement_rank": 10
+      },
+      "dev_ndcg": 0.685275,
+      "dev_delta": 0.072105,
+      "abstain_rate": 0.683333,
+      "catastrophic": 0.004545
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 3.262757,
+        "rr_gap_threshold": 0.921875,
+        "alpha": 1.0,
+        "max_displacement_rank": 3
+      },
+      "dev_ndcg": 0.640377,
+      "dev_delta": 0.027207,
+      "abstain_rate": 0.843939,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 3.262757,
+        "rr_gap_threshold": 0.921875,
+        "alpha": 1.0,
+        "max_displacement_rank": 5
+      },
+      "dev_ndcg": 0.647133,
+      "dev_delta": 0.033963,
+      "abstain_rate": 0.831818,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 3.262757,
+        "rr_gap_threshold": 0.921875,
+        "alpha": 1.0,
+        "max_displacement_rank": 10
+      },
+      "dev_ndcg": 0.651391,
+      "dev_delta": 0.038221,
+      "abstain_rate": 0.819697,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 3.262757,
+        "rr_gap_threshold": 0.921875,
+        "alpha": 0.7,
+        "max_displacement_rank": 3
+      },
+      "dev_ndcg": 0.646709,
+      "dev_delta": 0.033539,
+      "abstain_rate": 0.806061,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 3.262757,
+        "rr_gap_threshold": 0.921875,
+        "alpha": 0.7,
+        "max_displacement_rank": 5
+      },
+      "dev_ndcg": 0.652708,
+      "dev_delta": 0.039538,
+      "abstain_rate": 0.806061,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 3.262757,
+        "rr_gap_threshold": 0.921875,
+        "alpha": 0.7,
+        "max_displacement_rank": 10
+      },
+      "dev_ndcg": 0.654025,
+      "dev_delta": 0.040855,
+      "abstain_rate": 0.806061,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 3.262757,
+        "rr_gap_threshold": 0.921875,
+        "alpha": 0.5,
+        "max_displacement_rank": 3
+      },
+      "dev_ndcg": 0.652144,
+      "dev_delta": 0.038974,
+      "abstain_rate": 0.806061,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 3.262757,
+        "rr_gap_threshold": 0.921875,
+        "alpha": 0.5,
+        "max_displacement_rank": 5
+      },
+      "dev_ndcg": 0.655322,
+      "dev_delta": 0.042152,
+      "abstain_rate": 0.806061,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 3.262757,
+        "rr_gap_threshold": 0.921875,
+        "alpha": 0.5,
+        "max_displacement_rank": 10
+      },
+      "dev_ndcg": 0.655322,
+      "dev_delta": 0.042152,
+      "abstain_rate": 0.806061,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 3.262757,
+        "rr_gap_threshold": 1.588867,
+        "alpha": 1.0,
+        "max_displacement_rank": 3
+      },
+      "dev_ndcg": 0.630917,
+      "dev_delta": 0.017747,
+      "abstain_rate": 0.910606,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 3.262757,
+        "rr_gap_threshold": 1.588867,
+        "alpha": 1.0,
+        "max_displacement_rank": 5
+      },
+      "dev_ndcg": 0.634187,
+      "dev_delta": 0.021017,
+      "abstain_rate": 0.904545,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 3.262757,
+        "rr_gap_threshold": 1.588867,
+        "alpha": 1.0,
+        "max_displacement_rank": 10
+      },
+      "dev_ndcg": 0.636677,
+      "dev_delta": 0.023507,
+      "abstain_rate": 0.898485,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 3.262757,
+        "rr_gap_threshold": 1.588867,
+        "alpha": 0.7,
+        "max_displacement_rank": 3
+      },
+      "dev_ndcg": 0.636239,
+      "dev_delta": 0.023069,
+      "abstain_rate": 0.886364,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 3.262757,
+        "rr_gap_threshold": 1.588867,
+        "alpha": 0.7,
+        "max_displacement_rank": 5
+      },
+      "dev_ndcg": 0.638752,
+      "dev_delta": 0.025582,
+      "abstain_rate": 0.886364,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 3.262757,
+        "rr_gap_threshold": 1.588867,
+        "alpha": 0.7,
+        "max_displacement_rank": 10
+      },
+      "dev_ndcg": 0.639311,
+      "dev_delta": 0.026141,
+      "abstain_rate": 0.886364,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 3.262757,
+        "rr_gap_threshold": 1.588867,
+        "alpha": 0.5,
+        "max_displacement_rank": 3
+      },
+      "dev_ndcg": 0.639611,
+      "dev_delta": 0.026441,
+      "abstain_rate": 0.886364,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 3.262757,
+        "rr_gap_threshold": 1.588867,
+        "alpha": 0.5,
+        "max_displacement_rank": 5
+      },
+      "dev_ndcg": 0.640608,
+      "dev_delta": 0.027438,
+      "abstain_rate": 0.886364,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 3.262757,
+        "rr_gap_threshold": 1.588867,
+        "alpha": 0.5,
+        "max_displacement_rank": 10
+      },
+      "dev_ndcg": 0.640608,
+      "dev_delta": 0.027438,
+      "abstain_rate": 0.886364,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 3.262757,
+        "rr_gap_threshold": 2.09375,
+        "alpha": 1.0,
+        "max_displacement_rank": 3
+      },
+      "dev_ndcg": 0.627631,
+      "dev_delta": 0.014461,
+      "abstain_rate": 0.934848,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 3.262757,
+        "rr_gap_threshold": 2.09375,
+        "alpha": 1.0,
+        "max_displacement_rank": 5
+      },
+      "dev_ndcg": 0.629903,
+      "dev_delta": 0.016733,
+      "abstain_rate": 0.931818,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 3.262757,
+        "rr_gap_threshold": 2.09375,
+        "alpha": 1.0,
+        "max_displacement_rank": 10
+      },
+      "dev_ndcg": 0.632394,
+      "dev_delta": 0.019224,
+      "abstain_rate": 0.925758,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 3.262757,
+        "rr_gap_threshold": 2.09375,
+        "alpha": 0.7,
+        "max_displacement_rank": 3
+      },
+      "dev_ndcg": 0.632394,
+      "dev_delta": 0.019224,
+      "abstain_rate": 0.913636,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 3.262757,
+        "rr_gap_threshold": 2.09375,
+        "alpha": 0.7,
+        "max_displacement_rank": 5
+      },
+      "dev_ndcg": 0.634468,
+      "dev_delta": 0.021298,
+      "abstain_rate": 0.913636,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 3.262757,
+        "rr_gap_threshold": 2.09375,
+        "alpha": 0.7,
+        "max_displacement_rank": 10
+      },
+      "dev_ndcg": 0.635028,
+      "dev_delta": 0.021858,
+      "abstain_rate": 0.913636,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 3.262757,
+        "rr_gap_threshold": 2.09375,
+        "alpha": 0.5,
+        "max_displacement_rank": 3
+      },
+      "dev_ndcg": 0.635766,
+      "dev_delta": 0.022596,
+      "abstain_rate": 0.913636,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 3.262757,
+        "rr_gap_threshold": 2.09375,
+        "alpha": 0.5,
+        "max_displacement_rank": 5
+      },
+      "dev_ndcg": 0.636325,
+      "dev_delta": 0.023155,
+      "abstain_rate": 0.913636,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 3.262757,
+        "rr_gap_threshold": 2.09375,
+        "alpha": 0.5,
+        "max_displacement_rank": 10
+      },
+      "dev_ndcg": 0.636325,
+      "dev_delta": 0.023155,
+      "abstain_rate": 0.913636,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 3.262757,
+        "rr_gap_threshold": 2.625,
+        "alpha": 1.0,
+        "max_displacement_rank": 3
+      },
+      "dev_ndcg": 0.621989,
+      "dev_delta": 0.008819,
+      "abstain_rate": 0.957576,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 3.262757,
+        "rr_gap_threshold": 2.625,
+        "alpha": 1.0,
+        "max_displacement_rank": 5
+      },
+      "dev_ndcg": 0.624261,
+      "dev_delta": 0.011091,
+      "abstain_rate": 0.954545,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 3.262757,
+        "rr_gap_threshold": 2.625,
+        "alpha": 1.0,
+        "max_displacement_rank": 10
+      },
+      "dev_ndcg": 0.626752,
+      "dev_delta": 0.013582,
+      "abstain_rate": 0.948485,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 3.262757,
+        "rr_gap_threshold": 2.625,
+        "alpha": 0.7,
+        "max_displacement_rank": 3
+      },
+      "dev_ndcg": 0.626752,
+      "dev_delta": 0.013582,
+      "abstain_rate": 0.937879,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 3.262757,
+        "rr_gap_threshold": 2.625,
+        "alpha": 0.7,
+        "max_displacement_rank": 5
+      },
+      "dev_ndcg": 0.628826,
+      "dev_delta": 0.015656,
+      "abstain_rate": 0.937879,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 3.262757,
+        "rr_gap_threshold": 2.625,
+        "alpha": 0.7,
+        "max_displacement_rank": 10
+      },
+      "dev_ndcg": 0.629386,
+      "dev_delta": 0.016216,
+      "abstain_rate": 0.937879,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 3.262757,
+        "rr_gap_threshold": 2.625,
+        "alpha": 0.5,
+        "max_displacement_rank": 3
+      },
+      "dev_ndcg": 0.629584,
+      "dev_delta": 0.016414,
+      "abstain_rate": 0.937879,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 3.262757,
+        "rr_gap_threshold": 2.625,
+        "alpha": 0.5,
+        "max_displacement_rank": 5
+      },
+      "dev_ndcg": 0.630143,
+      "dev_delta": 0.016973,
+      "abstain_rate": 0.937879,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 3.262757,
+        "rr_gap_threshold": 2.625,
+        "alpha": 0.5,
+        "max_displacement_rank": 10
+      },
+      "dev_ndcg": 0.630143,
+      "dev_delta": 0.016973,
+      "abstain_rate": 0.937879,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 3.262757,
+        "rr_gap_threshold": 3.863281,
+        "alpha": 1.0,
+        "max_displacement_rank": 3
+      },
+      "dev_ndcg": 0.621484,
+      "dev_delta": 0.008314,
+      "abstain_rate": 0.974242,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 3.262757,
+        "rr_gap_threshold": 3.863281,
+        "alpha": 1.0,
+        "max_displacement_rank": 5
+      },
+      "dev_ndcg": 0.622241,
+      "dev_delta": 0.009071,
+      "abstain_rate": 0.972727,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 3.262757,
+        "rr_gap_threshold": 3.863281,
+        "alpha": 1.0,
+        "max_displacement_rank": 10
+      },
+      "dev_ndcg": 0.623756,
+      "dev_delta": 0.010586,
+      "abstain_rate": 0.968182,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 3.262757,
+        "rr_gap_threshold": 3.863281,
+        "alpha": 0.7,
+        "max_displacement_rank": 3
+      },
+      "dev_ndcg": 0.624514,
+      "dev_delta": 0.011344,
+      "abstain_rate": 0.963636,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 3.262757,
+        "rr_gap_threshold": 3.863281,
+        "alpha": 0.7,
+        "max_displacement_rank": 5
+      },
+      "dev_ndcg": 0.625073,
+      "dev_delta": 0.011903,
+      "abstain_rate": 0.963636,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 3.262757,
+        "rr_gap_threshold": 3.863281,
+        "alpha": 0.7,
+        "max_displacement_rank": 10
+      },
+      "dev_ndcg": 0.625073,
+      "dev_delta": 0.011903,
+      "abstain_rate": 0.963636,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 3.262757,
+        "rr_gap_threshold": 3.863281,
+        "alpha": 0.5,
+        "max_displacement_rank": 3
+      },
+      "dev_ndcg": 0.625073,
+      "dev_delta": 0.011903,
+      "abstain_rate": 0.963636,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 3.262757,
+        "rr_gap_threshold": 3.863281,
+        "alpha": 0.5,
+        "max_displacement_rank": 5
+      },
+      "dev_ndcg": 0.625073,
+      "dev_delta": 0.011903,
+      "abstain_rate": 0.963636,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 3.262757,
+        "rr_gap_threshold": 3.863281,
+        "alpha": 0.5,
+        "max_displacement_rank": 10
+      },
+      "dev_ndcg": 0.625073,
+      "dev_delta": 0.011903,
+      "abstain_rate": 0.963636,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 3.262757,
+        "rr_gap_threshold": 5.730469,
+        "alpha": 1.0,
+        "max_displacement_rank": 3
+      },
+      "dev_ndcg": 0.618201,
+      "dev_delta": 0.005031,
+      "abstain_rate": 0.986364,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 3.262757,
+        "rr_gap_threshold": 5.730469,
+        "alpha": 1.0,
+        "max_displacement_rank": 5
+      },
+      "dev_ndcg": 0.618201,
+      "dev_delta": 0.005031,
+      "abstain_rate": 0.986364,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 3.262757,
+        "rr_gap_threshold": 5.730469,
+        "alpha": 1.0,
+        "max_displacement_rank": 10
+      },
+      "dev_ndcg": 0.618958,
+      "dev_delta": 0.005788,
+      "abstain_rate": 0.984848,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 3.262757,
+        "rr_gap_threshold": 5.730469,
+        "alpha": 0.7,
+        "max_displacement_rank": 3
+      },
+      "dev_ndcg": 0.620275,
+      "dev_delta": 0.007105,
+      "abstain_rate": 0.980303,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 3.262757,
+        "rr_gap_threshold": 5.730469,
+        "alpha": 0.7,
+        "max_displacement_rank": 5
+      },
+      "dev_ndcg": 0.620275,
+      "dev_delta": 0.007105,
+      "abstain_rate": 0.980303,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 3.262757,
+        "rr_gap_threshold": 5.730469,
+        "alpha": 0.7,
+        "max_displacement_rank": 10
+      },
+      "dev_ndcg": 0.620275,
+      "dev_delta": 0.007105,
+      "abstain_rate": 0.980303,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 3.262757,
+        "rr_gap_threshold": 5.730469,
+        "alpha": 0.5,
+        "max_displacement_rank": 3
+      },
+      "dev_ndcg": 0.620275,
+      "dev_delta": 0.007105,
+      "abstain_rate": 0.980303,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 3.262757,
+        "rr_gap_threshold": 5.730469,
+        "alpha": 0.5,
+        "max_displacement_rank": 5
+      },
+      "dev_ndcg": 0.620275,
+      "dev_delta": 0.007105,
+      "abstain_rate": 0.980303,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 3.262757,
+        "rr_gap_threshold": 5.730469,
+        "alpha": 0.5,
+        "max_displacement_rank": 10
+      },
+      "dev_ndcg": 0.620275,
+      "dev_delta": 0.007105,
+      "abstain_rate": 0.980303,
+      "catastrophic": 0.0
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 5.017926,
+        "rr_gap_threshold": 0.250977,
+        "alpha": 1.0,
+        "max_displacement_rank": 3
+      },
+      "dev_ndcg": 0.665581,
+      "dev_delta": 0.052411,
+      "abstain_rate": 0.669697,
+      "catastrophic": 0.006061
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 5.017926,
+        "rr_gap_threshold": 0.250977,
+        "alpha": 1.0,
+        "max_displacement_rank": 5
+      },
+      "dev_ndcg": 0.678383,
+      "dev_delta": 0.065213,
+      "abstain_rate": 0.642424,
+      "catastrophic": 0.006061
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 5.017926,
+        "rr_gap_threshold": 0.250977,
+        "alpha": 1.0,
+        "max_displacement_rank": 10
+      },
+      "dev_ndcg": 0.688452,
+      "dev_delta": 0.075282,
+      "abstain_rate": 0.616667,
+      "catastrophic": 0.006061
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 5.017926,
+        "rr_gap_threshold": 0.250977,
+        "alpha": 0.7,
+        "max_displacement_rank": 3
+      },
+      "dev_ndcg": 0.672473,
+      "dev_delta": 0.059303,
+      "abstain_rate": 0.586364,
+      "catastrophic": 0.006061
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 5.017926,
+        "rr_gap_threshold": 0.250977,
+        "alpha": 0.7,
+        "max_displacement_rank": 5
+      },
+      "dev_ndcg": 0.684517,
+      "dev_delta": 0.071347,
+      "abstain_rate": 0.586364,
+      "catastrophic": 0.006061
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 5.017926,
+        "rr_gap_threshold": 0.250977,
+        "alpha": 0.7,
+        "max_displacement_rank": 10
+      },
+      "dev_ndcg": 0.691645,
+      "dev_delta": 0.078475,
+      "abstain_rate": 0.586364,
+      "catastrophic": 0.006061
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 5.017926,
+        "rr_gap_threshold": 0.250977,
+        "alpha": 0.5,
+        "max_displacement_rank": 3
+      },
+      "dev_ndcg": 0.684298,
+      "dev_delta": 0.071128,
+      "abstain_rate": 0.586364,
+      "catastrophic": 0.006061
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 5.017926,
+        "rr_gap_threshold": 0.250977,
+        "alpha": 0.5,
+        "max_displacement_rank": 5
+      },
+      "dev_ndcg": 0.691505,
+      "dev_delta": 0.078335,
+      "abstain_rate": 0.586364,
+      "catastrophic": 0.006061
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 5.017926,
+        "rr_gap_threshold": 0.250977,
+        "alpha": 0.5,
+        "max_displacement_rank": 10
+      },
+      "dev_ndcg": 0.69686,
+      "dev_delta": 0.08369,
+      "abstain_rate": 0.586364,
+      "catastrophic": 0.006061
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 5.017926,
+        "rr_gap_threshold": 0.921875,
+        "alpha": 1.0,
+        "max_displacement_rank": 3
+      },
+      "dev_ndcg": 0.647929,
+      "dev_delta": 0.034759,
+      "abstain_rate": 0.763636,
+      "catastrophic": 0.001515
+    },
+    {
+      "params": {
+        "fs_gap_threshold": 5.017926,
+        "rr_gap_threshold": 0.921875,
+        "alpha": 1.0,
+        "max_displacement_rank": 5
+      },
+      "dev_ndcg": 0.654751,
+      "dev_delta": 0.041581,
+      "abstain_rate": 0.75,
+      "catastrophic": 0.001515
+    }
+  ],
+  "dev_always_rerank": 0.141095,
+  "dev_never_rerank": 0.0,
+  "grid": {
+    "fs_gaps": [
+      0.481459,
+      1.602395,
+      3.262757,
+      5.017926,
+      6.925121,
+      10.314034,
+      15.068491
+    ],
+    "rr_gaps": [
+      0.250977,
+      0.921875,
+      1.588867,
+      2.09375,
+      2.625,
+      3.863281,
+      5.730469
+    ],
+    "alphas": [
+      1.0,
+      0.7,
+      0.5
+    ],
+    "max_displacements": [
+      3,
+      5,
+      10
+    ]
+  }
+}

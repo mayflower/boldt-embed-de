@@ -1,0 +1,65 @@
+{
+  "status": "fail",
+  "checks": [
+    {
+      "check": "webfaq_overall",
+      "status": "pass",
+      "detail": "+0.0975 (min +0.05)"
+    },
+    {
+      "check": "webfaq_medium_hard",
+      "status": "pass",
+      "detail": "0.21511 (min +0.2)"
+    },
+    {
+      "check": "germanquad_overall",
+      "status": "pass",
+      "detail": "+0.0243 (min -0.005)"
+    },
+    {
+      "check": "germanquad_catastrophic",
+      "status": "fail",
+      "detail": "0.0740 (max 0.03)"
+    },
+    {
+      "check": "germanquad_beats_always_rerank",
+      "status": "pass",
+      "detail": "policy +0.0243 vs always_rerank +0.0094"
+    },
+    {
+      "check": "dt_test_overall",
+      "status": "pass",
+      "detail": "+0.0193 (min -0.005)"
+    },
+    {
+      "check": "dt_test_catastrophic",
+      "status": "pass",
+      "detail": "0.0000 (max 0.02)"
+    },
+    {
+      "check": "dt_test_beats_always_rerank",
+      "status": "fail",
+      "detail": "policy +0.0193 vs always_rerank +0.0212"
+    }
+  ],
+  "failing": [
+    {
+      "check": "germanquad_catastrophic",
+      "status": "fail",
+      "detail": "0.0740 (max 0.03)"
+    },
+    {
+      "check": "dt_test_beats_always_rerank",
+      "status": "fail",
+      "detail": "policy +0.0193 vs always_rerank +0.0212"
+    }
+  ],
+  "thresholds": {
+    "webfaq_min_overall": 0.05,
+    "webfaq_min_medium_hard": 0.2,
+    "germanquad_min_overall": -0.005,
+    "germanquad_max_catastrophic": 0.03,
+    "dt_test_min_overall": -0.005,
+    "dt_test_max_catastrophic": 0.02
+  }
+}
