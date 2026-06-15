@@ -36,6 +36,17 @@ _Conservative-only gate fails: ['germanquad_catastrophic_rate']. Conservative+ab
 
 Real measured progress. Conservative training (rank-preservation penalty on high-first-stage-confidence lists) reduces near-ceiling churn: GermanQuAD overall -0.0285 -> +0.0094 (conservative) / +0.0243 (conservative+abstain) and catastrophic 0.169 -> 0.122 / 0.074, while WebFAQ (+0.0975) and DT-test (+0.0193) stay healthy. NOT promoted: the remaining failure is catastrophic tail risk on near-ceiling GermanQuAD lists (0.074 > 0.03 bar). Next step: a bounded / top-preserving rerank policy.
 
+## Preservation grid — negative training result, positive policy confirmation
+
+| checkpoint | RAW GQ catastrophic | RAW GQ Δ | RAW WebFAQ Δ | bounded GQ catastrophic |
+|---|--:|--:|--:|--:|
+| conservative(orig) | 0.123333 | 0.008698 | 0.139584 | 0.014667 |
+| lp04 | 0.174667 | -0.029012 | 0.156113 | 0.028 |
+| lp06 | 0.137333 | -0.002129 | 0.144548 | 0.019333 |
+| lp08 | 0.112 | 0.017902 | 0.195595 | 0.015333 |
+
+Stronger preservation (lp04/lp06/lp08) did NOT make raw always-rerank safe on GermanQuAD (catastrophic 0.11-0.18; no lambda approaches the 0.03 bar). Bounded margin_override passes on EVERY checkpoint including the original. No new checkpoint is promoted; the original conservative checkpoint + bounded policy remains the best deployment candidate. Next: freeze and validate the bounded policy on a held-out near-ceiling guardrail.
+
 ## Interpretation (raw v5)
 
 v5 is better than v4 but still NOT promotable. Multi-domain training (FAQ share 0.217) lifts every set strongly where there is real headroom (medium+hard buckets), and both guardrails improved over v4 (GermanQuAD -0.0711->-0.0285, DT-test -0.0007->+0.0211). But the gate FAILS: on GermanQuAD the reranker over-reorders near-ceiling first-stage lists (84% no_room), netting -0.0285 and 16.9% catastrophic per-query drops. Next step: rerank-or-abstain calibration on confident first stages.

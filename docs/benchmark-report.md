@@ -438,6 +438,30 @@ marginally `dt_test_beats_always_rerank`. The original −0.07 regression is now
 tail. The reranker stays **Experimental / not recommended**; next lever is a bounded / top-
 preserving rerank policy. See `outputs/v5-small-rag/V5_RESULTS.md`.
 
+### 6o. v5 conservative preservation grid — negative training result, positive policy confirmation (2026-06-15)
+
+Tested the hypothesis "stronger preservation on the highest-risk lists fixes catastrophic at the
+MODEL level." Trained 3 variants (preserve_top_k=3, teacher_margin_override=3.0), scored each on the
+same fixed eval lists, compared apples-to-apples to the original conservative checkpoint.
+
+| checkpoint | λ / hc-pct | RAW always-rerank GQ catastrophic | RAW GQ Δ | RAW WebFAQ Δ | bounded(margin_override) GQ catastrophic | bounded gate |
+|---|---|--:|--:|--:|--:|:--|
+| conservative (orig) | 0.2 / 0.60 | 0.123 | +0.009 | +0.140 | 0.015 | pass |
+| lp04 | 0.4 / 0.70 | 0.175 | −0.029 | +0.156 | 0.028 | pass |
+| lp06 | 0.6 / 0.75 | 0.137 | −0.002 | +0.144 | 0.019 | pass |
+| lp08 | 0.8 / 0.80 | 0.112 | +0.018 | +0.196 | 0.015 | pass |
+
+**Negative training result, positive policy confirmation.** No λ makes raw always-rerank safe —
+GermanQuAD catastrophic stays 0.11–0.18 (lp04 *worse*, and pushed raw GQ overall negative); none
+approach the 0.03 bar without a policy. Root cause: preservation protects WebFAQ-gap-defined
+high-confidence lists during training, which do not transfer to GermanQuAD's near-ceiling lists —
+the same transfer gap that broke the fitted policy threshold. **WebFAQ lift did NOT collapse** (lp08
+even improved it to +0.196), so none are "too conservative". **Bounded `margin_override` passes the
+gate on every checkpoint including the original**, so retraining did not change the deployable
+answer. **No new checkpoint promoted** (lp04/lp06/lp08); the original conservative checkpoint +
+bounded policy remains the best candidate. Next: freeze and validate the bounded policy on a
+held-out near-ceiling guardrail. See `outputs/v5-small-rag/grid/grid_comparison.md`.
+
 ## 7. Matryoshka truncation analysis
 Storage scales linearly with dim (fp32): 1024→4096 B, 512→2048 B, 256→1024 B, 128→512 B,
 64→256 B/vector. The HashingEncoder by-dim retrieval (toy) stays near-perfect down to 64 dims

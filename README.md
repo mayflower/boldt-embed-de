@@ -69,9 +69,16 @@ fit on dev) and (2) a **conservative reranker** trained with a **rank-preservati
 high-first-stage-confidence lists (`boldt-rag-reranker-v5-conservative`). Both reduce near-ceiling
 GermanQuAD churn — combined, GermanQuAD goes from **−0.0285 (raw) → +0.0243** overall and
 catastrophic **0.169 → 0.074**, with WebFAQ +0.0975 / DT-test +0.0193. **Real measured progress, but
-the gate still FAILS** (residual catastrophic 0.074 > 0.03 on near-ceiling GermanQuAD lists). The
-**v5 conservative reranker remains Experimental — not recommended.** **Next step: a bounded /
-top-preserving rerank policy** (hard-cap how far the reranker may move a confident first-stage top-k).
+the gate still FAILS** (residual catastrophic 0.074 > 0.03 on near-ceiling GermanQuAD lists).
+
+**v5 preservation grid — EXECUTED (lp04/lp06/lp08):** **Training more preservation variants did not
+fix raw reranking.** No λ makes raw always-rerank safe on GermanQuAD (catastrophic stays 0.11–0.18;
+lp04 worse), while bounded `margin_override` passes on *every* checkpoint including the original —
+so retraining did not change the deployable answer (WebFAQ lift did not collapse). No new checkpoint
+is promoted. The **v5 reranker remains Experimental — not recommended as a raw always-reranker.**
+**Next step: freeze and validate the bounded policy** on a held-out near-ceiling guardrail (the
+remaining catastrophic drops are policy-fixable, not a training problem). See
+`outputs/v5-small-rag/V5_RESULTS.md` and `docs/benchmark-report.md` §6o.
 
 Training data follows a strict **train≠eval** rule (`docs/data/training-datasets-research-2026.md`):
 benchmark datasets (GermanQuAD/GerDaLIR/MMTEB) are held out; training uses non-benchmark

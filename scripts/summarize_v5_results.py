@@ -117,6 +117,31 @@ def main() -> int:
         "failure is catastrophic tail risk on near-ceiling GermanQuAD lists (0.074 > 0.03 bar). "
         "Next step: a bounded / top-preserving rerank policy.")
 
+    # ---- preservation grid (stronger-preservation retraining experiment) ----
+    grid = _load(V5 / "grid" / "grid_comparison.json")
+    if grid:
+        pg = {}
+        for m, md in grid.items():
+            raw = md.get("raw_always_rerank", {})
+            bnd = md.get("bounded_margin_override", {})
+            pg[m] = {
+                "raw_germanquad_catastrophic": raw.get("gq", {}).get("catastrophic_drop_rate"),
+                "raw_germanquad_delta": raw.get("gq", {}).get("delta_vs_first_stage"),
+                "raw_webfaq_delta": raw.get("wf", {}).get("delta_vs_first_stage"),
+                "bounded_germanquad_catastrophic": bnd.get("gq", {}).get("catastrophic_drop_rate"),
+            }
+        result["preservation_grid"] = {
+            "verdict": "negative training result, positive policy confirmation",
+            "by_checkpoint": pg,
+            "conclusion": (
+                "Stronger preservation (lp04/lp06/lp08) did NOT make raw always-rerank safe on "
+                "GermanQuAD (catastrophic 0.11-0.18; no lambda approaches the 0.03 bar). Bounded "
+                "margin_override passes on EVERY checkpoint including the original. No new checkpoint "
+                "is promoted; the original conservative checkpoint + bounded policy remains the best "
+                "deployment candidate. Next: freeze and validate the bounded policy on a held-out "
+                "near-ceiling guardrail."),
+        }
+
     (V5).mkdir(parents=True, exist_ok=True)
     (V5 / "V5_RESULTS.json").write_text(json.dumps(result, ensure_ascii=False, indent=2),
                                         encoding="utf-8")
@@ -170,8 +195,17 @@ def main() -> int:
                   f"{ap['webfaq']['overall']} | {ap['dt_test']['overall']} | {statusmap[key]} |")
     md += ["", f"_Conservative-only gate fails: {cg['conservative_only']['failing']}. "
            f"Conservative+abstain gate fails: {cg['conservative_plus_abstain']['failing']}. "
-           "NOT promoted._", "", result["conservative_interpretation"], "",
-           "## Interpretation (raw v5)", "", result["interpretation"], ""]
+           "NOT promoted._", "", result["conservative_interpretation"], ""]
+    pgrid = result.get("preservation_grid")
+    if pgrid:
+        md += ["## Preservation grid — negative training result, positive policy confirmation", "",
+               "| checkpoint | RAW GQ catastrophic | RAW GQ Δ | RAW WebFAQ Δ | bounded GQ catastrophic |",
+               "|---|--:|--:|--:|--:|"]
+        for m, v in pgrid["by_checkpoint"].items():
+            md.append(f"| {m} | {v['raw_germanquad_catastrophic']} | {v['raw_germanquad_delta']} | "
+                      f"{v['raw_webfaq_delta']} | {v['bounded_germanquad_catastrophic']} |")
+        md += ["", pgrid["conclusion"], ""]
+    md += ["## Interpretation (raw v5)", "", result["interpretation"], ""]
     (V5 / "V5_RESULTS.md").write_text("\n".join(md) + "\n", encoding="utf-8")
     print(f"[v5-summary] verdict={result['verdict']} gate={result['gate_status']} "
           f"-> {V5}/V5_RESULTS.md, V5_RESULTS.json")

@@ -1,0 +1,56 @@
+{
+  "policy": "margin_override",
+  "params": {
+    "margin": 3.0
+  },
+  "n_queries": 700,
+  "first_stage_ndcg@10": 0.59937,
+  "always_rerank_ndcg@10": 0.73541,
+  "policy_ndcg@10": 0.699939,
+  "delta_vs_first_stage": 0.100569,
+  "delta_vs_always_rerank": -0.035471,
+  "abstain_rate": 0.008571,
+  "lock_rate": 0.952857,
+  "avg_max_displacement": 13.3314,
+  "catastrophic_drop_rate": 0.001429,
+  "medium_hard_delta": 0.215286,
+  "actions": {
+    "override_rerank": 33,
+    "top1_lock": 667
+  },
+  "by_bucket": {
+    "hard": {
+      "n": 263,
+      "first_stage_ndcg@10": 0.030465,
+      "policy_ndcg@10": 0.28503,
+      "delta": 0.254565
+    },
+    "medium": {
+      "n": 64,
+      "first_stage_ndcg@10": 0.602289,
+      "policy_ndcg@10": 0.656164,
+      "delta": 0.053875
+    },
+    "no_room": {
+      "n": 373,
+      "first_stage_ndcg@10": 1.0,
+      "policy_ndcg@10": 1.0,
+      "delta": 0.0
+    }
+  },
+  "top_catastrophic_examples": [
+    {
+      "query_id": "q5634948f4576496e",
+      "first_stage_ndcg@10": 0.6309,
+      "policy_ndcg@10": 0.4307,
+      "delta": -0.2003
+    }
+  ],
+  "policy_name": "margin_override",
+  "selected_thresholds": {
+    "margin": 3.0
+  },
+  "always_rerank_delta_vs_first_stage": 0.13604,
+  "always_rerank_catastrophic_drop_rate": 0.014286,
+  "eval_set": "webfaq_heldout_scored_conservative"
+}

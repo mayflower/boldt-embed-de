@@ -72,3 +72,25 @@ churn*, not the original −0.07 regression.
 - Not promoted: the residual GermanQuAD catastrophic rate (0.074) still exceeds the 0.03 bar; next
   levers are a higher `lambda_preserve`, a tighter high-confidence percentile, and set-aware
   abstention that doesn't give up DT-test's existing lift.
+
+## Preservation grid (lp04/lp06/lp08) — negative training result (2026-06-15)
+
+We then trained the higher-λ / stricter-percentile variants (`--preserve-top-k 3`,
+`--teacher-margin-override 3.0`) to test whether stronger preservation fixes catastrophic at the
+MODEL level (so raw always-rerank is safe, removing the policy-selection dependency).
+
+| checkpoint | λ / hc-pct | RAW always-rerank GQ catastrophic | RAW GQ Δ | RAW WebFAQ Δ | bounded(margin_override) GQ catastrophic | bounded gate |
+|---|---|--:|--:|--:|--:|:--|
+| conservative (orig) | 0.2 / 0.60 | 0.123 | +0.009 | +0.140 | 0.015 | pass |
+| lp04 | 0.4 / 0.70 | 0.175 | −0.029 | +0.156 | 0.028 | pass |
+| lp06 | 0.6 / 0.75 | 0.137 | −0.002 | +0.144 | 0.019 | pass |
+| lp08 | 0.8 / 0.80 | 0.112 | +0.018 | +0.196 | 0.015 | pass |
+
+**Conclusion: more preservation does not make raw always-rerank safe.** No λ brings raw GermanQuAD
+catastrophic near 0.03 (lp04 is *worse*); preservation protects WebFAQ-gap-defined high-confidence
+lists that don't transfer to GermanQuAD's near-ceiling lists. WebFAQ lift did not collapse (no
+variant is "too conservative"). Bounded `margin_override` already passes on the original checkpoint,
+so **retraining did not change the deployable answer** — the original conservative checkpoint +
+bounded policy remains the candidate; lp04/lp06/lp08 are not promoted. The reranker stays
+**Experimental** until the bounded policy is frozen and validated on a held-out near-ceiling
+guardrail. Full numbers: `outputs/v5-small-rag/grid/grid_comparison.{json,md}`.

@@ -1,0 +1,161 @@
+{
+  "run_card": {
+    "run_id": "v5-reranker-conservative-lp06",
+    "model_base": "Boldt/Boldt-DC-350M",
+    "lora": false,
+    "output": "outputs/v5-small-rag/checkpoints/boldt-rag-reranker-v5-conservative-lp06",
+    "bf16": true,
+    "gradient_checkpointing": true,
+    "timestamp": null,
+    "loss": "conservative",
+    "loss_components": [
+      "KLDivLoss(listwise)",
+      "MarginRankingLoss",
+      "BCEWithLogitsLoss(high_confidence_only)",
+      "rank_preservation_loss(lambda=0.6)"
+    ],
+    "primary": "listwise",
+    "listwise_variant": "listwise_kl",
+    "uncertain_listwise_only": true,
+    "faq_share_cap": 0.35,
+    "faq_share": 0.217,
+    "nonfaq_share": 0.783,
+    "not_faq_only": true,
+    "faq_dropped_for_cap": 0,
+    "examples_by_domain": {
+      "faq_real": 1228,
+      "german_stress": 1166,
+      "long_doc_chunks": 774,
+      "qa_passage_non_eval": 2492
+    },
+    "score_separation_by_domain": {
+      "faq_real": {
+        "pos_median": 6.5625,
+        "neg_median": -3.4375,
+        "separation": 10.0
+      },
+      "german_stress": {
+        "pos_median": 6.5625,
+        "neg_median": -8.875,
+        "separation": 15.4375
+      },
+      "long_doc_chunks": {
+        "pos_median": 6.625,
+        "neg_median": -8.8125,
+        "separation": 15.4375
+      },
+      "qa_passage_non_eval": {
+        "pos_median": 6.6875,
+        "neg_median": -9.25,
+        "separation": 15.9375
+      }
+    },
+    "uncertain_fraction": 0.03,
+    "evaluated_by": "hardness-aware gate (scripts/eval_v5_rag_lift.py): primary medium+hard lift on WebFAQ-heldout/local/hard-private; GermanQuAD/DT-test guardrails",
+    "conservative": {
+      "lambda_preserve": 0.6,
+      "justify_margin": 3.0,
+      "teacher_margin_override": 3.0,
+      "high_confidence_percentile": 0.75,
+      "preserve_top_k": 3,
+      "high_confidence_lists": 1416,
+      "total_lists": 5658,
+      "high_confidence_share": 0.2503,
+      "expected_max_displacement_proxy": {
+        "high_confidence_lists": 1416,
+        "mean_teacher_max_displacement": 14.0092,
+        "max_teacher_max_displacement": 19
+      }
+    },
+    "training_result": {
+      "status": "ok",
+      "objective": "conservative_listwise",
+      "output_dir": "outputs/v5-small-rag/checkpoints/boldt-rag-reranker-v5-conservative-lp06",
+      "num_queries": 5658,
+      "high_confidence_lists": 1416,
+      "lambda_preserve": 0.6,
+      "preserve_top_k": 3,
+      "justify_margin": 3.0,
+      "final_loss": 0.05183021351695061,
+      "mean_listwise_loss": 0.226691,
+      "mean_preservation_loss": 0.130041,
+      "pairwise_loss": null,
+      "pointwise_loss": null
+    }
+  },
+  "loss_plan": {
+    "components": [
+      "KLDivLoss(listwise)",
+      "MarginRankingLoss",
+      "BCEWithLogitsLoss(high_confidence_only)",
+      "rank_preservation_loss(lambda=0.6)"
+    ],
+    "weights": {
+      "listwise": 1.0,
+      "pairwise": 0.5,
+      "pointwise_bce": 0.2,
+      "preservation": 0.6
+    },
+    "primary": "listwise",
+    "preservation_applies_to": "high_first_stage_confidence_lists_only",
+    "uncertain_listwise_only": true
+  },
+  "faq_cap": {
+    "faq_dropped_for_cap": 0,
+    "max_faq_share": 0.35,
+    "faq_share_before": 0.217,
+    "faq_share_after": 0.217,
+    "n_before": 5660,
+    "n_after": 5660,
+    "status": "pass"
+  },
+  "training_report": {
+    "lists": 5660,
+    "examples_by_domain": {
+      "faq_real": 1228,
+      "german_stress": 1166,
+      "long_doc_chunks": 774,
+      "qa_passage_non_eval": 2492
+    },
+    "candidates_by_source": {
+      "bm25": 113145
+    },
+    "gold_positives": 5660,
+    "hard_negatives": 104091,
+    "uncertain": 3394,
+    "teacher_only_positives": 1305,
+    "teacher_score_separation": {
+      "pos_median": 6.625,
+      "neg_median": -8.75,
+      "separation": 15.375
+    },
+    "faq_share": 0.217,
+    "nonfaq_share": 0.783,
+    "faq_lists": 1228,
+    "nonfaq_lists": 4432,
+    "score_separation_by_domain": {
+      "faq_real": {
+        "pos_median": 6.5625,
+        "neg_median": -3.4375,
+        "separation": 10.0
+      },
+      "german_stress": {
+        "pos_median": 6.5625,
+        "neg_median": -8.875,
+        "separation": 15.4375
+      },
+      "long_doc_chunks": {
+        "pos_median": 6.625,
+        "neg_median": -8.8125,
+        "separation": 15.4375
+      },
+      "qa_passage_non_eval": {
+        "pos_median": 6.6875,
+        "neg_median": -9.25,
+        "separation": 15.9375
+      }
+    },
+    "uncertain_fraction": 0.03,
+    "not_faq_only": true
+  }
+}

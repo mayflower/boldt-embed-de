@@ -1,0 +1,112 @@
+{
+  "policy": "confidence_conditional",
+  "params": {
+    "fs_gap_high": 10.314034,
+    "k": 1
+  },
+  "n_queries": 700,
+  "first_stage_ndcg@10": 0.59937,
+  "always_rerank_ndcg@10": 0.73541,
+  "policy_ndcg@10": 0.734883,
+  "delta_vs_first_stage": 0.135513,
+  "delta_vs_always_rerank": -0.000527,
+  "abstain_rate": 0.008571,
+  "lock_rate": 0.71,
+  "avg_max_displacement": 13.4257,
+  "catastrophic_drop_rate": 0.014286,
+  "medium_hard_delta": 0.301701,
+  "actions": {
+    "rerank": 523,
+    "topk_lock": 177
+  },
+  "by_bucket": {
+    "hard": {
+      "n": 263,
+      "first_stage_ndcg@10": 0.030465,
+      "policy_ndcg@10": 0.329352,
+      "delta": 0.298887
+    },
+    "medium": {
+      "n": 64,
+      "first_stage_ndcg@10": 0.602289,
+      "policy_ndcg@10": 0.915553,
+      "delta": 0.313264
+    },
+    "no_room": {
+      "n": 373,
+      "first_stage_ndcg@10": 1.0,
+      "policy_ndcg@10": 0.989821,
+      "delta": -0.010179
+    }
+  },
+  "top_catastrophic_examples": [
+    {
+      "query_id": "q6103a31ebfcdc213",
+      "first_stage_ndcg@10": 1.0,
+      "policy_ndcg@10": 0.3562,
+      "delta": -0.6438
+    },
+    {
+      "query_id": "q6418e9846bcd4a1b",
+      "first_stage_ndcg@10": 1.0,
+      "policy_ndcg@10": 0.4307,
+      "delta": -0.5693
+    },
+    {
+      "query_id": "q8847b493e6747741",
+      "first_stage_ndcg@10": 1.0,
+      "policy_ndcg@10": 0.6309,
+      "delta": -0.3691
+    },
+    {
+      "query_id": "q82d9df44c0bec0b2",
+      "first_stage_ndcg@10": 1.0,
+      "policy_ndcg@10": 0.6309,
+      "delta": -0.3691
+    },
+    {
+      "query_id": "qceb3d71562d19745",
+      "first_stage_ndcg@10": 1.0,
+      "policy_ndcg@10": 0.6309,
+      "delta": -0.3691
+    },
+    {
+      "query_id": "qbb99eb2a557d67bc",
+      "first_stage_ndcg@10": 1.0,
+      "policy_ndcg@10": 0.6309,
+      "delta": -0.3691
+    },
+    {
+      "query_id": "qfae1b753c4be356d",
+      "first_stage_ndcg@10": 1.0,
+      "policy_ndcg@10": 0.6309,
+      "delta": -0.3691
+    },
+    {
+      "query_id": "q059c03f6a3ea49b6",
+      "first_stage_ndcg@10": 1.0,
+      "policy_ndcg@10": 0.6309,
+      "delta": -0.3691
+    },
+    {
+      "query_id": "q56394849f793085b",
+      "first_stage_ndcg@10": 1.0,
+      "policy_ndcg@10": 0.6309,
+      "delta": -0.3691
+    },
+    {
+      "query_id": "q5634948f4576496e",
+      "first_stage_ndcg@10": 0.6309,
+      "policy_ndcg@10": 0.4307,
+      "delta": -0.2003
+    }
+  ],
+  "policy_name": "confidence_conditional",
+  "selected_thresholds": {
+    "fs_gap_high": 10.314034,
+    "k": 1
+  },
+  "always_rerank_delta_vs_first_stage": 0.13604,
+  "always_rerank_catastrophic_drop_rate": 0.014286,
+  "eval_set": "webfaq_heldout_scored_conservative"
+}

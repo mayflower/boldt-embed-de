@@ -98,14 +98,16 @@ def scored_lists_to_conservative_batches(rows: Sequence[Dict[str, Any]], *,
 
 
 def rank_preservation_loss(student_scores, first_stage_ranks: Sequence[int], teacher_scores,
-                           *, justify_margin: float = DEFAULT_JUSTIFY_MARGIN):
+                           *, justify_margin: float = DEFAULT_JUSTIFY_MARGIN,
+                           preserve_top_k: Optional[int] = None):
     """Penalize student inversions of the first-stage order that the teacher does NOT justify.
 
     For every first-stage-ordered pair (i higher than j), if the teacher does not advantage j over
-    i by >= ``justify_margin``, penalize the student for scoring j above i: relu(s_j - s_i). Returns
-    0 when the student preserves the first-stage order, and is large when it moves docs (incl. the
-    first-stage top1) above better-first-stage docs without teacher support. Differentiable wrt
-    ``student_scores``; teacher_scores / first_stage_ranks are constants. (torch, lazy import.)"""
+    i by >= ``justify_margin``, penalize the student for scoring j above i: relu(s_j - s_i). When
+    ``preserve_top_k`` is set, only the first-stage top-k docs are protected (penalize only pairs
+    whose higher doc i has first-stage rank < k) — focusing preservation on the highest-risk top.
+    Returns 0 when order is preserved; large when it moves protected docs down without teacher
+    support. Differentiable wrt ``student_scores``; teacher/ranks are constants. (torch, lazy.)"""
     import torch
     ss = student_scores if torch.is_tensor(student_scores) else torch.as_tensor(
         student_scores, dtype=torch.float32)
@@ -117,8 +119,30 @@ def rank_preservation_loss(student_scores, first_stage_ranks: Sequence[int], tea
     higher = fs.unsqueeze(1) < fs.unsqueeze(0)               # [i,j] True if rank_i < rank_j
     tmargin = ts.unsqueeze(0) - ts.unsqueeze(1)              # [i,j] = teacher_j - teacher_i
     justified = tmargin >= justify_margin
-    mask = (higher & (~justified)).float()
+    mask = higher & (~justified)
+    if preserve_top_k is not None:                           # protect only the first-stage top-k
+        mask = mask & (fs.unsqueeze(1) < preserve_top_k)
+    mask = mask.float()
     sdiff = ss.unsqueeze(0) - ss.unsqueeze(1)                # [i,j] = student_j - student_i
     penalty = torch.relu(sdiff) * mask
     denom = mask.sum().clamp(min=1.0)
     return penalty.sum() / denom
+
+
+def displacement_proxy(batches: Sequence[Dict[str, Any]]) -> Dict[str, Any]:
+    """Stdlib pre-training proxy for how much the TEACHER order would displace the first stage on
+    high-confidence lists (what preservation must counteract). No ML."""
+    maxes = []
+    for b in batches:
+        if not b.get("high_confidence"):
+            continue
+        ts = b.get("teacher_scores") or []
+        fr = b.get("first_stage_ranks") or []
+        if len(ts) < 2:
+            continue
+        teacher_order = sorted(range(len(ts)), key=lambda i: -ts[i])
+        teacher_rank = {idx: pos for pos, idx in enumerate(teacher_order)}
+        maxes.append(max(abs(teacher_rank[i] - fr[i]) for i in range(len(ts))))
+    return {"high_confidence_lists": len(maxes),
+            "mean_teacher_max_displacement": round(sum(maxes) / len(maxes), 4) if maxes else 0.0,
+            "max_teacher_max_displacement": max(maxes) if maxes else 0}

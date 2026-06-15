@@ -24,12 +24,17 @@ def _load(p):
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--abstain-dir", required=True)
+    ap.add_argument("--abstain-dir", default=None)
+    ap.add_argument("--bounded-dir", default=None,
+                    help="bounded-policy eval dir -> task's 7-check bounded gate")
     ap.add_argument("--output", required=True)
     ap.add_argument("--markdown", required=True)
     args = ap.parse_args()
 
-    d = pathlib.Path(args.abstain_dir)
+    if not (args.abstain_dir or args.bounded_dir):
+        print("ERROR: pass --abstain-dir or --bounded-dir", file=sys.stderr)
+        return 2
+    d = pathlib.Path(args.bounded_dir or args.abstain_dir)
     reports, always = {}, {}
     missing = []
     for name in ("webfaq", "germanquad", "dt_test"):
@@ -44,10 +49,14 @@ def main() -> int:
             "catastrophic_drop_rate": rep.get("always_rerank_catastrophic_drop_rate"),
         }
     if missing:
-        print(f"ERROR: missing abstain eval reports: {missing}", file=sys.stderr)
+        print(f"ERROR: missing eval reports: {missing}", file=sys.stderr)
         return 2
 
-    gate = RA.policy_gate(reports, always)
+    if args.bounded_dir:
+        from boldt_embed import bounded_rerank as BR
+        gate = BR.bounded_policy_gate(reports)
+    else:
+        gate = RA.policy_gate(reports, always)
     pathlib.Path(args.output).parent.mkdir(parents=True, exist_ok=True)
     pathlib.Path(args.output).write_text(json.dumps(gate, ensure_ascii=False, indent=2),
                                          encoding="utf-8")

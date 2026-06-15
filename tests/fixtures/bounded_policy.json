@@ -1,0 +1,6 @@
+{
+  "policy": "top1_lock",
+  "best_params": {},
+  "fit_on": "dev_only",
+  "note": "fixture policy for eval dry-run validation"
+}

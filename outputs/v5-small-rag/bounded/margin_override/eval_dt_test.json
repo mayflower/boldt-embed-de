@@ -1,0 +1,49 @@
+{
+  "policy": "margin_override",
+  "params": {
+    "margin": 3.0
+  },
+  "n_queries": 1000,
+  "first_stage_ndcg@10": 0.977444,
+  "always_rerank_ndcg@10": 0.998649,
+  "policy_ndcg@10": 0.997042,
+  "delta_vs_first_stage": 0.019598,
+  "delta_vs_always_rerank": -0.001607,
+  "abstain_rate": 0.0,
+  "lock_rate": 0.968,
+  "avg_max_displacement": 14.305,
+  "catastrophic_drop_rate": 0.0,
+  "medium_hard_delta": 0.502501,
+  "actions": {
+    "top1_lock": 968,
+    "override_rerank": 32
+  },
+  "by_bucket": {
+    "hard": {
+      "n": 17,
+      "first_stage_ndcg@10": 0.189302,
+      "policy_ndcg@10": 0.869391,
+      "delta": 0.680088
+    },
+    "medium": {
+      "n": 22,
+      "first_stage_ndcg@10": 0.601173,
+      "policy_ndcg@10": 0.966448,
+      "delta": 0.365275
+    },
+    "no_room": {
+      "n": 961,
+      "first_stage_ndcg@10": 1.0,
+      "policy_ndcg@10": 1.0,
+      "delta": 0.0
+    }
+  },
+  "top_catastrophic_examples": [],
+  "policy_name": "margin_override",
+  "selected_thresholds": {
+    "margin": 3.0
+  },
+  "always_rerank_delta_vs_first_stage": 0.021205,
+  "always_rerank_catastrophic_drop_rate": 0.001,
+  "eval_set": "dt_test_scored_conservative"
+}

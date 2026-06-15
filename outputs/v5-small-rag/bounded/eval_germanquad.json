@@ -1,0 +1,112 @@
+{
+  "policy": "confidence_conditional",
+  "params": {
+    "fs_gap_high": 10.314034,
+    "k": 1
+  },
+  "n_queries": 1500,
+  "first_stage_ndcg@10": 0.905778,
+  "always_rerank_ndcg@10": 0.914476,
+  "policy_ndcg@10": 0.923995,
+  "delta_vs_first_stage": 0.018217,
+  "delta_vs_always_rerank": 0.009519,
+  "abstain_rate": 0.000667,
+  "lock_rate": 0.77,
+  "avg_max_displacement": 14.1307,
+  "catastrophic_drop_rate": 0.103333,
+  "medium_hard_delta": 0.419993,
+  "actions": {
+    "rerank": 985,
+    "topk_lock": 515
+  },
+  "by_bucket": {
+    "hard": {
+      "n": 104,
+      "first_stage_ndcg@10": 0.167146,
+      "policy_ndcg@10": 0.82967,
+      "delta": 0.662525
+    },
+    "medium": {
+      "n": 133,
+      "first_stage_ndcg@10": 0.588599,
+      "policy_ndcg@10": 0.818943,
+      "delta": 0.230344
+    },
+    "no_room": {
+      "n": 1263,
+      "first_stage_ndcg@10": 1.0,
+      "policy_ndcg@10": 0.942825,
+      "delta": -0.057175
+    }
+  },
+  "top_catastrophic_examples": [
+    {
+      "query_id": "gq773",
+      "first_stage_ndcg@10": 1.0,
+      "policy_ndcg@10": 0.0,
+      "delta": -1.0
+    },
+    {
+      "query_id": "gq1099",
+      "first_stage_ndcg@10": 1.0,
+      "policy_ndcg@10": 0.0,
+      "delta": -1.0
+    },
+    {
+      "query_id": "gq1261",
+      "first_stage_ndcg@10": 1.0,
+      "policy_ndcg@10": 0.0,
+      "delta": -1.0
+    },
+    {
+      "query_id": "gq1001",
+      "first_stage_ndcg@10": 1.0,
+      "policy_ndcg@10": 0.0,
+      "delta": -1.0
+    },
+    {
+      "query_id": "gq919",
+      "first_stage_ndcg@10": 1.0,
+      "policy_ndcg@10": 0.0,
+      "delta": -1.0
+    },
+    {
+      "query_id": "gq928",
+      "first_stage_ndcg@10": 1.0,
+      "policy_ndcg@10": 0.0,
+      "delta": -1.0
+    },
+    {
+      "query_id": "gq256",
+      "first_stage_ndcg@10": 1.0,
+      "policy_ndcg@10": 0.0,
+      "delta": -1.0
+    },
+    {
+      "query_id": "gq915",
+      "first_stage_ndcg@10": 1.0,
+      "policy_ndcg@10": 0.2891,
+      "delta": -0.7109
+    },
+    {
+      "query_id": "gq916",
+      "first_stage_ndcg@10": 1.0,
+      "policy_ndcg@10": 0.2891,
+      "delta": -0.7109
+    },
+    {
+      "query_id": "gq379",
+      "first_stage_ndcg@10": 1.0,
+      "policy_ndcg@10": 0.2891,
+      "delta": -0.7109
+    }
+  ],
+  "policy_name": "confidence_conditional",
+  "selected_thresholds": {
+    "fs_gap_high": 10.314034,
+    "k": 1
+  },
+  "always_rerank_delta_vs_first_stage": 0.008698,
+  "always_rerank_catastrophic_drop_rate": 0.123333,
+  "eval_set": "germanquad_scored_conservative"
+}

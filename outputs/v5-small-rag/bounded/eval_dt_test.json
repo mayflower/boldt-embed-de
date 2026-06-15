@@ -1,0 +1,58 @@
+{
+  "policy": "confidence_conditional",
+  "params": {
+    "fs_gap_high": 10.314034,
+    "k": 1
+  },
+  "n_queries": 1000,
+  "first_stage_ndcg@10": 0.977444,
+  "always_rerank_ndcg@10": 0.998649,
+  "policy_ndcg@10": 0.998649,
+  "delta_vs_first_stage": 0.021205,
+  "delta_vs_always_rerank": 0.0,
+  "abstain_rate": 0.0,
+  "lock_rate": 0.961,
+  "avg_max_displacement": 14.309,
+  "catastrophic_drop_rate": 0.001,
+  "medium_hard_delta": 0.553175,
+  "actions": {
+    "topk_lock": 637,
+    "rerank": 363
+  },
+  "by_bucket": {
+    "hard": {
+      "n": 17,
+      "first_stage_ndcg@10": 0.189302,
+      "policy_ndcg@10": 0.942223,
+      "delta": 0.75292
+    },
+    "medium": {
+      "n": 22,
+      "first_stage_ndcg@10": 0.601173,
+      "policy_ndcg@10": 1.0,
+      "delta": 0.398827
+    },
+    "no_room": {
+      "n": 961,
+      "first_stage_ndcg@10": 1.0,
+      "policy_ndcg@10": 0.999616,
+      "delta": -0.000384
+    }
+  },
+  "top_catastrophic_examples": [
+    {
+      "query_id": "dt4358",
+      "first_stage_ndcg@10": 1.0,
+      "policy_ndcg@10": 0.6309,
+      "delta": -0.3691
+    }
+  ],
+  "policy_name": "confidence_conditional",
+  "selected_thresholds": {
+    "fs_gap_high": 10.314034,
+    "k": 1
+  },
+  "always_rerank_delta_vs_first_stage": 0.021205,
+  "always_rerank_catastrophic_drop_rate": 0.001,
+  "eval_set": "dt_test_scored_conservative"
+}

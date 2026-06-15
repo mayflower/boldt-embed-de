@@ -1,0 +1,1 @@
+{"policy":"margin_override","best_params":{"margin":3.0},"fit_on":"unconditional_principle (protect confident first-stage top1; not fitted on guardrails)"}
