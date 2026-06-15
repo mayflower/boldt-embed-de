@@ -1,0 +1,71 @@
+{
+  "experiment_id": "v5-small-model-candidates",
+  "goal": "Same-harness comparison of small German RAG dense retrievers and rerankers (Boldt vs Qwen3-0.6B vs other small baselines); choose the production default by quality-then-latency, not by model family. Qwen3-0.6B is small, multilingual, instruction-aware, 32k-context and already trained for embedding/reranking, so Boldt must EARN the default.",
+  "dense_candidates": [
+    {
+      "name": "boldt-causal-v3",
+      "model_name_or_path": "outputs/v3-real-domain/checkpoints/boldt-modern-causal-v3",
+      "family": "boldt", "backend": "boldt_causal",
+      "query_instruction": "Anfrage: ", "document_instruction": "Passage: ",
+      "max_length": 512, "expected_dim": 1024, "embedding_dims": [1024, 512, 256, 128], "normalize": true
+    },
+    {
+      "name": "qwen3-emb-0.6b",
+      "model_name_or_path": "Qwen/Qwen3-Embedding-0.6B",
+      "family": "qwen3", "backend": "sentence_transformers",
+      "query_instruction": "Instruct: Given a German search query, retrieve relevant German passages.\nQuery: ",
+      "document_instruction": null,
+      "max_length": 512, "expected_dim": 1024, "embedding_dims": [1024, 512, 256], "normalize": true
+    },
+    {
+      "name": "bge-m3",
+      "model_name_or_path": "BAAI/bge-m3",
+      "family": "bge", "backend": "sentence_transformers",
+      "query_instruction": "", "document_instruction": null,
+      "max_length": 8192, "expected_dim": 1024, "embedding_dims": [1024, 512, 256], "normalize": true
+    },
+    {
+      "name": "e5-base",
+      "model_name_or_path": "intfloat/multilingual-e5-base",
+      "family": "e5", "backend": "sentence_transformers",
+      "query_instruction": "query: ", "document_instruction": "passage: ",
+      "max_length": 512, "expected_dim": 768, "embedding_dims": [768, 512, 256], "normalize": true
+    }
+  ],
+  "reranker_candidates": [
+    {
+      "name": "boldt-reranker-v4",
+      "model_name_or_path": "outputs/v4-rag-reranker/checkpoints/boldt-rag-reranker-v4",
+      "family": "boldt", "backend": "boldt_reranker",
+      "input_template": "Anfrage: {query}\nDokument: {document}\nIst das Dokument relevant für die Anfrage?",
+      "max_length": 256
+    },
+    {
+      "name": "qwen3-rerank-0.6b",
+      "model_name_or_path": "Qwen/Qwen3-Reranker-0.6B",
+      "family": "qwen3", "backend": "qwen3_reranker",
+      "max_length": 512
+    }
+  ],
+  "teachers": {
+    "embedding": "Qwen/Qwen3-Embedding-8B",
+    "reranker": "Qwen/Qwen3-Reranker-8B"
+  },
+  "tuning": {
+    "method": "lora",
+    "full_finetune_allowed": false,
+    "lora": {"r": 16, "alpha": 32, "dropout": 0.05,
+             "target_modules": ["q_proj", "k_proj", "v_proj", "o_proj"]},
+    "train_lists": "data/processed/v5/webfaq2_hardnegatives_de.reranker_lists.jsonl",
+    "note": "LoRA only unless --full-finetune; teacher = Qwen3-8B; train lists from v5 teacher-scored candidates"
+  },
+  "selection_gate": {
+    "quality_metric": "ndcg@10",
+    "max_dense_latency_ms": 20.0,
+    "max_reranker_latency_ms": 60.0,
+    "tie_break_quality_delta": 0.005,
+    "min_256d_retention": 0.95,
+    "prefer": "quality_then_latency",
+    "family_blind": true
+  }
+}

@@ -1,0 +1,57 @@
+{
+  "experiment": "v5-small-rag (prompt-4 reranker)",
+  "verdict": "fail",
+  "promoted": false,
+  "device": "RTX A6000",
+  "stages": [
+    {
+      "stage": "acquire_v5_real",
+      "status": "ok",
+      "rows": 6500,
+      "leakage_dropped": 0
+    },
+    {
+      "stage": "prep_candidate_lists",
+      "status": "ok",
+      "queries": 6500,
+      "docs": 4883
+    },
+    {
+      "stage": "bm25_first_stage",
+      "status": "ok"
+    },
+    {
+      "stage": "build_candidate_lists",
+      "status": "ok",
+      "lists": 5660,
+      "bm25_recall": 0.8708,
+      "faq_share": 0.217
+    },
+    {
+      "stage": "teacher_score",
+      "status": "ok",
+      "pairs": 113145,
+      "teacher": "Qwen/Qwen3-Reranker-8B"
+    },
+    {
+      "stage": "train_reranker",
+      "status": "ok",
+      "queries": 5658,
+      "loss": "listwise_kl+pairwise+pointwise_confident"
+    },
+    {
+      "stage": "eval_score",
+      "status": "ok",
+      "pairs": 77249
+    },
+    {
+      "stage": "hardness_gate",
+      "status": "fail",
+      "failing": [
+        "germanquad_catastrophic_rate",
+        "germanquad_guardrail_do_not_regress"
+      ]
+    }
+  ],
+  "status": "EXPERIMENTAL - NOT recommended for production reranking"
+}

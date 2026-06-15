@@ -1,0 +1,60 @@
+{
+  "run_id": "v5-reranker-boldt",
+  "model_base": "Boldt/Boldt-DC-350M",
+  "lora": false,
+  "output": "outputs/v5-small-rag/checkpoints/boldt-rag-reranker-v5",
+  "bf16": true,
+  "gradient_checkpointing": true,
+  "timestamp": null,
+  "loss": "listwise_kl+pairwise+pointwise_confident",
+  "loss_components": [
+    "KLDivLoss(listwise)",
+    "MarginRankingLoss",
+    "BCEWithLogitsLoss(high_confidence_only)"
+  ],
+  "primary": "listwise",
+  "listwise_variant": "listwise_kl",
+  "uncertain_listwise_only": true,
+  "faq_share_cap": 0.35,
+  "faq_share": 0.217,
+  "nonfaq_share": 0.783,
+  "not_faq_only": true,
+  "faq_dropped_for_cap": 0,
+  "examples_by_domain": {
+    "faq_real": 1228,
+    "german_stress": 1166,
+    "long_doc_chunks": 774,
+    "qa_passage_non_eval": 2492
+  },
+  "score_separation_by_domain": {
+    "faq_real": {
+      "pos_median": 6.5625,
+      "neg_median": -3.4375,
+      "separation": 10.0
+    },
+    "german_stress": {
+      "pos_median": 6.5625,
+      "neg_median": -8.875,
+      "separation": 15.4375
+    },
+    "long_doc_chunks": {
+      "pos_median": 6.625,
+      "neg_median": -8.8125,
+      "separation": 15.4375
+    },
+    "qa_passage_non_eval": {
+      "pos_median": 6.6875,
+      "neg_median": -9.25,
+      "separation": 15.9375
+    }
+  },
+  "uncertain_fraction": 0.03,
+  "evaluated_by": "hardness-aware gate (scripts/eval_v5_rag_lift.py): primary medium+hard lift on WebFAQ-heldout/local/hard-private; GermanQuAD/DT-test guardrails",
+  "training_result": {
+    "status": "ok",
+    "objective": "listwise",
+    "output_dir": "outputs/v5-small-rag/checkpoints/boldt-rag-reranker-v5",
+    "num_queries": 5658,
+    "final_loss": 0.0033736745826900005
+  }
+}

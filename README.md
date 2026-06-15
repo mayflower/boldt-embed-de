@@ -38,21 +38,32 @@ data). Measured held-out nDCG@10 (`docs/benchmark-report.md` §6e–§6j, run ca
 - **Bidirectional + MNTP:** executed (MNTP essential); competitive but causal keeps the edge.
 - **Matryoshka:** 256-d retains ~97% of 1024-d quality on GermanQuAD.
 
-**Next active target — `v4-rag-reranker`** (`docs/v4-rag-reranker-plan.md`): train + gate a
-German **RAG reranker** over fixed first-stage candidate sets (WebFAQ-held-out + local RAG must
-lift ≥+0.03; GermanQuAD/DT-test neutral-or-better; no catastrophic degradation). **v3's
-legal/admin domain gates are retired as a product target** — GerDaLIR (legal) is now a
-**diagnostic only**, not a release blocker. v1/v2/v3 are kept as historical/diagnostic.
+**`v4-rag-reranker` — CLOSED (2026-06-14, RTX A6000):** distilled from Qwen3-Reranker-8B over
+7,415 WebFAQ candidate lists. Lift over fixed BM25 top-20 (nDCG@10): **WebFAQ held-out +0.2907**,
+GermanQuAD **−0.0711**, DT-test −0.0007. **Promotion gate FAILED** → a strong in-domain FAQ
+reranker that does **not** generalize. It stays **Experimental / not promoted** (see
+`outputs/v4-rag-reranker/V4_RAG_RESULTS.md`). Two lessons: v4 trained on a single style (FAQ), and
+GermanQuAD/DT-test first stages were near-ceiling (recall 0.96–0.99, oracle 1.0) so reranking only
+churns near-perfect lists — a tiny negative delta there is noise, not failure.
 
-Promotion is **mechanically enforced**: the reranker model card may claim "Recommended for
-German FAQ/RAG reranking" only if the v4 promotion gate passes
-(`validate_release_2026.py --require-v4-rag-artifacts`); otherwise it stays *Experimental*. The
-run is summarized by `scripts/summarize_v4_rag_results.py` → `outputs/v4-rag-reranker/V4_RAG_RESULTS.{md,json}`.
-**v4 run EXECUTED (2026-06-14, RTX A6000):** distilled from Qwen3-Reranker-8B over 7,415 WebFAQ
-candidate lists. Lift over fixed BM25 top-20 (nDCG@10): **WebFAQ held-out +0.2907**, GermanQuAD
-**−0.0711**, DT-test −0.0007. **Promotion gate FAILED** (GermanQuAD degrades catastrophically;
-DT-test not neutral) → a strong in-domain FAQ reranker that does **not** generalize. The reranker
-stays **Experimental / not promoted**; see `outputs/v4-rag-reranker/V4_RAG_RESULTS.md`.
+**Next active target — `v5-small-rag`** (`docs/v5-small-rag-plan.md`,
+`configs/experiments/v5_small_rag.json`): a **small, deployable** German RAG retriever + reranker
+trained on **diverse** question styles (FAQ, QA-passage, web non-FAQ, long-doc, German stress,
+local RAG) with **hardness-aware** candidate lists. Promotion is driven by sets with real headroom
+(WebFAQ held-out ≥+0.05, local RAG/hard private web-QA ≥+0.03) plus a 256-d Matryoshka retention
+≥0.95 gate; near-ceiling sets (GermanQuAD/DT-test, oracle ≥0.98) carry only a −0.005
+do-not-regress tolerance and are **never the primary promotion signal**. **Legal/admin is retired
+as a product target — GerDaLIR stays diagnostic-only.** v1–v4 are kept historical/diagnostic.
+
+**`v5-small-rag` reranker — EXECUTED (2026-06-15, RTX A6000):** real multi-domain run (6,500 rows
+WebFAQ + DPR-train QA/long-doc/stress, leakage-filtered vs DT-test + GermanQuAD; 113,145 teacher
+pairs scored by Qwen3-Reranker-8B; listwise-KL training on `Boldt/Boldt-DC-350M`, FAQ share 0.217).
+Hardness-aware gate (`outputs/v5-small-rag/V5_RESULTS.md`): WebFAQ +0.1665 (primary pass), DT-test
++0.0211 (pass), **GermanQuAD −0.0285 with 16.9% catastrophic drops → FAIL**. It improves on v4
+(GermanQuAD −0.0711→−0.0285, DT-test −0.0007→+0.0211) and lifts every set strongly where there is
+headroom, but **the promotion gate FAILS**. The v5 reranker is **Experimental — not recommended for
+production reranking.** Failure mode: over-reranking near-ceiling first-stage lists; **next step is
+rerank-or-abstain calibration** (skip/identity when the first stage is already confident).
 
 Training data follows a strict **train≠eval** rule (`docs/data/training-datasets-research-2026.md`):
 benchmark datasets (GermanQuAD/GerDaLIR/MMTEB) are held out; training uses non-benchmark

@@ -107,3 +107,45 @@ python scripts/train_modern_embedder.py --base-model outputs/checkpoints/boldt-b
   --bidirectional true --teacher-cache .../qwen3_v2.filtered.jsonl \
   --output outputs/checkpoints/boldt-modern-bi-mntp-v2 --bf16 --gradient-checkpointing
 ```
+
+## v5 dense RAG retriever (`scripts/train_v5_dense_rag_embedder.py`)
+
+v5 trains a better small German **dense retriever** — not just another cross-encoder — so first-
+stage recall improves and the candidate lists handed to the reranker are better. It composes the
+stdlib helpers in `train_modern.py`: `build_v5_dense_dataset`, `plan_v5_dense_loss_stack`,
+`v5_dense_run_card`.
+
+**Loss stack** (objectives): `CachedMultipleNegativesRankingLoss` → `MatryoshkaLoss` over
+`[1024, 768, 512, 256, 128, 64]` + `MarginMSELoss` (from Qwen3-8B teacher scores on hard negatives)
++ optional `EmbedDistillLoss` (MSE to Qwen3-Embedding-8B vectors), with the **NO_DUPLICATES** batch
+sampler.
+
+**Inputs**: `--train-pairs` (`data/processed/v5/rag_pairs.teacher_validated.jsonl`), optional
+`--hard-negatives` (WebFAQ2 triplets with teacher margins), optional `--teacher-scores`
+(`outputs/v5-small-rag/teacher/rag_embedder_teacher_scores.jsonl`), optional `--distill-vectors`
+(Qwen3-Embedding-8B vectors → enables EmbedDistill).
+
+**Models**: Boldt causal v5 (default) or `Qwen/Qwen3-Embedding-0.6B` with `--lora`.
+
+**Guards (fail closed)**: rows referencing a public-benchmark eval set (GermanQuAD/DT-test/GerDaLIR
+or the **WebFAQ held-out** split) are rejected — WebFAQ training pairs (`faq_real`) and WebFAQ 2.0
+hard negatives (`webfaq2`) are legitimate training sources and pass. Synthetic pairs flagged
+`must_teacher_validate` train ONLY when a teacher score clears `--teacher-threshold` (provisional
+rows are excluded, not silently trained).
+
+**Reports / run card**: loss stack, domain mix, hard-negative margin distribution, teacher
+validation, Matryoshka dims, written to `outputs/v5-small-rag/<run-id>_run_card.json` and
+`outputs/run-cards/<run-id>.json`. `--dry-run` writes these with **no ML import**.
+
+```bash
+python scripts/train_v5_dense_rag_embedder.py \
+  --config configs/experiments/v5_small_rag.json \
+  --train-pairs data/processed/v5/rag_pairs.teacher_validated.jsonl \
+  --hard-negatives data/processed/v5/webfaq2_hardnegatives_de.jsonl \
+  --output outputs/v5-small-rag/checkpoints/boldt-dense-v5 \
+  --bf16 --gradient-checkpointing --max-steps 2000 --run-id v5-dense-boldt
+```
+
+> EmbedDistill ML wiring (MSE to teacher vectors) is declared in the plan/run card and activated by
+> `--distill-vectors`; the contrastive+Matryoshka+MarginMSE stack runs via `train_modern_embedder`.
+Matryoshka-dim retrieval quality is evaluated post-training with `scripts/eval_matryoshka_sweep.py`.

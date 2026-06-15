@@ -1,0 +1,47 @@
+{
+  "run_id": "t",
+  "model_base": "Boldt/Boldt-DC-350M",
+  "lora": false,
+  "output": "outputs/v5-small-rag/checkpoints/boldt-rag-reranker-v5",
+  "bf16": false,
+  "gradient_checkpointing": false,
+  "timestamp": null,
+  "loss": "listwise_kl+pairwise+pointwise_confident",
+  "loss_components": [
+    "KLDivLoss(listwise)",
+    "MarginRankingLoss",
+    "BCEWithLogitsLoss(high_confidence_only)"
+  ],
+  "primary": "listwise",
+  "listwise_variant": "listwise_kl",
+  "uncertain_listwise_only": true,
+  "faq_share_cap": 0.5,
+  "faq_share": 0.375,
+  "nonfaq_share": 0.625,
+  "not_faq_only": true,
+  "faq_dropped_for_cap": 0,
+  "examples_by_domain": {
+    "faq_real": 3,
+    "qa_passage_non_eval": 2,
+    "web_nonfaq": 3
+  },
+  "score_separation_by_domain": {
+    "faq_real": {
+      "pos_median": 8.0,
+      "neg_median": 1.0,
+      "separation": 7.0
+    },
+    "qa_passage_non_eval": {
+      "pos_median": 8.0,
+      "neg_median": 1.0,
+      "separation": 7.0
+    },
+    "web_nonfaq": {
+      "pos_median": 8.0,
+      "neg_median": 1.0,
+      "separation": 7.0
+    }
+  },
+  "uncertain_fraction": 0.3333,
+  "evaluated_by": "hardness-aware gate (scripts/eval_v5_rag_lift.py): primary medium+hard lift on WebFAQ-heldout/local/hard-private; GermanQuAD/DT-test guardrails"
+}

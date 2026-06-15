@@ -1,0 +1,49 @@
+{
+  "experiment_id": "v5-small-rag",
+  "goal": "small German RAG retriever + reranker that improves fixed candidate lists across FAQ, QA-passage, web, long-doc, and local RAG",
+  "legal_eval_is_diagnostic_only": true,
+  "public_benchmarks_eval_only": true,
+  "dense_candidates": [
+    "outputs/v3-real-domain/checkpoints/boldt-modern-causal-v3",
+    "Qwen/Qwen3-Embedding-0.6B",
+    "BAAI/bge-m3",
+    "intfloat/multilingual-e5-base"
+  ],
+  "reranker_candidates": [
+    "outputs/v4-rag-reranker/checkpoints/boldt-rag-reranker-v4",
+    "Qwen/Qwen3-Reranker-0.6B"
+  ],
+  "teacher_models": {
+    "embedding": "Qwen/Qwen3-Embedding-8B",
+    "reranker": "Qwen/Qwen3-Reranker-8B"
+  },
+  "train_domains": [
+    "faq_real",
+    "qa_passage_non_eval",
+    "web_nonfaq",
+    "long_doc_chunks",
+    "german_stress",
+    "local_rag"
+  ],
+  "eval_sets": [
+    "webfaq_heldout",
+    "germanquad_do_not_train",
+    "dt_test_do_not_train",
+    "local_rag",
+    "hard_webqa_private"
+  ],
+  "success_criteria": {
+    "webfaq_delta_ndcg10_min": 0.05,
+    "local_rag_delta_ndcg10_min": 0.03,
+    "hard_webqa_private_delta_ndcg10_min": 0.03,
+    "germanquad_delta_ndcg10_min": -0.005,
+    "dt_test_delta_ndcg10_min": -0.005,
+    "any_non_ceiling_eval_catastrophic_delta_min": -0.02,
+    "dense_256d_retention_min": 0.95
+  },
+  "near_ceiling_eval_policy": {
+    "if_oracle_ndcg10_ge": 0.98,
+    "use_do_not_regress_tolerance": -0.005,
+    "do_not_use_as_primary_promotion_signal": true
+  }
+}

@@ -179,3 +179,40 @@ python scripts/train_rag_reranker_v4.py \
   --run-id v4-rag-reranker
 ```
 
+## v5 reranker — anti-FAQ-overfit (`scripts/train_v5_rag_reranker.py`)
+
+v4 lifted WebFAQ +0.29 but degraded GermanQuAD (it over-fit one style). v5 trains on **multi-domain**
+teacher-scored candidate lists (WebFAQ held-in, WebFAQ2 hard negatives, QA-passage non-eval, web
+non-FAQ, long-doc chunks, local RAG, German stress) and makes the mix **demonstrably not FAQ-only**:
+
+- **FAQ-share cap** (`reranker_modern.cap_faq_share`, default 0.35): FAQ lists are deterministically
+  downsampled — keeping ALL non-FAQ — so the FAQ share is ≤ the cap. With no non-FAQ data the cap
+  cannot be met and training **fails closed**.
+- **Domain/source-balanced batches** via `domain_balanced_list_sampler`.
+- **Loss** (`plan_v5_reranker_loss`): **listwise KL is always the PRIMARY objective**; LambdaLoss/
+  ListNet/ListMLE are optional listwise variants (used if the loss lib provides them); pairwise is
+  RankNet or margin (strong teacher margins only); pointwise BCE is **high-confidence-only**; and
+  **uncertain candidates are listwise-only** — never a hard BCE label.
+- **Report / run card** (`v5_reranker_training_report`, `v5_reranker_run_card`): examples by domain,
+  FAQ vs non-FAQ share, **score separation per domain**, uncertain fraction.
+- **Evaluation is the hardness-aware gate** (`scripts/eval_v5_rag_lift.py`): primary medium+hard lift
+  on WebFAQ-heldout/local/hard-private; GermanQuAD/DT-test are do-not-regress guardrails — NOT raw
+  WebFAQ lift.
+
+`--dry-run` writes the FAQ-cap report + loss plan + run card with **no ML import**.
+
+```bash
+python scripts/train_v5_rag_reranker.py \
+  --config configs/experiments/v5_small_rag.json \
+  --candidate-lists outputs/v5-small-rag/teacher/rag_train_scored.jsonl \
+  --model-base Boldt/Boldt-DC-350M \
+  --output outputs/v5-small-rag/checkpoints/boldt-rag-reranker-v5 \
+  --loss listwise_kl+pairwise+pointwise_confident \
+  --max-faq-share 0.35 --bf16 --gradient-checkpointing --run-id v5-reranker-boldt
+```
+
+> The real run trains the **listwise-primary** objective via `train_listwise_distilled_reranker`
+> (KL toward the teacher candidate distribution). Pairwise/pointwise auxiliaries are declared in the
+> plan/run card; full multi-loss wiring extends that trainer. Optional model: Qwen3-Reranker-0.6B
+> with `--lora`.
+

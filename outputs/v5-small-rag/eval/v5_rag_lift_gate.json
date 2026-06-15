@@ -1,0 +1,255 @@
+{
+  "gate": {
+    "status": "fail",
+    "checks": [
+      {
+        "check": "webfaq_catastrophic_rate",
+        "status": "pass",
+        "detail": "0.0103 (max 0.05)"
+      },
+      {
+        "check": "webfaq_primary_lift",
+        "status": "pass",
+        "detail": "micro +0.3699 / macro +0.3501 medium+hard (min 0.0)"
+      },
+      {
+        "check": "germanquad_catastrophic_rate",
+        "status": "fail",
+        "detail": "0.1693 (max 0.05)"
+      },
+      {
+        "check": "germanquad_guardrail_do_not_regress",
+        "status": "fail",
+        "detail": "delta -0.0285 (tol -0.005; near-ceiling)"
+      },
+      {
+        "check": "dt_test_catastrophic_rate",
+        "status": "pass",
+        "detail": "0.0000 (max 0.05)"
+      },
+      {
+        "check": "dt_test_guardrail_do_not_regress",
+        "status": "pass",
+        "detail": "delta +0.0211 (tol -0.005; near-ceiling)"
+      }
+    ],
+    "failing": [
+      {
+        "check": "germanquad_catastrophic_rate",
+        "status": "fail",
+        "detail": "0.1693 (max 0.05)"
+      },
+      {
+        "check": "germanquad_guardrail_do_not_regress",
+        "status": "fail",
+        "detail": "delta -0.0285 (tol -0.005; near-ceiling)"
+      }
+    ],
+    "params": {
+      "primary_min_lift": 0.0,
+      "no_room_tolerance": -0.005,
+      "guardrail_tolerance": 0.0,
+      "max_catastrophic_rate": 0.05
+    }
+  },
+  "eval_sets": [
+    {
+      "eval_set": "webfaq",
+      "role": "primary",
+      "n_queries": 1360,
+      "bucket_counts": {
+        "hard": 500,
+        "medium": 126,
+        "no_room": 734
+      },
+      "by_bucket": {
+        "hard": {
+          "n": 500,
+          "mean_delta": 0.383286,
+          "mean_first_stage": 0.030149,
+          "mean_reranked": 0.413435,
+          "mean_oracle": 1.0
+        },
+        "medium": {
+          "n": 126,
+          "mean_delta": 0.316961,
+          "mean_first_stage": 0.596639,
+          "mean_reranked": 0.9136,
+          "mean_oracle": 1.0
+        },
+        "no_room": {
+          "n": 734,
+          "mean_delta": -0.006915,
+          "mean_first_stage": 1.0,
+          "mean_reranked": 0.993085,
+          "mean_oracle": 1.0
+        }
+      },
+      "overall_delta_ndcg@10": 0.166548,
+      "micro_lift_all": 0.166548,
+      "macro_lift_by_bucket": 0.231111,
+      "primary_n": 626,
+      "primary_micro_lift": 0.369936,
+      "primary_macro_lift": 0.350124,
+      "no_room_fraction": 0.539706,
+      "mostly_no_room": true,
+      "catastrophic_drops": 14,
+      "catastrophic_rate": 0.010294,
+      "catastrophic_query_ids": [
+        "q5ce3211fd02003b1",
+        "qceb3d71562d19745",
+        "q99df527ad767eb91",
+        "qbb99eb2a557d67bc",
+        "q059c03f6a3ea49b6",
+        "q611538de6eb8250e",
+        "q3c26075b66e3be05",
+        "q59522e3b50056a40",
+        "q5634948f4576496e",
+        "q176681de2f7837ea",
+        "qd2fb9d8b2adea589",
+        "q57c5f95d811c4e25",
+        "q6418e9846bcd4a1b",
+        "q7fce855e53e54f78"
+      ]
+    },
+    {
+      "eval_set": "germanquad",
+      "role": "guardrail",
+      "n_queries": 1500,
+      "bucket_counts": {
+        "hard": 104,
+        "medium": 133,
+        "no_room": 1263
+      },
+      "by_bucket": {
+        "hard": {
+          "n": 104,
+          "mean_delta": 0.565699,
+          "mean_first_stage": 0.167146,
+          "mean_reranked": 0.732844,
+          "mean_oracle": 1.0
+        },
+        "medium": {
+          "n": 133,
+          "mean_delta": 0.17335,
+          "mean_first_stage": 0.588599,
+          "mean_reranked": 0.761949,
+          "mean_oracle": 1.0
+        },
+        "no_room": {
+          "n": 1263,
+          "mean_delta": -0.098627,
+          "mean_first_stage": 1.0,
+          "mean_reranked": 0.901373,
+          "mean_oracle": 1.0
+        }
+      },
+      "overall_delta_ndcg@10": -0.028452,
+      "micro_lift_all": -0.028452,
+      "macro_lift_by_bucket": 0.213474,
+      "primary_n": 237,
+      "primary_micro_lift": 0.34552,
+      "primary_macro_lift": 0.369524,
+      "no_room_fraction": 0.842,
+      "mostly_no_room": true,
+      "catastrophic_drops": 254,
+      "catastrophic_rate": 0.169333,
+      "catastrophic_query_ids": [
+        "gq548",
+        "gq1961",
+        "gq1807",
+        "gq1687",
+        "gq368",
+        "gq622",
+        "gq1696",
+        "gq111",
+        "gq381",
+        "gq380",
+        "gq1079",
+        "gq1444",
+        "gq1315",
+        "gq1958",
+        "gq1457",
+        "gq773",
+        "gq623",
+        "gq1330",
+        "gq1443",
+        "gq1703",
+        "gq1081",
+        "gq253",
+        "gq2066",
+        "gq1375",
+        "gq2203",
+        "gq1411",
+        "gq1752",
+        "gq988",
+        "gq1226",
+        "gq1489",
+        "gq1174",
+        "gq728",
+        "gq2068",
+        "gq216",
+        "gq736",
+        "gq1473",
+        "gq581",
+        "gq1710",
+        "gq1100",
+        "gq1380",
+        "gq488",
+        "gq1029",
+        "gq920",
+        "gq857",
+        "gq1895",
+        "gq2073",
+        "gq1957",
+        "gq1030",
+        "gq193",
+        "gq284"
+      ]
+    },
+    {
+      "eval_set": "dt_test",
+      "role": "guardrail",
+      "n_queries": 1000,
+      "bucket_counts": {
+        "hard": 17,
+        "medium": 22,
+        "no_room": 961
+      },
+      "by_bucket": {
+        "hard": {
+          "n": 17,
+          "mean_delta": 0.726086,
+          "mean_first_stage": 0.189302,
+          "mean_reranked": 0.915389,
+          "mean_oracle": 1.0
+        },
+        "medium": {
+          "n": 22,
+          "mean_delta": 0.398827,
+          "mean_first_stage": 0.601173,
+          "mean_reranked": 1.0,
+          "mean_oracle": 1.0
+        },
+        "no_room": {
+          "n": 961,
+          "mean_delta": 0.0,
+          "mean_first_stage": 1.0,
+          "mean_reranked": 1.0,
+          "mean_oracle": 1.0
+        }
+      },
+      "overall_delta_ndcg@10": 0.021118,
+      "micro_lift_all": 0.021118,
+      "macro_lift_by_bucket": 0.374971,
+      "primary_n": 39,
+      "primary_micro_lift": 0.541478,
+      "primary_macro_lift": 0.562457,
+      "no_room_fraction": 0.961,
+      "mostly_no_room": true,
+      "catastrophic_drops": 0,
+      "catastrophic_rate": 0.0,
+      "catastrophic_query_ids": []
+    }
+  ]
+}

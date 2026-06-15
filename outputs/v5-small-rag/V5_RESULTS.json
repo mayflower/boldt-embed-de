@@ -1,0 +1,114 @@
+{
+  "experiment": "v5-small-rag (prompt-4 reranker)",
+  "verdict": "fail / not_promoted",
+  "gate_status": "fail",
+  "gate_failing_checks": [
+    "germanquad_catastrophic_rate",
+    "germanquad_guardrail_do_not_regress"
+  ],
+  "training_data": {
+    "raw_rows": 6500,
+    "raw_by_domain": {
+      "faq_real": 2000,
+      "qa_passage_non_eval": 2500,
+      "german_stress": 1200,
+      "long_doc_chunks": 800
+    },
+    "domains_missing_no_real_source": [
+      "web_nonfaq",
+      "local_rag"
+    ],
+    "candidate_lists": 5660,
+    "first_stage_recall_top_k": 0.8708,
+    "teacher_pairs_scored": 113145,
+    "gold_positives": 5660,
+    "hard_negatives": 104091,
+    "uncertain": 3394,
+    "teacher": "Qwen/Qwen3-Reranker-8B",
+    "leakage_filtered_against": [
+      "dt_test",
+      "germanquad"
+    ]
+  },
+  "model": {
+    "base": "Boldt/Boldt-DC-350M",
+    "loss": "listwise_kl+pairwise+pointwise_confident",
+    "faq_share": 0.217,
+    "not_faq_only": true
+  },
+  "eval": {
+    "webfaq": {
+      "eval_set": "webfaq",
+      "role": "primary",
+      "overall_delta_ndcg@10": 0.166548,
+      "medium_hard_micro_lift": 0.369936,
+      "no_room_fraction": 0.539706,
+      "catastrophic_rate": 0.010294,
+      "bucket_counts": {
+        "hard": 500,
+        "medium": 126,
+        "no_room": 734
+      }
+    },
+    "germanquad": {
+      "eval_set": "germanquad",
+      "role": "guardrail",
+      "overall_delta_ndcg@10": -0.028452,
+      "medium_hard_micro_lift": 0.34552,
+      "no_room_fraction": 0.842,
+      "catastrophic_rate": 0.169333,
+      "bucket_counts": {
+        "hard": 104,
+        "medium": 133,
+        "no_room": 1263
+      }
+    },
+    "dt_test": {
+      "eval_set": "dt_test",
+      "role": "guardrail",
+      "overall_delta_ndcg@10": 0.021118,
+      "medium_hard_micro_lift": 0.541478,
+      "no_room_fraction": 0.961,
+      "catastrophic_rate": 0.0,
+      "bucket_counts": {
+        "hard": 17,
+        "medium": 22,
+        "no_room": 961
+      }
+    }
+  },
+  "teacher_score_separation_by_domain": {
+    "faq_real": {
+      "pos_median": 6.5625,
+      "neg_median": -3.4375,
+      "separation": 10.0
+    },
+    "german_stress": {
+      "pos_median": 6.5625,
+      "neg_median": -8.875,
+      "separation": 15.4375
+    },
+    "long_doc_chunks": {
+      "pos_median": 6.625,
+      "neg_median": -8.8125,
+      "separation": 15.4375
+    },
+    "qa_passage_non_eval": {
+      "pos_median": 6.6875,
+      "neg_median": -9.25,
+      "separation": 15.9375
+    }
+  },
+  "v4_vs_v5_same_fixed_lists": {
+    "germanquad_delta": {
+      "v4": -0.0711,
+      "v5": -0.028452
+    },
+    "dt_test_delta": {
+      "v4": -0.0007,
+      "v5": 0.021118
+    }
+  },
+  "interpretation": "v5 is better than v4 but still NOT promotable. Multi-domain training (FAQ share 0.217) lifts every set strongly where there is real headroom (medium+hard buckets), and both guardrails improved over v4 (GermanQuAD -0.0711->-0.0285, DT-test -0.0007->+0.0211). But the gate FAILS: on GermanQuAD the reranker over-reorders near-ceiling first-stage lists (84% no_room), netting -0.0285 and 16.9% catastrophic per-query drops. Next step: rerank-or-abstain calibration on confident first stages.",
+  "status": "EXPERIMENTAL - NOT recommended for production reranking"
+}

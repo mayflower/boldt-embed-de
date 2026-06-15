@@ -360,6 +360,145 @@ def rag_reranker_training_report(rows: Sequence[Dict[str, Any]],
     }
 
 
+# ------------------------------------------------- v5 RAG: anti-FAQ-overfit reranker
+FAQ_RERANKER_DOMAINS = frozenset({"faq_real", "faq"})
+
+_V5_LISTWISE = {"listwise_kl": "KLDivLoss(listwise)", "listwise": "KLDivLoss(listwise)",
+                "lambdaloss": "LambdaLoss", "listnet": "ListNet", "listmle": "ListMLE"}
+
+
+def _list_key(r: Dict[str, Any]) -> str:
+    import hashlib
+    raw = f"{r.get('query_id', '')}\x1f{r.get('query', '')}"
+    return hashlib.blake2b(raw.encode("utf-8"), digest_size=8).hexdigest()
+
+
+def _is_faq(r: Dict[str, Any]) -> bool:
+    return str(r.get("domain", "")) in FAQ_RERANKER_DOMAINS
+
+
+def cap_faq_share(rows: Sequence[Dict[str, Any]], max_faq_share: float = 0.35) -> Dict[str, Any]:
+    """Deterministically downsample FAQ candidate lists so the FAQ share is <= ``max_faq_share`` —
+    keeping ALL non-FAQ lists. v5 reranker training must be demonstrably NOT FAQ-only. If there is
+    no non-FAQ data, the cap cannot be met without an empty set and the status is ``fail``."""
+    faq = [r for r in rows if _is_faq(r)]
+    nonfaq = [r for r in rows if not _is_faq(r)]
+    n_before = len(rows)
+    share_before = round(len(faq) / n_before, 4) if n_before else 0.0
+    if max_faq_share >= 1.0 or share_before <= max_faq_share:
+        kept = list(rows)
+        dropped = 0
+    else:
+        # faq/(faq+nonfaq) <= cap  =>  faq <= cap/(1-cap) * nonfaq
+        max_faq = int((max_faq_share / (1.0 - max_faq_share)) * len(nonfaq))
+        kept_faq = sorted(faq, key=_list_key)[:max_faq]
+        kept = list(nonfaq) + kept_faq
+        dropped = len(faq) - len(kept_faq)
+    n_after = len(kept)
+    faq_after = sum(1 for r in kept if _is_faq(r))
+    status = "pass" if n_after > 0 else "fail"
+    out = {"kept": kept, "faq_dropped_for_cap": dropped, "max_faq_share": max_faq_share,
+           "faq_share_before": share_before,
+           "faq_share_after": round(faq_after / n_after, 4) if n_after else 0.0,
+           "n_before": n_before, "n_after": n_after, "status": status}
+    if status == "fail":
+        out["reason"] = "no non-FAQ lists: cannot satisfy the FAQ-share cap without an empty set"
+    return out
+
+
+def plan_v5_reranker_loss(loss: str) -> Dict[str, Any]:
+    """v5 loss plan from a '+'-spec (e.g. ``listwise_kl+pairwise+pointwise_confident``). Listwise KL
+    is ALWAYS the primary objective; LambdaLoss/ListNet/ListMLE are optional listwise variants (used
+    if the loss lib provides them). Pairwise is RankNet or margin; pointwise BCE is high-confidence-
+    only; uncertain candidates are listwise-only (never a hard BCE label)."""
+    tokens = [t.strip() for t in loss.split("+") if t.strip()]
+    components: List[str] = []
+    weights: Dict[str, float] = {}
+    listwise_variant = None
+    for t in tokens:
+        if t in _V5_LISTWISE:
+            components.append(_V5_LISTWISE[t]); weights["listwise"] = 1.0; listwise_variant = t
+        elif t == "ranknet":
+            components.append("RankNet"); weights["pairwise"] = 0.5
+        elif t in ("pairwise", "margin"):
+            components.append("MarginRankingLoss"); weights["pairwise"] = 0.5
+        elif t in ("pointwise_confident", "pointwise_bce"):
+            components.append("BCEWithLogitsLoss(high_confidence_only)"); weights["pointwise_bce"] = 0.2
+        elif t == "mse":
+            components.append("MSELoss(teacher_score)"); weights["mse"] = 0.2
+    if "listwise" not in weights:                 # listwise KL is mandatory primary for v5
+        components.insert(0, _V5_LISTWISE["listwise_kl"]); weights["listwise"] = 1.0
+        listwise_variant = listwise_variant or "listwise_kl"
+    optional = [_V5_LISTWISE[t] for t in ("lambdaloss", "listnet", "listmle") if t in tokens]
+    pairwise = ("RankNet" if "ranknet" in tokens
+                else "MarginRankingLoss" if any(t in ("pairwise", "margin") for t in tokens) else None)
+    return {"loss": loss, "components": components, "weights": weights, "primary": "listwise",
+            "listwise_variant": listwise_variant or "listwise_kl",
+            "optional_listwise_variants_if_available": optional, "pairwise": pairwise,
+            "pointwise_bce_high_confidence_only": True, "uncertain_listwise_only": True}
+
+
+def v5_reranker_training_report(rows: Sequence[Dict[str, Any]],
+                                positive_threshold: float = V3_POSITIVE_THRESHOLD) -> Dict[str, Any]:
+    """v5 visibility: examples by domain, FAQ vs non-FAQ share, score separation PER DOMAIN, and the
+    uncertain fraction — so it is demonstrable that the training data is not FAQ-only."""
+    base = rag_reranker_training_report(rows, positive_threshold=positive_threshold)
+    n = len(rows) or 1
+    faq = sum(1 for r in rows if _is_faq(r))
+    pos_by_dom: Dict[str, List[float]] = {}
+    neg_by_dom: Dict[str, List[float]] = {}
+    total_c = uncertain_c = 0
+    for r in rows:
+        dom = str(r.get("domain", "unknown"))
+        for c in r.get("candidates", []):
+            total_c += 1
+            ts = c.get("teacher_score")
+            if c.get("uncertain"):
+                uncertain_c += 1
+            if c.get("label") == 1 and ts is not None:
+                pos_by_dom.setdefault(dom, []).append(float(ts))
+            elif c.get("label") == 0 and ts is not None:
+                neg_by_dom.setdefault(dom, []).append(float(ts))
+
+    def _median(xs):
+        return round(sorted(xs)[len(xs) // 2], 4) if xs else None
+
+    sep_by_dom = {}
+    for dom in sorted(set(pos_by_dom) | set(neg_by_dom)):
+        pm, nm = _median(pos_by_dom.get(dom, [])), _median(neg_by_dom.get(dom, []))
+        sep_by_dom[dom] = {"pos_median": pm, "neg_median": nm,
+                           "separation": round(pm - nm, 4) if (pm is not None and nm is not None) else None}
+    base.update({
+        "faq_share": round(faq / n, 4), "nonfaq_share": round((len(rows) - faq) / n, 4),
+        "faq_lists": faq, "nonfaq_lists": len(rows) - faq,
+        "score_separation_by_domain": sep_by_dom,
+        "uncertain_fraction": round(uncertain_c / total_c, 4) if total_c else 0.0,
+        "not_faq_only": (len(rows) - faq) > 0,
+    })
+    return base
+
+
+def v5_reranker_run_card(report: Dict[str, Any], loss_plan: Dict[str, Any], cap: Dict[str, Any],
+                         *, run_id: str, model_base: str, output: str, bf16: bool,
+                         gradient_checkpointing: bool, lora: bool = False,
+                         timestamp: Optional[str] = None) -> Dict[str, Any]:
+    return {
+        "run_id": run_id, "model_base": model_base, "lora": lora, "output": output,
+        "bf16": bf16, "gradient_checkpointing": gradient_checkpointing, "timestamp": timestamp,
+        "loss": loss_plan["loss"], "loss_components": loss_plan["components"],
+        "primary": loss_plan["primary"], "listwise_variant": loss_plan["listwise_variant"],
+        "uncertain_listwise_only": loss_plan["uncertain_listwise_only"],
+        "faq_share_cap": cap["max_faq_share"], "faq_share": report["faq_share"],
+        "nonfaq_share": report["nonfaq_share"], "not_faq_only": report["not_faq_only"],
+        "faq_dropped_for_cap": cap["faq_dropped_for_cap"],
+        "examples_by_domain": report["examples_by_domain"],
+        "score_separation_by_domain": report["score_separation_by_domain"],
+        "uncertain_fraction": report["uncertain_fraction"],
+        "evaluated_by": "hardness-aware gate (scripts/eval_v5_rag_lift.py): primary medium+hard "
+                        "lift on WebFAQ-heldout/local/hard-private; GermanQuAD/DT-test guardrails",
+    }
+
+
 def candidate_lists_to_listwise(rows: Sequence[Dict[str, Any]], temperature: float = 1.0
                                 ) -> List[Dict[str, Any]]:
     """Per-query listwise batch: target = softmax of teacher_scores when present, else the

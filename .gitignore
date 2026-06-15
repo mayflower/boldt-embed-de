@@ -60,3 +60,13 @@ outputs/v4-rag-reranker/*.log
 outputs/v4-rag-reranker/**/*.jsonl
 outputs/v4-rag-reranker/first_stage/*.json
 outputs/v4-rag-reranker/teacher/rag_teacher_summary.json
+
+# v5 small-RAG run: large intermediate data (weights via *.safetensors/checkpoints/ above).
+# Small json/md summaries (V5_RESULTS, gate, *.report.json, teacher summary), run cards,
+# COMMANDS.md and STATUS.json ARE tracked. Raw data + scored/candidate JSONL are NOT.
+outputs/v5-small-rag/**/*.log
+outputs/v5-small-rag/**/*.jsonl
+outputs/v5-small-rag/train/bm25.json
+outputs/v5-small-rag/train/domain_map.json
+outputs/v5-small-rag/v5-reranker-boldt_run_card.json
+data/raw/v5/*.jsonl

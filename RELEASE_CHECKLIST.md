@@ -68,6 +68,21 @@ all **blocking** items pass.
 Card correctly stays *Experimental; not recommended for production reranking*. See
 `outputs/v4-rag-reranker/V4_RAG_RESULTS.md`.
 
+## v5 — small German RAG (active product track)
+- [x] Training data is leakage-filtered vs public guardrails (dt_test + GermanQuAD) and
+      **demonstrably not FAQ-only** (FAQ share 0.217).
+- [x] Reranker evaluated by the **hardness-aware gate** (`scripts/eval_v5_rag_lift.py`), not raw
+      WebFAQ lift.
+- [x] Reranker model card / README claim "recommended" **only if** the hardness-aware gate passes.
+- [ ] **v5 reranker promotion gate** passes (medium+hard lift on primary; guardrails do-not-regress;
+      catastrophic rate ≤ 5%).
+
+**Reranker run executed 2026-06-15 (RTX A6000) — hardness-aware gate FAILED → NOT promoted.** WebFAQ
++0.1665 (primary pass), DT-test +0.0211 (pass), GermanQuAD −0.0285 with 16.9% catastrophic drops
+(fail). Better than v4 (GermanQuAD −0.0711→−0.0285) but still not promotable. Card/README stay
+*Experimental; not recommended*. Next step: rerank-or-abstain calibration. See
+`outputs/v5-small-rag/V5_RESULTS.md`.
+
 ## Non-blocking — hygiene
 - [ ] `make all` green; CI green on py3.10–3.12.
 - [ ] Working tree clean; release tagged.

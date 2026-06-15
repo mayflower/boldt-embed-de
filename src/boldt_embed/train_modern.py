@@ -129,6 +129,149 @@ def plan_loss_stack(student_cfg, has_teacher_scores: bool, use_guide: bool = Fal
     }
 
 
+# ---------------------------------------------------------------- v5 dense RAG (stdlib)
+def _margin_bucket(m: float) -> str:
+    if m < 0:
+        return "<0"
+    if m >= 5:
+        return ">=5"
+    return f"{int(m)}-{int(m) + 1}"
+
+
+def build_v5_dense_dataset(pairs: Sequence[Dict[str, Any]],
+                           hardnegs: Optional[Sequence[Dict[str, Any]]] = None,
+                           teacher_scores: Optional[Sequence[Dict[str, Any]]] = None,
+                           *, teacher_threshold: float = 4.0) -> Dict[str, Any]:
+    """Build the v5 dense-RAG training set from rag_pairs (+ optional webfaq2 hard-neg triplets +
+    optional embedding-teacher scores). Pure stdlib. HARD-FAILS (via ``errors``) on public-benchmark
+    / eval leakage. Synthetic pairs flagged ``must_teacher_validate`` are kept only when a
+    ``teacher_score`` clears ``teacher_threshold`` (provisional rows excluded, not silently trained).
+    """
+    from .v5_data_mixer import leakage_reason
+    hardnegs = list(hardnegs or [])
+    teacher_scores = list(teacher_scores or [])
+    errors: List[str] = []
+    for i, r in enumerate(list(pairs) + hardnegs):
+        if isinstance(r, dict):
+            reason = leakage_reason(r)
+            if reason:
+                errors.append(f"row {i} ({r.get('source_id') or r.get('query', '?')}): "
+                              f"public-benchmark/eval leakage ({reason})")
+
+    tmap: Dict[tuple, float] = {}
+    has_distill_vectors = False
+    for s in teacher_scores:
+        key = (str(s.get("query") or s.get("query_id")), str(s.get("document") or s.get("doc_id")))
+        if s.get("teacher_score") is not None:
+            tmap[key] = float(s["teacher_score"])
+        if s.get("teacher_vector") or s.get("embedding"):
+            has_distill_vectors = True
+
+    def _pos(r):
+        return r.get("positive") or r.get("document") or r.get("answer")
+
+    validated = provisional_excluded = real_pairs = 0
+    examples: List[Dict[str, Any]] = []
+    domain_mix: Dict[str, int] = {}
+    for r in pairs:
+        q, p = r.get("query"), _pos(r)
+        if not (isinstance(q, str) and q.strip() and isinstance(p, str) and p.strip()):
+            continue
+        if r.get("must_teacher_validate") is True:
+            ts = r.get("teacher_score")
+            if not (isinstance(ts, (int, float)) and not isinstance(ts, bool) and ts >= teacher_threshold):
+                provisional_excluded += 1
+                continue
+            validated += 1
+        else:
+            real_pairs += 1
+        dom = r.get("domain", "unknown")
+        domain_mix[dom] = domain_mix.get(dom, 0) + 1
+        examples.append({"query": q, "positive": p, "negatives": [],
+                         "pos_score": tmap.get((str(q), str(p))), "neg_scores": [], "domain": dom})
+
+    grouped: Dict[tuple, Dict[str, Any]] = {}
+    for r in hardnegs:
+        q, p, n = r.get("query"), r.get("positive"), r.get("negative")
+        if not (q and p and n):
+            continue
+        g = grouped.setdefault((q, p), {"query": q, "positive": p, "negatives": [], "neg_scores": [],
+                                        "margins": [], "domain": r.get("domain", "webfaq2"),
+                                        "pos_score": r.get("positive_score")})
+        g["negatives"].append(n)
+        g["neg_scores"].append(r.get("negative_score"))
+        g["margins"].append(r.get("teacher_margin"))
+
+    margins_all: List[float] = []
+    margin_hist: Dict[str, int] = {}
+    for g in grouped.values():
+        ms = [m for m in g["margins"] if isinstance(m, (int, float)) and not isinstance(m, bool)]
+        margins_all += ms
+        for m in ms:
+            margin_hist[_margin_bucket(m)] = margin_hist.get(_margin_bucket(m), 0) + 1
+        domain_mix[g["domain"]] = domain_mix.get(g["domain"], 0) + 1
+        examples.append({"query": g["query"], "positive": g["positive"], "negatives": g["negatives"],
+                         "pos_score": g["pos_score"], "neg_scores": g["neg_scores"], "domain": g["domain"]})
+
+    has_teacher_scores = bool(tmap) or bool(margins_all) or any(
+        e.get("pos_score") is not None for e in examples)
+    report = {
+        "num_pairs_in": len(list(pairs)), "num_hardneg_triplets_in": len(hardnegs),
+        "examples": len(examples),
+        "domain_mix": dict(sorted(domain_mix.items())),
+        "teacher_validation": {"validated_synthetic": validated, "real_pairs": real_pairs,
+                               "provisional_excluded": provisional_excluded,
+                               "teacher_threshold": teacher_threshold},
+        "hard_negatives": {"triplets": len(hardnegs), "queries_with_hardnegs": len(grouped),
+                           "avg_margin": round(sum(margins_all) / len(margins_all), 4) if margins_all else None,
+                           "margin_distribution": dict(sorted(margin_hist.items()))},
+        "has_teacher_scores": has_teacher_scores,
+        "has_distill_vectors": has_distill_vectors,
+        "leakage_rows": len(errors),
+    }
+    return {"examples": examples, "report": report, "errors": errors}
+
+
+def plan_v5_dense_loss_stack(*, has_teacher_scores: bool, has_distill_vectors: bool,
+                             matryoshka_dims: Optional[Sequence[int]] = None,
+                             use_guide: bool = False) -> Dict[str, Any]:
+    """v5 dense loss stack (stdlib, no ML): CachedMNRL -> Matryoshka, + MarginMSE (teacher scores)
+    + optional EmbedDistill (Qwen3-Embedding-8B vectors), NO_DUPLICATES sampler."""
+    dims = list(matryoshka_dims or MATRYOSHKA_DEFAULT)
+    base = "CachedGISTEmbedLoss" if use_guide else "CachedMultipleNegativesRankingLoss"
+    wrapped = [base, f"MatryoshkaLoss(dims={dims})"]
+    margin = ["MarginMSELoss"] if has_teacher_scores else []
+    distill = ["EmbedDistillLoss(MSELoss to Qwen3-Embedding-8B vectors)"] if has_distill_vectors else []
+    return {
+        "base_contrastive": base,
+        "wrapped": " -> ".join(wrapped),
+        "matryoshka_dims": dims,
+        "margin_mse": margin,
+        "embed_distill": distill,
+        "batch_sampler": "NO_DUPLICATES",
+        "loss_stack": wrapped + margin + distill,
+    }
+
+
+def v5_dense_run_card(dataset_report: Dict[str, Any], loss_plan: Dict[str, Any], *, run_id: str,
+                      model: str, output: str, max_steps: int, bf16: bool,
+                      gradient_checkpointing: bool, lora: bool = False,
+                      timestamp: Optional[str] = None) -> Dict[str, Any]:
+    return {
+        "run_id": run_id, "model": model, "lora": lora, "output": output,
+        "max_steps": max_steps, "bf16": bf16, "gradient_checkpointing": gradient_checkpointing,
+        "loss_stack": loss_plan["loss_stack"], "batch_sampler": loss_plan["batch_sampler"],
+        "matryoshka_dims": loss_plan["matryoshka_dims"],
+        "num_examples": dataset_report["examples"], "domain_mix": dataset_report["domain_mix"],
+        "hard_negative_margins": dataset_report["hard_negatives"],
+        "teacher_validation": dataset_report["teacher_validation"],
+        "has_teacher_scores": dataset_report["has_teacher_scores"],
+        "has_distill_vectors": dataset_report["has_distill_vectors"],
+        "timestamp": timestamp,
+        "purpose": "v5 dense RAG retriever: improve first-stage recall + candidate lists for reranking",
+    }
+
+
 # --------------------------------------------------------------- ML layer (lazy import)
 def apply_bidirectional_to_st_module(transformer_module) -> None:
     """Apply the LLM2Vec bidirectional mask patch to a SentenceTransformers Transformer

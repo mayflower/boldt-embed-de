@@ -362,6 +362,58 @@ Next data needed to promote: diverse non-FAQ German question styles (QA-passage,
 teacher-scored training mix, not only WebFAQ FAQ pairs. GerDaLIR/legal stays diagnostic-only and
 never gates this track.
 
+### 6l. Track transition → v5 small RAG (2026-06-14)
+
+**v4 is CLOSED; the active product target is `v5-small-rag`** (`docs/v5-small-rag-plan.md`,
+`configs/experiments/v5_small_rag.json`, validated by `src/boldt_embed/v5_rag_config.py`). v4
+delivered a strong in-domain FAQ reranker (+0.2907 nDCG@10 on held-out WebFAQ) that **did not
+generalize** to GermanQuAD (−0.0711); the gate correctly blocked promotion. Legal/admin and
+**GerDaLIR remain diagnostic-only** — never a release blocker for this track.
+
+v5 encodes the two v4 lessons as hard rules:
+
+1. **Diverse training styles, not single-style FAQ.** Train on FAQ, QA-passage (non-eval), web
+   non-FAQ, long-doc chunks, German stress, and local RAG — with **hardness-aware** mixed-first-
+   stage candidate lists (in-house dense + e5 + bge-m3 + BM25), so reranker skill is measured on
+   non-trivial lists rather than near-perfect BM25 ones.
+2. **Near-ceiling sets are not the promotion signal.** GermanQuAD/DT-test first stages are
+   near-ceiling (oracle nDCG@10 = 1.0); reranking can only churn them. v5 treats any set with
+   oracle ≥ 0.98 as **do-not-regress** (−0.005 tolerance), **never** a primary promotion driver.
+   Promotion is driven by sets with real headroom: WebFAQ held-out ≥ +0.05, local RAG and a hard
+   private web-QA set ≥ +0.03, plus a **256-dim Matryoshka retention ≥ 0.95** gate so the
+   retriever stays small/deployable. Public benchmarks stay eval-only; no public set may train.
+
+### 6m. v5 small-RAG reranker — EXECUTED (2026-06-15, RTX A6000, `outputs/v5-small-rag`)
+
+First real v5 run (prompt-4 reranker). Multi-domain training data, leakage-filtered against the
+guardrails, teacher-scored by Qwen3-Reranker-8B, listwise-KL trained on `Boldt/Boldt-DC-350M`.
+
+- **Data (real):** 6,500 rows — faq_real 2,000 (WebFAQ), qa_passage_non_eval 2,500, german_stress
+  1,200, long_doc_chunks 800 (last three from `deutsche-telekom/wikipedia-22-12-de-dpr` **train**
+  split, real questions). `web_nonfaq`/`local_rag` omitted (no real source — not faked). Leakage-
+  filtered vs dt_test + GermanQuAD (DPR train↔test disjoint, 0 dropped). 5,660 candidate lists
+  (BM25 recall 0.871), **FAQ share 0.217**.
+- **Teacher scoring:** 113,145 pairs (Qwen3-Reranker-8B); 5,660 gold / 104,091 hard-neg / 3,394
+  uncertain. Score separation by domain: faq_real 10.0, german_stress 15.4, long_doc 15.4,
+  qa_passage 15.9.
+- **Training:** listwise-KL primary on 5,658 queries.
+
+Hardness-aware gate (nDCG@10 over FIXED candidate lists):
+
+| eval set | role | overall Δ | medium+hard | no_room | catastrophic | result |
+|---|---|--:|--:|--:|--:|:--|
+| WebFAQ held-out (1,360, leakage-filtered) | primary | +0.1665 | +0.370 | 0.54 | 0.010 | pass |
+| GermanQuAD | guardrail | **−0.0285** | +0.346 | 0.84 | **0.169** | **FAIL** |
+| DT-test | guardrail | +0.0211 | +0.542 | 0.96 | 0.000 | pass |
+
+**Verdict: gate FAIL → not promoted.** On the identical fixed guardrail lists, v5 **improves on v4**
+(GermanQuAD −0.0711 → −0.0285; DT-test −0.0007 → +0.0211) and lifts every set strongly where there
+is real headroom (medium+hard +0.35 to +0.54, including GermanQuAD). But it still **over-reranks
+near-ceiling GermanQuAD lists** (84% no_room), netting −0.0285 with 16.9% catastrophic per-query
+drops — beyond even the lenient −0.005 near-ceiling tolerance. The reranker stays **Experimental,
+not recommended**; next step is **rerank-or-abstain calibration** on confident first stages. See
+`outputs/v5-small-rag/V5_RESULTS.md`.
+
 ## 7. Matryoshka truncation analysis
 Storage scales linearly with dim (fp32): 1024→4096 B, 512→2048 B, 256→1024 B, 128→512 B,
 64→256 B/vector. The HashingEncoder by-dim retrieval (toy) stays near-perfect down to 64 dims
