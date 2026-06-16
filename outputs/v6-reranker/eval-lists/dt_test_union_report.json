@@ -1,0 +1,20 @@
+{
+  "eval_set": "dt_test",
+  "n_queries": 1000,
+  "corpus_docs": 5000,
+  "list_size": 100,
+  "rrf_k": 60,
+  "positive_present_rate": 1.0,
+  "union_recall": {
+    "recall@10": 0.997,
+    "recall@50": 0.999,
+    "recall@100": 1.0
+  },
+  "union_ndcg@10": 0.9916,
+  "gold_source_contribution": {
+    "bm25_only": 1,
+    "dense_only": 2,
+    "both": 997,
+    "absent": 0
+  }
+}

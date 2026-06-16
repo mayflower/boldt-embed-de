@@ -1,0 +1,117 @@
+{
+  "eval_set": "dt_test",
+  "n_queries": 1000,
+  "total_positives": 1000,
+  "recall": {
+    "recall@10": 0.992,
+    "recall@20": 0.994,
+    "recall@50": 0.994,
+    "recall@100": 0.994,
+    "recall@200": 0.994
+  },
+  "positive_in_top_10_rate": 0.992,
+  "first_stage_ndcg10": 0.977444,
+  "oracle_ndcg10_retriever": 0.994,
+  "oracle_ndcg10_with_injected": 1.0,
+  "upper_bound_reranker_lift_realistic": 0.016556,
+  "upper_bound_reranker_lift_if_perfect_candidates": 0.022556,
+  "illusory_lift_from_injection": 0.006,
+  "missing_positive_count": 6,
+  "missing_positive_rate": 0.006,
+  "missing_by_domain": {
+    "unknown": 6
+  },
+  "missing_by_query_style": {
+    "unknown": 6
+  },
+  "missing_by_source": {
+    "injected_only": 6
+  },
+  "candidate_source_contribution": {
+    "total_positives": 1000,
+    "bm25_hits": 994,
+    "dense_hits": 0,
+    "other_retriever_hits": 0,
+    "bm25_only": 994,
+    "dense_only": 0,
+    "overlap_bm25_and_dense": 0,
+    "union_any_retriever": 994,
+    "injected_only_not_retrieved": 6,
+    "absent_from_list": 0,
+    "has_dense_source": false
+  },
+  "bottleneck": {
+    "primary": "near_ceiling_first_stage",
+    "detail": "first stage is already near-ceiling; reranking can only churn it. Reranker lift is not the lever here.",
+    "realistic_reranker_ceiling": 0.016556,
+    "no_dense_first_stage": true
+  },
+  "examples": [
+    {
+      "query_id": "dt2528",
+      "domain": "unknown",
+      "query_style": "unknown",
+      "query": "Was ist Ƙ und wo kommt es vor?",
+      "missing_positive": "d2528",
+      "missing_positive_text": "Ƙ (kleingeschrieben ƙ) ist ein Buchstabe des lateinischen Schriftsystems, der in afrikanischen Erweiterungen des lateinischen Alphabets vorkommt. Er besteht aus einem K mit Haken. Während bei dem Klei",
+      "first_stage_ndcg10": 0.0,
+      "oracle_ndcg10_retriever": 0.0,
+      "note": "positive present only via injected/oracle source — first stage never retrieved it"
+    },
+    {
+      "query_id": "dt596",
+      "domain": "unknown",
+      "query_style": "unknown",
+      "query": "Was waren Mark Forests berufliche Tätigkeiten?",
+      "missing_positive": "d596",
+      "missing_positive_text": "Mark Forest (* 6. Januar 1933 in Brooklyn, New York City, New York; † 7. Januar 2022 in Arleta, Kalifornien; eigentlich \"Lou Degni\") war ein US-amerikanischer Bodybuilder, Schauspieler und Opernsänger",
+      "first_stage_ndcg10": 0.0,
+      "oracle_ndcg10_retriever": 0.0,
+      "note": "positive present only via injected/oracle source — first stage never retrieved it"
+    },
+    {
+      "query_id": "dt2145",
+      "domain": "unknown",
+      "query_style": "unknown",
+      "query": "Wer wird in dieser Liste aufgeführt?",
+      "missing_positive": "d2145",
+      "missing_positive_text": "Diese Liste führt Mitglieder der National Academy of Design auf, die (mit Ausnahme der Gründungsmitglieder) nachweislich zu Mitgliedern, Ehrenmitgliedern oder Präsidenten gewählt wurden.",
+      "first_stage_ndcg10": 0.0,
+      "oracle_ndcg10_retriever": 0.0,
+      "note": "positive present only via injected/oracle source — first stage never retrieved it"
+    },
+    {
+      "query_id": "dt4111",
+      "domain": "unknown",
+      "query_style": "unknown",
+      "query": "Welcher Religion gehört Auslanders Familie an?",
+      "missing_positive": "d4111",
+      "missing_positive_text": "Auslander entstammt einer jüdischen ultraorthodoxen Familie. In seinem Buch \"Eine Vorhaut klagt an\" thematisiert er Eindrücke und Einflüsse seiner Kindheit und Jugend. Auslander schreibt außerdem Kolu",
+      "first_stage_ndcg10": 0.0,
+      "oracle_ndcg10_retriever": 0.0,
+      "note": "positive present only via injected/oracle source — first stage never retrieved it"
+    },
+    {
+      "query_id": "dt4918",
+      "domain": "unknown",
+      "query_style": "unknown",
+      "query": "Was ist die Adresse des denkmalgeschützten Gebäudes?",
+      "missing_positive": "d4918",
+      "missing_positive_text": "Die ehemalige Weinhandlung und Weinstube Kach ist ein denkmalgeschütztes Gebäude in der Kirchenstraße 2 in der Altstadt der mittelfränkischen Stadt Erlangen. Bei dem Eckhaus handelt es sich um einen z",
+      "first_stage_ndcg10": 0.0,
+      "oracle_ndcg10_retriever": 0.0,
+      "note": "positive present only via injected/oracle source — first stage never retrieved it"
+    },
+    {
+      "query_id": "dt1660",
+      "domain": "unknown",
+      "query_style": "unknown",
+      "query": "Wie lautet der ukrainische Name des Ortes in dem Text?",
+      "missing_positive": "d1660",
+      "missing_positive_text": "Ustyniwka (ukrainisch ; russische Entsprechung /\"Ustinowka\") ist der Name mehrerer Orte in der Ukraine.",
+      "first_stage_ndcg10": 0.0,
+      "oracle_ndcg10_retriever": 0.0,
+      "note": "positive present only via injected/oracle source — first stage never retrieved it"
+    }
+  ]
+}

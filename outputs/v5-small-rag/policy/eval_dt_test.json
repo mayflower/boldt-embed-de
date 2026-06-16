@@ -1,0 +1,30 @@
+{
+  "eval_set": "dt_test",
+  "role": "guardrail",
+  "ranking_mode": "policy_gated",
+  "n_queries": 1000,
+  "first_stage_ndcg@10": 0.977444,
+  "raw_rerank_ndcg@10": 0.998649,
+  "policy_ndcg@10": 0.994929,
+  "policy_delta": 0.017485,
+  "raw_delta": 0.021205,
+  "catastrophic_drop_rate": 0.0,
+  "abstain_rate": 0.005,
+  "lock_rate": 0.995,
+  "blend_rate": 0.995,
+  "margin_override_rate": 0.032,
+  "max_downshift_distribution": {
+    "0": 5,
+    "1": 140,
+    "2": 855
+  },
+  "medium_hard_lift": 0.448323,
+  "no_room_delta": 0.0,
+  "bucket_counts": {
+    "hard": 17,
+    "medium": 22,
+    "no_room": 961
+  },
+  "first_stage_unranked_candidates": 6,
+  "queries_with_unranked_candidates": 6
+}

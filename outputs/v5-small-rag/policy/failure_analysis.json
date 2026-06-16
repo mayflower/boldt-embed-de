@@ -1,0 +1,352 @@
+{
+  "policy_id": "bounded_margin_override_v1",
+  "failing_sets": [
+    "webfaq"
+  ],
+  "sets": [
+    {
+      "eval_set": "dt_test",
+      "role": "guardrail",
+      "n_queries": 1000,
+      "n_failures": 7,
+      "failure_rate": 0.007,
+      "margin_override_fire_rate": 0.032,
+      "first_stage_score_stats": {
+        "mean": 10.0132,
+        "min": 0.3065,
+        "max": 73.5929,
+        "spread": 73.2864
+      },
+      "by_category": {
+        "margin_override_too_strict": 3,
+        "no_useful_first_stage_score": 3,
+        "top_k_lock_too_strict": 1
+      },
+      "by_type": {
+        "missed_lift": 6,
+        "regression": 1
+      },
+      "by_domain": {
+        "unknown": 7
+      },
+      "by_displacer_source": {
+        "bm25": 7
+      },
+      "by_recommendation": {
+        "tune_policy_threshold": 4,
+        "add_calibration_features": 3
+      },
+      "policy_fixable_share": 0.5714,
+      "examples": [
+        {
+          "query_id": "dt3154",
+          "domain": "unknown",
+          "ftype": "missed_lift",
+          "category": "margin_override_too_strict",
+          "constraint": "bounds.margin_override (too high)",
+          "policy_fixable": true,
+          "recommendation": "tune_policy_threshold",
+          "detail": "reranker gap over first-stage top1 = 2.11 < margin 3.0; override did not fire",
+          "displacer_source": "bm25",
+          "fs_ndcg": 0.6309,
+          "raw_ndcg": 1.0,
+          "pol_ndcg": 0.6309
+        },
+        {
+          "query_id": "dt2145",
+          "domain": "unknown",
+          "ftype": "missed_lift",
+          "category": "no_useful_first_stage_score",
+          "constraint": "first_stage_order_degenerate",
+          "policy_fixable": false,
+          "recommendation": "add_calibration_features",
+          "detail": "no usable first_stage_score → locks built on a meaningless order",
+          "displacer_source": "bm25",
+          "fs_ndcg": 0.0,
+          "raw_ndcg": 0.6309,
+          "pol_ndcg": 0.0
+        },
+        {
+          "query_id": "dt4396",
+          "domain": "unknown",
+          "ftype": "missed_lift",
+          "category": "margin_override_too_strict",
+          "constraint": "bounds.margin_override (too high)",
+          "policy_fixable": true,
+          "recommendation": "tune_policy_threshold",
+          "detail": "reranker gap over first-stage top1 = 1.96 < margin 3.0; override did not fire",
+          "displacer_source": "bm25",
+          "fs_ndcg": 0.6309,
+          "raw_ndcg": 1.0,
+          "pol_ndcg": 0.6309
+        },
+        {
+          "query_id": "dt214",
+          "domain": "unknown",
+          "ftype": "regression",
+          "category": "top_k_lock_too_strict",
+          "constraint": "bounds.preserve_first_stage_top_k / max_upshift_without_margin",
+          "policy_fixable": true,
+          "recommendation": "tune_policy_threshold",
+          "detail": "positive at first-stage rank 5 (tail); raw lifts to 4; head locked at top-3 so policy left it at 6",
+          "displacer_source": "bm25",
+          "fs_ndcg": 0.3562,
+          "raw_ndcg": 0.3869,
+          "pol_ndcg": 0.3333
+        }
+      ],
+      "implicated_by_gate": false
+    },
+    {
+      "eval_set": "germanquad",
+      "role": "guardrail",
+      "n_queries": 1500,
+      "n_failures": 117,
+      "failure_rate": 0.078,
+      "margin_override_fire_rate": 0.062,
+      "first_stage_score_stats": {
+        "mean": 6.8528,
+        "min": 0.0222,
+        "max": 61.8151,
+        "spread": 61.7928
+      },
+      "by_category": {
+        "margin_override_too_strict": 80,
+        "no_useful_first_stage_score": 17,
+        "top_k_lock_too_strict": 9,
+        "margin_override_too_permissive": 5,
+        "positive_locked_too_low": 5,
+        "blend_alpha_too_low": 1
+      },
+      "by_type": {
+        "missed_lift": 111,
+        "catastrophic": 5,
+        "regression": 1
+      },
+      "by_domain": {
+        "unknown": 117
+      },
+      "by_displacer_source": {
+        "bm25": 117
+      },
+      "by_recommendation": {
+        "tune_policy_threshold": 100,
+        "add_calibration_features": 17
+      },
+      "policy_fixable_share": 0.8547,
+      "examples": [
+        {
+          "query_id": "gq658",
+          "domain": "unknown",
+          "ftype": "missed_lift",
+          "category": "no_useful_first_stage_score",
+          "constraint": "first_stage_order_degenerate",
+          "policy_fixable": false,
+          "recommendation": "add_calibration_features",
+          "detail": "no usable first_stage_score → locks built on a meaningless order",
+          "displacer_source": "bm25",
+          "fs_ndcg": 0.0,
+          "raw_ndcg": 0.5,
+          "pol_ndcg": 0.0
+        },
+        {
+          "query_id": "gq1317",
+          "domain": "unknown",
+          "ftype": "missed_lift",
+          "category": "margin_override_too_strict",
+          "constraint": "bounds.margin_override (too high)",
+          "policy_fixable": true,
+          "recommendation": "tune_policy_threshold",
+          "detail": "reranker gap over first-stage top1 = 0.91 < margin 3.0; override did not fire",
+          "displacer_source": "bm25",
+          "fs_ndcg": 0.5,
+          "raw_ndcg": 1.0,
+          "pol_ndcg": 0.5
+        },
+        {
+          "query_id": "gq225",
+          "domain": "unknown",
+          "ftype": "missed_lift",
+          "category": "no_useful_first_stage_score",
+          "constraint": "first_stage_order_degenerate",
+          "policy_fixable": false,
+          "recommendation": "add_calibration_features",
+          "detail": "no usable first_stage_score → locks built on a meaningless order",
+          "displacer_source": "bm25",
+          "fs_ndcg": 0.0,
+          "raw_ndcg": 0.3562,
+          "pol_ndcg": 0.0
+        },
+        {
+          "query_id": "gq518",
+          "domain": "unknown",
+          "ftype": "missed_lift",
+          "category": "margin_override_too_strict",
+          "constraint": "bounds.margin_override (too high)",
+          "policy_fixable": true,
+          "recommendation": "tune_policy_threshold",
+          "detail": "reranker gap over first-stage top1 = 1.39 < margin 3.0; override did not fire",
+          "displacer_source": "bm25",
+          "fs_ndcg": 0.3869,
+          "raw_ndcg": 1.0,
+          "pol_ndcg": 0.4307
+        }
+      ],
+      "implicated_by_gate": false
+    },
+    {
+      "eval_set": "near_ceiling",
+      "role": "primary",
+      "n_queries": 716,
+      "n_failures": 1,
+      "failure_rate": 0.0014,
+      "margin_override_fire_rate": 0.0014,
+      "first_stage_score_stats": {
+        "mean": 9.7413,
+        "min": 1.126,
+        "max": 92.3283,
+        "spread": 91.2023
+      },
+      "by_category": {
+        "margin_override_too_permissive": 1
+      },
+      "by_type": {
+        "catastrophic": 1
+      },
+      "by_domain": {
+        "faq_real": 1
+      },
+      "by_displacer_source": {
+        "bm25": 1
+      },
+      "by_recommendation": {
+        "tune_policy_threshold": 1
+      },
+      "policy_fixable_share": 1.0,
+      "examples": [
+        {
+          "query_id": "q99df527ad767eb91",
+          "domain": "faq_real",
+          "ftype": "catastrophic",
+          "category": "margin_override_too_permissive",
+          "constraint": "bounds.margin_override (too low)",
+          "policy_fixable": true,
+          "recommendation": "tune_policy_threshold",
+          "detail": "margin override promoted a non-positive to rank 1",
+          "displacer_source": "bm25",
+          "fs_ndcg": 1.0,
+          "raw_ndcg": 0.6309,
+          "pol_ndcg": 0.6309
+        }
+      ],
+      "implicated_by_gate": false
+    },
+    {
+      "eval_set": "webfaq",
+      "role": "primary",
+      "n_queries": 1360,
+      "n_failures": 344,
+      "failure_rate": 0.2529,
+      "margin_override_fire_rate": 0.0529,
+      "first_stage_score_stats": {
+        "mean": 9.2313,
+        "min": 0.5788,
+        "max": 92.3283,
+        "spread": 91.7495
+      },
+      "by_category": {
+        "no_useful_first_stage_score": 234,
+        "margin_override_too_strict": 96,
+        "top_k_lock_too_strict": 10,
+        "positive_locked_too_low": 2,
+        "margin_override_too_permissive": 2
+      },
+      "by_type": {
+        "missed_lift": 342,
+        "catastrophic": 1,
+        "regression": 1
+      },
+      "by_domain": {
+        "faq_real": 344
+      },
+      "by_displacer_source": {
+        "bm25": 344
+      },
+      "by_recommendation": {
+        "add_calibration_features": 234,
+        "tune_policy_threshold": 110
+      },
+      "policy_fixable_share": 0.3198,
+      "examples": [
+        {
+          "query_id": "qa82ceaccb240a11c",
+          "domain": "faq_real",
+          "ftype": "missed_lift",
+          "category": "no_useful_first_stage_score",
+          "constraint": "first_stage_order_degenerate",
+          "policy_fixable": false,
+          "recommendation": "add_calibration_features",
+          "detail": "no usable first_stage_score → locks built on a meaningless order",
+          "displacer_source": "bm25",
+          "fs_ndcg": 0.0,
+          "raw_ndcg": 0.2891,
+          "pol_ndcg": 0.0
+        },
+        {
+          "query_id": "q13a65a84d840fede",
+          "domain": "faq_real",
+          "ftype": "missed_lift",
+          "category": "no_useful_first_stage_score",
+          "constraint": "first_stage_order_degenerate",
+          "policy_fixable": false,
+          "recommendation": "add_calibration_features",
+          "detail": "no usable first_stage_score → locks built on a meaningless order",
+          "displacer_source": "bm25",
+          "fs_ndcg": 0.0,
+          "raw_ndcg": 0.2891,
+          "pol_ndcg": 0.0
+        },
+        {
+          "query_id": "qc7af909b072243fe",
+          "domain": "faq_real",
+          "ftype": "missed_lift",
+          "category": "margin_override_too_strict",
+          "constraint": "bounds.margin_override (too high)",
+          "policy_fixable": true,
+          "recommendation": "tune_policy_threshold",
+          "detail": "reranker gap over first-stage top1 = 0.55 < margin 3.0; override did not fire",
+          "displacer_source": "bm25",
+          "fs_ndcg": 0.6309,
+          "raw_ndcg": 1.0,
+          "pol_ndcg": 0.6309
+        },
+        {
+          "query_id": "q3a4067050d04fced",
+          "domain": "faq_real",
+          "ftype": "missed_lift",
+          "category": "margin_override_too_strict",
+          "constraint": "bounds.margin_override (too high)",
+          "policy_fixable": true,
+          "recommendation": "tune_policy_threshold",
+          "detail": "reranker gap over first-stage top1 = 0.45 < margin 3.0; override did not fire",
+          "displacer_source": "bm25",
+          "fs_ndcg": 0.6309,
+          "raw_ndcg": 1.0,
+          "pol_ndcg": 0.6309
+        }
+      ],
+      "implicated_by_gate": true
+    }
+  ],
+  "first_stage_score_spread_by_set": {
+    "dt_test": 73.2864,
+    "germanquad": 61.7928,
+    "near_ceiling": 91.2023,
+    "webfaq": 91.7495
+  },
+  "cross_set_calibration_divergence": false,
+  "aggregate_recommendation_counts": {
+    "add_calibration_features": 254,
+    "tune_policy_threshold": 215
+  }
+}

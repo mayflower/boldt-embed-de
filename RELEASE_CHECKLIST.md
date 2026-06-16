@@ -68,20 +68,59 @@ all **blocking** items pass.
 Card correctly stays *Experimental; not recommended for production reranking*. See
 `outputs/v4-rag-reranker/V4_RAG_RESULTS.md`.
 
-## v5 — small German RAG (active product track)
+## Reranker promotion rule (applies to every reranker track)
+- [ ] A reranker may be called "recommended" **only** when its **RAW** reranker shows lift over
+      **FIXED** candidate lists and passes its raw promotion gate (`eval/v5_rag_lift_gate.json` /
+      `eval/rag_reranker_gate.json` status `pass`). This is enforced by `validate_release_2026.py`
+      (`check_reranker_raw_recommendation`).
+- [ ] **Policy-gated variants do NOT count for model promotion.** Rerank-or-abstain, conservative +
+      rank-preservation, preservation grids, and bounded `margin_override` serving policies are
+      **diagnostics only** and must **never** be recommended as a production workaround
+      (`check_no_policy_gated_recommendation` fails the gate if a card does). Policy docs are allowed
+      only under diagnostics/analysis framing.
+
+## v5 — small German RAG (EXECUTED; reranker NOT promoted; closed → v6)
 - [x] Training data is leakage-filtered vs public guardrails (dt_test + GermanQuAD) and
       **demonstrably not FAQ-only** (FAQ share 0.217).
 - [x] Reranker evaluated by the **hardness-aware gate** (`scripts/eval_v5_rag_lift.py`), not raw
       WebFAQ lift.
-- [x] Reranker model card / README claim "recommended" **only if** the hardness-aware gate passes.
-- [ ] **v5 reranker promotion gate** passes (medium+hard lift on primary; guardrails do-not-regress;
-      catastrophic rate ≤ 5%).
+- [x] Reranker model card / README claim "recommended" **only if** the RAW reranker gate passes.
+- [ ] **v5 RAW reranker promotion gate** passes (medium+hard lift on primary; guardrails
+      do-not-regress; catastrophic rate ≤ 5%). — **FAILS.**
 
-**Reranker run executed 2026-06-15 (RTX A6000) — hardness-aware gate FAILED → NOT promoted.** WebFAQ
-+0.1665 (primary pass), DT-test +0.0211 (pass), GermanQuAD −0.0285 with 16.9% catastrophic drops
-(fail). Better than v4 (GermanQuAD −0.0711→−0.0285) but still not promotable. Card/README stay
-*Experimental; not recommended*. Next step: rerank-or-abstain calibration. See
-`outputs/v5-small-rag/V5_RESULTS.md`.
+**Reranker run executed 2026-06-15 (RTX A6000) — RAW hardness-aware gate FAILED → NOT promoted.**
+WebFAQ +0.1665 (primary pass), DT-test +0.0211 (pass), GermanQuAD −0.0285 with 16.9% catastrophic
+drops (fail). The follow-on **policy experiments are diagnostic only**: the frozen bounded policy was
+evaluated on a held-out near-ceiling guardrail and **also FAILED** its promotion gate (WebFAQ policy
+Δ +0.0245 < +0.05). Failure analysis (`docs/v5-policy-failure-analysis.md`) shows the WebFAQ
+under-lift is **mostly first-stage recall failure** (positives absent from candidate lists), which no
+reranker can recover. Card/README stay *Experimental; not recommended* (raw **and** policy-gated).
+See `outputs/v5-small-rag/V5_RESULTS.md`.
+
+## v6 — dense RAG recall + standalone reranker (active product track; run `validate_release_2026.py --require-v6-dense-artifacts --require-v6-raw-reranker-artifacts`)
+- [x] Plan recorded (`docs/v6-dense-rag-and-reranker-plan.md`).
+- [x] **Dense first-stage recall** improved + measured directly under the harness over the real
+      corpus: WebFAQ **Recall@100 0.651 → 0.964** (`docs/dense-recall-gate.md`).
+- [x] **Standalone reranker** trained on multi-domain teacher-scored union lists and measured as
+      **RAW** lift over FIXED candidate lists (no serving policy).
+- [x] **GerDaLIR/legal is diagnostic-only** for the RAG track; active RAG evals are **WebFAQ / local
+      RAG / GermanQuAD / DT-test**.
+
+**Gate rules (enforced by `validate_release_2026.py`):**
+- [ ] **Dense embedder** is recommended **only if the dense-recall gate passes** AND recall/eval
+      reports exist — `check_v6_dense_recommendation`. (Currently advisory-fail on top-50; not promoted.)
+- [ ] **Reranker** is recommended **only if the RAW reranker gate passes** —
+      `check_v6_raw_reranker_recommendation`. (**Raw gate FAILED 2026-06-16:** WebFAQ Δ +0.036,
+      GermanQuAD Δ −0.086 / 21% catastrophic → over-reranks near-ceiling; NOT promoted.)
+- [x] **Policy-gated/bounded/abstain results are diagnostic-only** and may **never** be promotion
+      evidence (`check_no_policy_result_as_promotion_evidence` + `check_no_policy_gated_recommendation`).
+- [x] **No model card implies a serving wrapper is required** to make a model safe.
+- [x] **No public-eval leakage** (`check_no_public_eval_leakage_v6` + manifest eval-only check).
+- [x] The dense embedder may be recommended **independently** of the reranker.
+
+**Run executed 2026-06-16 (RTX A6000).** Dense retriever = the win (recall fixed). Raw reranker =
+NOT promoted (over-reranks near-ceiling guardrail lists; a model problem, not recall, and not maskable
+by a serving policy). See `outputs/v6-reranker/raw_gate.md`, `outputs/v6-dense-rag/dense_recall_gate.json`.
 
 ## Non-blocking — hygiene
 - [ ] `make all` green; CI green on py3.10–3.12.

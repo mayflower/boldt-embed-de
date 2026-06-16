@@ -1,0 +1,139 @@
+{
+  "eval_set": "germanquad",
+  "n_queries": 1500,
+  "total_positives": 1500,
+  "recall": {
+    "recall@10": 0.961333,
+    "recall@20": 0.975333,
+    "recall@50": 0.975333,
+    "recall@100": 0.975333,
+    "recall@200": 0.975333
+  },
+  "positive_in_top_10_rate": 0.961333,
+  "first_stage_ndcg10": 0.905778,
+  "oracle_ndcg10_retriever": 0.975333,
+  "oracle_ndcg10_with_injected": 1.0,
+  "upper_bound_reranker_lift_realistic": 0.069555,
+  "upper_bound_reranker_lift_if_perfect_candidates": 0.094222,
+  "illusory_lift_from_injection": 0.024667,
+  "missing_positive_count": 37,
+  "missing_positive_rate": 0.024667,
+  "missing_by_domain": {
+    "unknown": 37
+  },
+  "missing_by_query_style": {
+    "unknown": 37
+  },
+  "missing_by_source": {
+    "injected_only": 37
+  },
+  "candidate_source_contribution": {
+    "total_positives": 1500,
+    "bm25_hits": 1463,
+    "dense_hits": 0,
+    "other_retriever_hits": 0,
+    "bm25_only": 1463,
+    "dense_only": 0,
+    "overlap_bm25_and_dense": 0,
+    "union_any_retriever": 1463,
+    "injected_only_not_retrieved": 37,
+    "absent_from_list": 0,
+    "has_dense_source": false
+  },
+  "bottleneck": {
+    "primary": "reranker_quality",
+    "detail": "positives are retrieved but ranked low; a better reranker could realistically lift nDCG@10 by up to 0.069555.",
+    "realistic_reranker_ceiling": 0.069555,
+    "no_dense_first_stage": true
+  },
+  "examples": [
+    {
+      "query_id": "gq650",
+      "domain": "unknown",
+      "query_style": "unknown",
+      "query": "Wie heißen die Lehrer an der Uni?",
+      "missing_positive": "g137",
+      "missing_positive_text": "Universität\n\n=== Struktur ===\nBildungsgänge im deutschen Bildungssystem\nIn Deutschland sind die meisten Universitäten heute als rechtsfähige öffentlich-rechtliche Körperschaften organisiert und unters",
+      "first_stage_ndcg10": 0.0,
+      "oracle_ndcg10_retriever": 0.0,
+      "note": "positive present only via injected/oracle source — first stage never retrieved it"
+    },
+    {
+      "query_id": "gq870",
+      "domain": "unknown",
+      "query_style": "unknown",
+      "query": "Aus welcher Epoche stammt das erste nachgewiesene kultivierte Getreide?",
+      "missing_positive": "g171",
+      "missing_positive_text": "Jungsteinzeit\n\n== Zeitliche Einteilung der neolithischen Kulturen Vorderasiens und Europas ==\nDie Ausbreitung der Neolithischen Kulturen ausgehend vom südöstlichen Mittelmeerraum in den Nordosten Euro",
+      "first_stage_ndcg10": 0.0,
+      "oracle_ndcg10_retriever": 0.0,
+      "note": "positive present only via injected/oracle source — first stage never retrieved it"
+    },
+    {
+      "query_id": "gq176",
+      "domain": "unknown",
+      "query_style": "unknown",
+      "query": "Woher kommen die meisten ausländischen Touristen Berns?",
+      "missing_positive": "g42",
+      "missing_positive_text": "Bern\n\n==== Tourismus ====\n+ Übernachtungen in Hotelbetrieben\nBern ist eines der meistbesuchten Zentren des nationalen und internationalen Städtetourismus. Laut einem Bericht des ''BAK Basel Economics'",
+      "first_stage_ndcg10": 0.0,
+      "oracle_ndcg10_retriever": 0.0,
+      "note": "positive present only via injected/oracle source — first stage never retrieved it"
+    },
+    {
+      "query_id": "gq1682",
+      "domain": "unknown",
+      "query_style": "unknown",
+      "query": "Haben Tiere im Vergleich zu Menschen oft einen Herzinfakt?",
+      "missing_positive": "g359",
+      "missing_positive_text": "Herzinfarkt\n\n== Myokardinfarkt bei Tieren ==\nAnders als beim Menschen wird der Herzmuskelinfarkt bei Tieren nur selten beobachtet. Zudem sind bei Haussäugetieren, im Gegensatz zur meist nichtinfektiös",
+      "first_stage_ndcg10": 0.0,
+      "oracle_ndcg10_retriever": 0.0,
+      "note": "positive present only via injected/oracle source — first stage never retrieved it"
+    },
+    {
+      "query_id": "gq2032",
+      "domain": "unknown",
+      "query_style": "unknown",
+      "query": "Was ist die Heimat von Ursäugern?",
+      "missing_positive": "g440",
+      "missing_positive_text": "Säugetiere\n\n== Verbreitung und Lebensräume ==\nSäugetiere sind weltweit verbreitet, sie finden sich auf allen Kontinenten, in allen Ozeanen sowie auf den meisten Inseln. Ursäuger sind auf Australien un",
+      "first_stage_ndcg10": 0.0,
+      "oracle_ndcg10_retriever": 0.0,
+      "note": "positive present only via injected/oracle source — first stage never retrieved it"
+    },
+    {
+      "query_id": "gq909",
+      "domain": "unknown",
+      "query_style": "unknown",
+      "query": "Als was verstehen sich viele griechisch-stämmigen Menschen im Ausland?",
+      "missing_positive": "g175",
+      "missing_positive_text": "Griechen\n\n=== Die griechischen Auswanderer ===\nMigration ist ein beinahe kontinuierlicher Bestandteil der Geschichte der Griechen: Man kann vier Phasen griechischer Auswanderung aus dem Stammland defi",
+      "first_stage_ndcg10": 0.0,
+      "oracle_ndcg10_retriever": 0.0,
+      "note": "positive present only via injected/oracle source — first stage never retrieved it"
+    },
+    {
+      "query_id": "gq972",
+      "domain": "unknown",
+      "query_style": "unknown",
+      "query": "Was ist die Zeitdimension von subklinischen Infektionen?",
+      "missing_positive": "g185",
+      "missing_positive_text": "Infektion\n\n=== Symptomauffälligkeit bzw. Abwehrkraft des Organismus ===\n* Stumme (symptomlose, asymptomatische, inapparente) Infektion: Wenn das Immunsystem gesund und der Erreger an den Menschen ange",
+      "first_stage_ndcg10": 0.0,
+      "oracle_ndcg10_retriever": 0.0,
+      "note": "positive present only via injected/oracle source — first stage never retrieved it"
+    },
+    {
+      "query_id": "gq498",
+      "domain": "unknown",
+      "query_style": "unknown",
+      "query": "In welchem Land hat man das Famicon verkauft?",
+      "missing_positive": "g101",
+      "missing_positive_text": "Nintendo_Entertainment_System\n\n== Geschichte ==\nFamily Computer (Famicom), japanische Version des NES\nNintendo ''Advanced Video System'' mit Zubehör (1984)\nNach einigen erfolgreichen Spielhallenautoma",
+      "first_stage_ndcg10": 0.0,
+      "oracle_ndcg10_retriever": 0.0,
+      "note": "positive present only via injected/oracle source — first stage never retrieved it"
+    }
+  ]
+}

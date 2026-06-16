@@ -1,8 +1,18 @@
 # v5 — small German RAG retriever + reranker (plan)
 
-**Status:** planning. Config: `configs/experiments/v5_small_rag.json`
-(validated by `src/boldt_embed/v5_rag_config.py`). Supersedes the v4 reranker track as the active
-product target. v1–v4 are kept historical/diagnostic.
+> **Status: EXECUTED — reranker NOT promoted; track CLOSED, superseded by v6.** The v5 RAW reranker
+> failed its hardness-aware promotion gate (GermanQuAD −0.0285, 16.9% catastrophic). The follow-on
+> **policy work (rerank-or-abstain, conservative + rank-preservation, preservation grid, bounded
+> `margin_override`) is DIAGNOSTIC ONLY — not the product, and never a serving recommendation.** The
+> frozen bounded policy also failed promotion on a held-out near-ceiling guardrail (WebFAQ policy Δ
+> +0.0245 < +0.05), and failure analysis (`docs/v5-policy-failure-analysis.md`) traced the WebFAQ
+> under-lift to **first-stage recall failure** (positives absent from candidate lists). The active
+> product track is now **dense first-stage recall + a standalone reranker** —
+> see `docs/v6-dense-rag-and-reranker-plan.md`.
+
+**Original status:** planning. Config: `configs/experiments/v5_small_rag.json`
+(validated by `src/boldt_embed/v5_rag_config.py`). Superseded the v4 reranker track. v1–v4 are kept
+historical/diagnostic.
 
 ## Why v5 (what v4 taught us)
 

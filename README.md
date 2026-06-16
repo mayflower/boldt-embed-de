@@ -46,7 +46,7 @@ reranker that does **not** generalize. It stays **Experimental / not promoted** 
 GermanQuAD/DT-test first stages were near-ceiling (recall 0.96–0.99, oracle 1.0) so reranking only
 churns near-perfect lists — a tiny negative delta there is noise, not failure.
 
-**Next active target — `v5-small-rag`** (`docs/v5-small-rag-plan.md`,
+**`v5-small-rag` — EXECUTED, now historical/diagnostic (superseded by v6)** (`docs/v5-small-rag-plan.md`,
 `configs/experiments/v5_small_rag.json`): a **small, deployable** German RAG retriever + reranker
 trained on **diverse** question styles (FAQ, QA-passage, web non-FAQ, long-doc, German stress,
 local RAG) with **hardness-aware** candidate lists. Promotion is driven by sets with real headroom
@@ -64,21 +64,37 @@ Hardness-aware gate (`outputs/v5-small-rag/V5_RESULTS.md`): WebFAQ +0.1665 (prim
 headroom, but **the promotion gate FAILS**. The v5 reranker is **Experimental — not recommended for
 production reranking.** Failure mode: over-reranking near-ceiling first-stage lists.
 
-**v5 mitigations — EXECUTED:** (1) a production-feasible **rerank-or-abstain** policy (features-only,
-fit on dev) and (2) a **conservative reranker** trained with a **rank-preservation loss** on
-high-first-stage-confidence lists (`boldt-rag-reranker-v5-conservative`). Both reduce near-ceiling
-GermanQuAD churn — combined, GermanQuAD goes from **−0.0285 (raw) → +0.0243** overall and
-catastrophic **0.169 → 0.074**, with WebFAQ +0.0975 / DT-test +0.0193. **Real measured progress, but
-the gate still FAILS** (residual catastrophic 0.074 > 0.03 on near-ceiling GermanQuAD lists).
+**v5 policy experiments — DIAGNOSTIC ONLY (not the product):** rerank-or-abstain, a conservative
+reranker with a rank-preservation loss, a preservation grid (lp04/lp06/lp08), and a bounded
+`margin_override` serving policy were all executed. They are useful **diagnostics** but **not the
+product goal** — we do **not** recommend a policy-gated serving workaround. Two firm conclusions:
+(1) **no λ makes raw always-rerank safe** on GermanQuAD (catastrophic stays 0.11–0.18), so retraining
+did not change the answer; (2) the frozen bounded policy was evaluated on a held-out near-ceiling
+guardrail and **FAILED its promotion gate** (WebFAQ policy Δ **+0.0245 < +0.05**). Failure analysis
+(`docs/v5-policy-failure-analysis.md`) shows the WebFAQ under-lift is **mostly first-stage recall
+failure**: in 234/344 failing queries the positive is **absent from the candidate list** (BM25 never
+retrieved it), so **no reranker — bounded or raw — can recover it.**
 
-**v5 preservation grid — EXECUTED (lp04/lp06/lp08):** **Training more preservation variants did not
-fix raw reranking.** No λ makes raw always-rerank safe on GermanQuAD (catastrophic stays 0.11–0.18;
-lp04 worse), while bounded `margin_override` passes on *every* checkpoint including the original —
-so retraining did not change the deployable answer (WebFAQ lift did not collapse). No new checkpoint
-is promoted. The **v5 reranker remains Experimental — not recommended as a raw always-reranker.**
-**Next step: freeze and validate the bounded policy** on a held-out near-ceiling guardrail (the
-remaining catastrophic drops are policy-fixable, not a training problem). See
-`outputs/v5-small-rag/V5_RESULTS.md` and `docs/benchmark-report.md` §6o.
+**Conclusion — scope reset to v6 (the actual product):** the **v5 reranker stays Experimental — not
+recommended** (raw or policy-gated). The next target is **dense first-stage recall + standalone
+reranker quality measured directly under the harness**, not a serving wrapper. See
+`docs/v6-dense-rag-and-reranker-plan.md`, `outputs/v5-small-rag/V5_RESULTS.md`, and
+`docs/benchmark-report.md` §6o–§6p.
+
+**`v6` — EXECUTED (2026-06-16, RTX A6000): dense retriever is the win; raw reranker FAILS its gate.**
+The Boldt dense v6 retriever **materially fixes first-stage recall** over the real WebFAQ corpus:
+**Recall@100 0.651 → 0.964** (missing-positive rate 0.349 → 0.036; `docs/dense-recall-gate.md`,
+`outputs/v6-dense-rag/`). A standalone reranker was then trained on multi-domain teacher-scored union
+lists (449,832 Qwen3-Reranker-8B pairs, no policy loss) and evaluated **RAW**: it **FAILS the
+promotion gate** — WebFAQ Δ +0.036 (< +0.05) and **GermanQuAD Δ −0.086 with 21% catastrophic drops**
+(it over-reranks near-ceiling guardrail lists; `outputs/v6-reranker/raw_gate.md`). Active RAG evals:
+**WebFAQ / local RAG / GermanQuAD / DT-test**; **GerDaLIR/legal is diagnostic-only**. Both models stay
+**not recommended** until their gates pass: the **dense embedder** needs the dense-recall gate
+(`scripts/check_dense_recall_gate.py`, currently advisory-fail on top-50), the **reranker** needs the
+RAW reranker gate (`scripts/check_v6_raw_reranker_gate.py`, failed). **Policy-gated/bounded/abstain
+results are diagnostic-only and never promotion evidence; no serving wrapper is required for safety**
+— all enforced by `scripts/validate_release_2026.py` (`--require-v6-dense-artifacts`,
+`--require-v6-raw-reranker-artifacts`). See `docs/v6-raw-reranker-gate.md`.
 
 Training data follows a strict **train≠eval** rule (`docs/data/training-datasets-research-2026.md`):
 benchmark datasets (GermanQuAD/GerDaLIR/MMTEB) are held out; training uses non-benchmark

@@ -1,0 +1,138 @@
+{
+  "eval_set": "webfaq_dense_v6",
+  "n_queries": 1360,
+  "total_positives": 1360,
+  "recall": {
+    "recall@10": 0.759559,
+    "recall@20": 0.813971,
+    "recall@50": 0.907353,
+    "recall@100": 0.963235
+  },
+  "positive_in_top_10_rate": 0.759559,
+  "first_stage_ndcg10": 0.684232,
+  "oracle_ndcg10_retriever": 0.963235,
+  "oracle_ndcg10_with_injected": 0.963235,
+  "upper_bound_reranker_lift_realistic": 0.279003,
+  "upper_bound_reranker_lift_if_perfect_candidates": 0.279003,
+  "illusory_lift_from_injection": 0.0,
+  "missing_positive_count": 50,
+  "missing_positive_rate": 0.036765,
+  "missing_by_domain": {
+    "faq_real": 50
+  },
+  "missing_by_query_style": {
+    "faq_real": 50
+  },
+  "missing_by_source": {
+    "absent": 50
+  },
+  "candidate_source_contribution": {
+    "total_positives": 1360,
+    "bm25_hits": 0,
+    "dense_hits": 1310,
+    "other_retriever_hits": 0,
+    "bm25_only": 0,
+    "dense_only": 1310,
+    "overlap_bm25_and_dense": 0,
+    "union_any_retriever": 1310,
+    "injected_only_not_retrieved": 0,
+    "absent_from_list": 50,
+    "has_dense_source": true
+  },
+  "bottleneck": {
+    "primary": "reranker_quality",
+    "detail": "positives are retrieved but ranked low; a better reranker could realistically lift nDCG@10 by up to 0.279003.",
+    "realistic_reranker_ceiling": 0.279003,
+    "no_dense_first_stage": false
+  },
+  "examples": [
+    {
+      "query_id": "q96f517ef110a7124",
+      "domain": "faq_real",
+      "query_style": "faq_real",
+      "query": "",
+      "missing_positive": "d1c6cd92cdaa5e14f",
+      "missing_positive_text": "",
+      "first_stage_ndcg10": 0.0,
+      "oracle_ndcg10_retriever": 0.0,
+      "note": "positive absent from candidate list entirely"
+    },
+    {
+      "query_id": "q509223b7cea72df0",
+      "domain": "faq_real",
+      "query_style": "faq_real",
+      "query": "",
+      "missing_positive": "d1c6cd92cdaa5e14f",
+      "missing_positive_text": "",
+      "first_stage_ndcg10": 0.0,
+      "oracle_ndcg10_retriever": 0.0,
+      "note": "positive absent from candidate list entirely"
+    },
+    {
+      "query_id": "qe3655852989e6ef2",
+      "domain": "faq_real",
+      "query_style": "faq_real",
+      "query": "",
+      "missing_positive": "d1c6cd92cdaa5e14f",
+      "missing_positive_text": "",
+      "first_stage_ndcg10": 0.0,
+      "oracle_ndcg10_retriever": 0.0,
+      "note": "positive absent from candidate list entirely"
+    },
+    {
+      "query_id": "q7f7f1446e0a00501",
+      "domain": "faq_real",
+      "query_style": "faq_real",
+      "query": "",
+      "missing_positive": "d1c6cd92cdaa5e14f",
+      "missing_positive_text": "",
+      "first_stage_ndcg10": 0.0,
+      "oracle_ndcg10_retriever": 0.0,
+      "note": "positive absent from candidate list entirely"
+    },
+    {
+      "query_id": "qd2b193ff6c96fcbb",
+      "domain": "faq_real",
+      "query_style": "faq_real",
+      "query": "",
+      "missing_positive": "de86a29d6c372059f",
+      "missing_positive_text": "",
+      "first_stage_ndcg10": 0.0,
+      "oracle_ndcg10_retriever": 0.0,
+      "note": "positive absent from candidate list entirely"
+    },
+    {
+      "query_id": "q150f7c3603a687f1",
+      "domain": "faq_real",
+      "query_style": "faq_real",
+      "query": "",
+      "missing_positive": "d1c6cd92cdaa5e14f",
+      "missing_positive_text": "",
+      "first_stage_ndcg10": 0.0,
+      "oracle_ndcg10_retriever": 0.0,
+      "note": "positive absent from candidate list entirely"
+    },
+    {
+      "query_id": "q1cc93331f3ca75ca",
+      "domain": "faq_real",
+      "query_style": "faq_real",
+      "query": "",
+      "missing_positive": "d1c6cd92cdaa5e14f",
+      "missing_positive_text": "",
+      "first_stage_ndcg10": 0.0,
+      "oracle_ndcg10_retriever": 0.0,
+      "note": "positive absent from candidate list entirely"
+    },
+    {
+      "query_id": "qbdb06a842f3254f5",
+      "domain": "faq_real",
+      "query_style": "faq_real",
+      "query": "",
+      "missing_positive": "d1c6cd92cdaa5e14f",
+      "missing_positive_text": "",
+      "first_stage_ndcg10": 0.0,
+      "oracle_ndcg10_retriever": 0.0,
+      "note": "positive absent from candidate list entirely"
+    }
+  ]
+}

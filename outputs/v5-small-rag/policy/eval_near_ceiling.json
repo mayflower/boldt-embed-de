@@ -1,0 +1,28 @@
+{
+  "eval_set": "near_ceiling",
+  "role": "primary",
+  "ranking_mode": "policy_gated",
+  "n_queries": 716,
+  "first_stage_ndcg@10": 1.0,
+  "raw_rerank_ndcg@10": 0.991221,
+  "policy_ndcg@10": 0.999485,
+  "policy_delta": -0.000515,
+  "raw_delta": -0.008779,
+  "catastrophic_drop_rate": 0.001397,
+  "abstain_rate": 0.001397,
+  "lock_rate": 0.998603,
+  "blend_rate": 0.998603,
+  "margin_override_rate": 0.001397,
+  "max_downshift_distribution": {
+    "0": 1,
+    "1": 81,
+    "2": 634
+  },
+  "medium_hard_lift": null,
+  "no_room_delta": -0.000515,
+  "bucket_counts": {
+    "no_room": 716
+  },
+  "first_stage_unranked_candidates": 0,
+  "queries_with_unranked_candidates": 0
+}

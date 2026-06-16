@@ -1,0 +1,30 @@
+{
+  "eval_set": "webfaq",
+  "role": "primary",
+  "ranking_mode": "policy_gated",
+  "n_queries": 1360,
+  "first_stage_ndcg@10": 0.606067,
+  "raw_rerank_ndcg@10": 0.745651,
+  "policy_ndcg@10": 0.630587,
+  "policy_delta": 0.02452,
+  "raw_delta": 0.139584,
+  "catastrophic_drop_rate": 0.000735,
+  "abstain_rate": 0.016176,
+  "lock_rate": 0.983824,
+  "blend_rate": 0.982353,
+  "margin_override_rate": 0.052941,
+  "max_downshift_distribution": {
+    "0": 22,
+    "1": 149,
+    "2": 1189
+  },
+  "medium_hard_lift": 0.05386,
+  "no_room_delta": -0.000503,
+  "bucket_counts": {
+    "hard": 500,
+    "medium": 126,
+    "no_room": 734
+  },
+  "first_stage_unranked_candidates": 469,
+  "queries_with_unranked_candidates": 469
+}

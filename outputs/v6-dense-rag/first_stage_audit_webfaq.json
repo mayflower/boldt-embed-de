@@ -1,0 +1,139 @@
+{
+  "eval_set": "webfaq",
+  "n_queries": 1360,
+  "total_positives": 1360,
+  "recall": {
+    "recall@10": 0.650735,
+    "recall@20": 0.655147,
+    "recall@50": 0.655147,
+    "recall@100": 0.655147,
+    "recall@200": 0.655147
+  },
+  "positive_in_top_10_rate": 0.650735,
+  "first_stage_ndcg10": 0.596869,
+  "oracle_ndcg10_retriever": 0.655147,
+  "oracle_ndcg10_with_injected": 1.0,
+  "upper_bound_reranker_lift_realistic": 0.058278,
+  "upper_bound_reranker_lift_if_perfect_candidates": 0.403131,
+  "illusory_lift_from_injection": 0.344853,
+  "missing_positive_count": 469,
+  "missing_positive_rate": 0.344853,
+  "missing_by_domain": {
+    "faq_real": 469
+  },
+  "missing_by_query_style": {
+    "faq_real": 469
+  },
+  "missing_by_source": {
+    "injected_only": 469
+  },
+  "candidate_source_contribution": {
+    "total_positives": 1360,
+    "bm25_hits": 891,
+    "dense_hits": 0,
+    "other_retriever_hits": 0,
+    "bm25_only": 891,
+    "dense_only": 0,
+    "overlap_bm25_and_dense": 0,
+    "union_any_retriever": 891,
+    "injected_only_not_retrieved": 469,
+    "absent_from_list": 0,
+    "has_dense_source": false
+  },
+  "bottleneck": {
+    "primary": "first_stage_recall",
+    "detail": "34.5% of positives were never retrieved — the reranker cannot see them. Fix retrieval / candidate-list construction, not the reranker.",
+    "realistic_reranker_ceiling": 0.058278,
+    "no_dense_first_stage": true
+  },
+  "examples": [
+    {
+      "query_id": "qba7287681818122a",
+      "domain": "faq_real",
+      "query_style": "faq_real",
+      "query": "Wie lange dauert eine Autofahrt von Sitten nach Montreux?",
+      "missing_positive": "df6b10f9985e70c83",
+      "missing_positive_text": "Fahrzeit:\n39 min\nDiese Zeit wird für das Fahren mit der maximal zulässigen Geschwindigkeit unter Berücksichtigung der Einschränkungen der Verkehrsregeln berechnet.\n55 km mit einer Höchstgeschwindigkei",
+      "first_stage_ndcg10": 0.0,
+      "oracle_ndcg10_retriever": 0.0,
+      "note": "positive present only via injected/oracle source — first stage never retrieved it"
+    },
+    {
+      "query_id": "qcedd7101273eec77",
+      "domain": "faq_real",
+      "query_style": "faq_real",
+      "query": "Wie lange dauert eine Autofahrt von Steinpoint nach Wiesing?",
+      "missing_positive": "df392ffd87bc01904",
+      "missing_positive_text": "Fahrzeit:\n14 min\nDiese Zeit wird für das Fahren mit der maximal zulässigen Geschwindigkeit unter Berücksichtigung der Einschränkungen der Verkehrsregeln berechnet.\n11 km mit einer Höchstgeschwindigkei",
+      "first_stage_ndcg10": 0.0,
+      "oracle_ndcg10_retriever": 0.0,
+      "note": "positive present only via injected/oracle source — first stage never retrieved it"
+    },
+    {
+      "query_id": "q67b44a2202451251",
+      "domain": "faq_real",
+      "query_style": "faq_real",
+      "query": "Wie viel kostet es, von Leoben nach Edlach zu fahren?",
+      "missing_positive": "d63dadd98cd4121a8",
+      "missing_positive_text": "Kraftstoffkosten:\n7,3 EUR\nDiese Kraftstoffkosten werden berechnet als: (Routenlänge 61 km / 100 km) * (Kraftstoffverbrauch 8 L/100 km) * (Kraftstoffpreis 1.5 EUR / L)\nSie können den Kraftstoffverbrauc",
+      "first_stage_ndcg10": 0.0,
+      "oracle_ndcg10_retriever": 0.0,
+      "note": "positive present only via injected/oracle source — first stage never retrieved it"
+    },
+    {
+      "query_id": "qa84deaa17effa36d",
+      "domain": "faq_real",
+      "query_style": "faq_real",
+      "query": "Wieviel kostet der Aufenthalt in der Hotel Wuzhen wangjinli Boutique?",
+      "missing_positive": "d538eb30fc4848a28",
+      "missing_positive_text": "Die Preise beginnen bei CNY900, Dies hängt vom Zimmertyp und dem Datum ab.",
+      "first_stage_ndcg10": 0.0,
+      "oracle_ndcg10_retriever": 0.0,
+      "note": "positive present only via injected/oracle source — first stage never retrieved it"
+    },
+    {
+      "query_id": "q350cf3c26129e8ed",
+      "domain": "faq_real",
+      "query_style": "faq_real",
+      "query": "Wie viele Stunden ist Rüdtligen von Boll mit dem Flugzeug entfernt?",
+      "missing_positive": "d74e539c79b9a3e2f",
+      "missing_positive_text": "Das Verkehrsflugzeug Boeing 737 benötigt 4 min, um die Strecke von 65 km bei einer Reisegeschwindigkeit von 800 km/h zurückzulegen.\nDas Kleinflugzeug \"Cessna 172\" braucht 17 min, um diese Strecke mit ",
+      "first_stage_ndcg10": 0.0,
+      "oracle_ndcg10_retriever": 0.0,
+      "note": "positive present only via injected/oracle source — first stage never retrieved it"
+    },
+    {
+      "query_id": "q8e4ba7240914ba0e",
+      "domain": "faq_real",
+      "query_style": "faq_real",
+      "query": "Wie viel kostet es, von Wiesing nach Völs zu fahren?",
+      "missing_positive": "de3af4ddc3c748430",
+      "missing_positive_text": "Kraftstoffkosten:\n5,5 EUR\nDiese Kraftstoffkosten werden berechnet als: (Routenlänge 46 km / 100 km) * (Kraftstoffverbrauch 8 L/100 km) * (Kraftstoffpreis 1.5 EUR / L)\nSie können den Kraftstoffverbrauc",
+      "first_stage_ndcg10": 0.0,
+      "oracle_ndcg10_retriever": 0.0,
+      "note": "positive present only via injected/oracle source — first stage never retrieved it"
+    },
+    {
+      "query_id": "q42ab4f4419486265",
+      "domain": "faq_real",
+      "query_style": "faq_real",
+      "query": "Wie viel kostet es, von Inning nach Maria Ellend zu fahren?",
+      "missing_positive": "dbd6fde05314f1076",
+      "missing_positive_text": "Kraftstoffkosten:\n13,7 EUR\nDiese Kraftstoffkosten werden berechnet als: (Routenlänge 116 km / 100 km) * (Kraftstoffverbrauch 8 L/100 km) * (Kraftstoffpreis 1.48 EUR / L)\nSie können den Kraftstoffverbr",
+      "first_stage_ndcg10": 0.0,
+      "oracle_ndcg10_retriever": 0.0,
+      "note": "positive present only via injected/oracle source — first stage never retrieved it"
+    },
+    {
+      "query_id": "q7c5f23ab255d7e91",
+      "domain": "faq_real",
+      "query_style": "faq_real",
+      "query": "Wie lange dauert ein Hubschrauberflug von Treglwang nach Schwanberg?",
+      "missing_positive": "d45008a580bc513a0",
+      "missing_positive_text": "Der schnelle Helikopter \"Eurocopter AS350\" oder \"Hughes OH-6 Cayuse\" braucht 23 min, um die Strecke von 92 km bei einer Reisegeschwindigkeit von 240 km/h zurückzulegen.\nDer beliebte \"Robinson R44\" ben",
+      "first_stage_ndcg10": 0.0,
+      "oracle_ndcg10_retriever": 0.0,
+      "note": "positive present only via injected/oracle source — first stage never retrieved it"
+    }
+  ]
+}

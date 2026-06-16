@@ -158,6 +158,54 @@ Always true of this reranker:
 - it is **evaluated as lift over first-stage candidates** (nDCG@10 delta), not standalone;
 - relevance scoring over German text (incl. legal/admin) is **not legal advice**.
 
+## v5 RAG + policy experiments (diagnostic only) — and the v6 scope reset
+
+**Status: Experimental; never recommended — neither raw nor policy-gated.** The v5 RAG reranker
+improved on v4 where there is headroom (WebFAQ +0.1665, DT-test +0.0211), but its **RAW always-rerank
+promotion gate FAILED** (GermanQuAD −0.0285, 16.9% catastrophic drops). A reranker becomes
+recommended only once its **raw** lift over **fixed** candidate lists passes the raw gate — enforced
+by `validate_release_2026.py`.
+
+The follow-on serving experiments are **diagnostics only** and are **never** a production
+recommendation:
+
+- rerank-or-abstain — diagnostic only; never a production recommendation.
+- conservative reranker with a rank-preservation loss — diagnostic only.
+- preservation grid (lp04/lp06/lp08) — diagnostic only; no checkpoint promoted.
+- the bounded `margin_override` serving experiment — diagnostic only; never a serving recommendation.
+
+We never recommend any policy-gated serving workaround. The frozen bounded experiment was evaluated
+on a held-out near-ceiling guardrail and **also failed** its promotion gate (WebFAQ policy
+Δ +0.0245 < +0.05). Failure analysis (`docs/v5-policy-failure-analysis.md`) shows the WebFAQ
+under-lift is **mostly first-stage recall failure**: in 234/344 failing queries the positive is
+**absent from the candidate list**, so **no reranker — raw or bounded — can recover it.**
+
+**Next product target (v6, `docs/v6-dense-rag-and-reranker-plan.md`):** improve **dense first-stage
+recall** and train a **standalone reranker** whose quality is measured **directly under the harness**
+(raw lift over fixed candidate lists), not via any serving policy. Policy artifacts remain in the repo
+strictly as diagnostics/analysis. GerDaLIR (legal) stays diagnostic-only and never gates.
+
+## v6 RAW reranker — EXECUTED (2026-06-16, RTX A6000), gate FAILED → NOT promoted
+
+Recall was fixed first (dense Boldt-v6: WebFAQ Recall@100 0.65 → 0.96), then a standalone reranker
+was trained on multi-domain teacher-scored union lists (449,832 Qwen3-Reranker-8B pairs;
+positive-absent lists excluded from BCE/pairwise; **no policy loss**) and evaluated **RAW** over fixed
+candidate lists (`outputs/v6-reranker/raw_gate.md`):
+
+| eval set | role | raw Δ nDCG@10 | catastrophic | gate |
+|---|---|--:|--:|:--|
+| webfaq | primary | +0.0358 | 0.050 | fail (< +0.05) |
+| germanquad | guardrail | **−0.0864** | **0.207** | fail |
+| dt_test | guardrail | +0.0036 | 0.007 | pass |
+
+**Gate FAIL → the reranker is NOT promoted.** It lifts hard/medium queries strongly (GermanQuAD hard
++0.38) but **over-reranks near-ceiling lists** (GermanQuAD no_room −0.127), a model-level failure —
+**not** a recall problem (recall is fixed) and **not** something a serving policy may mask. The
+reranker becomes recommended **only when the v6 RAW reranker gate passes**
+(`scripts/check_v6_raw_reranker_gate.py`); it does not. No serving wrapper is required to make this
+model safe — there is no safe-via-wrapper claim, and policy-gated/bounded/abstain results are
+diagnostic-only and never promotion evidence.
+
 ## License
 - **Code:** Apache-2.0. **Base weights:** apache-2.0 (verified 2026-05-28).
 - **Derivative weights:** intended apache-2.0, contingent on training-data licenses (ADR-004).

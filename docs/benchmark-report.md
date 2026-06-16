@@ -435,8 +435,8 @@ while WebFAQ and DT-test stay healthy. The gate **still fails**: the remaining f
 **catastrophic tail risk on near-ceiling GermanQuAD lists** — conservative-only trips
 `germanquad_catastrophic` (0.122 > 0.05) and conservative+abstain trips it (0.074 > 0.03) plus
 marginally `dt_test_beats_always_rerank`. The original −0.07 regression is now a small residual
-tail. The reranker stays **Experimental / not recommended**; next lever is a bounded / top-
-preserving rerank policy. See `outputs/v5-small-rag/V5_RESULTS.md`.
+tail. The reranker stays **Experimental / not recommended**. These conservative/abstain variants are
+**diagnostics only**, not the product — see the scope reset in §6p. `outputs/v5-small-rag/V5_RESULTS.md`.
 
 ### 6o. v5 conservative preservation grid — negative training result, positive policy confirmation (2026-06-15)
 
@@ -458,9 +458,36 @@ high-confidence lists during training, which do not transfer to GermanQuAD's nea
 the same transfer gap that broke the fitted policy threshold. **WebFAQ lift did NOT collapse** (lp08
 even improved it to +0.196), so none are "too conservative". **Bounded `margin_override` passes the
 gate on every checkpoint including the original**, so retraining did not change the deployable
-answer. **No new checkpoint promoted** (lp04/lp06/lp08); the original conservative checkpoint +
-bounded policy remains the best candidate. Next: freeze and validate the bounded policy on a
-held-out near-ceiling guardrail. See `outputs/v5-small-rag/grid/grid_comparison.md`.
+answer. **No new checkpoint promoted** (lp04/lp06/lp08); the original conservative checkpoint plus
+the bounded experiment was the best *diagnostic* candidate. The bounded policy was then frozen and
+validated on a held-out near-ceiling guardrail — see §6p. `outputs/v5-small-rag/grid/grid_comparison.md`.
+
+### 6p. Frozen bounded-policy validation FAILED → scope reset to v6 (dense recall + standalone reranker)
+
+The frozen bounded `margin_override` policy was evaluated against its promotion gate on a held-out,
+train-disjoint **near-ceiling guardrail** (716 WebFAQ lists) plus WebFAQ/GermanQuAD/DT-test. Result
+(`outputs/v5-small-rag/policy/promotion_gate.md`):
+
+| eval set | role | policy Δ | raw Δ | catastrophic | gate |
+|---|---|--:|--:|--:|:--|
+| webfaq | primary (lift) | **+0.0245** | +0.1396 | 0.0007 | **fail (< +0.05)** |
+| near_ceiling | primary guardrail | −0.0005 | −0.0088 | 0.0014 | pass |
+| germanquad | guardrail | +0.0369 | +0.0087 | 0.0033 | pass |
+| dt_test | guardrail | +0.0175 | +0.0212 | 0.0000 | pass |
+
+**The bounded policy FAILED its promotion gate** on exactly one condition — the WebFAQ lift bar. The
+policy is a safe do-no-harm wrapper (every guardrail passes; it beats raw on GermanQuAD and
+near-ceiling), but the bounds that guarantee safety throttle WebFAQ lift below +0.05. Failure
+analysis (`outputs/v5-small-rag/policy/failure_analysis.md`, `docs/v5-policy-failure-analysis.md`)
+shows the WebFAQ under-lift is **dominated (234/344) by first-stage recall failure**: the positive is
+**absent from the candidate list** (BM25 never retrieved it; first-stage nDCG = 0), so **no
+reranker — raw or bounded — can recover it.**
+
+**Scope reset.** The policy/bounded-rerank work is **diagnostic only and not the product**; we do not
+ship a policy-gated serving workaround. The actual product is a **Boldt dense German RAG embedder +
+a standalone reranker**, with quality measured **directly under the harness**. The next active track
+is **dense first-stage recall + standalone reranker quality** — see
+`docs/v6-dense-rag-and-reranker-plan.md`. v5 is closed: reranker stays Experimental / not recommended.
 
 ## 7. Matryoshka truncation analysis
 Storage scales linearly with dim (fp32): 1024→4096 B, 512→2048 B, 256→1024 B, 128→512 B,

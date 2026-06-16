@@ -1,0 +1,20 @@
+{
+  "eval_set": "germanquad",
+  "n_queries": 1500,
+  "corpus_docs": 474,
+  "list_size": 100,
+  "rrf_k": 60,
+  "positive_present_rate": 1.0,
+  "union_recall": {
+    "recall@10": 0.982,
+    "recall@50": 1.0,
+    "recall@100": 1.0
+  },
+  "union_ndcg@10": 0.9276,
+  "gold_source_contribution": {
+    "bm25_only": 6,
+    "dense_only": 17,
+    "both": 1477,
+    "absent": 0
+  }
+}

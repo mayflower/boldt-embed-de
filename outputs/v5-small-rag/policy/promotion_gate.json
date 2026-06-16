@@ -1,0 +1,73 @@
+{
+  "status": "fail",
+  "checks": [
+    {
+      "check": "not_tuned_on_guardrail",
+      "status": "pass",
+      "detail": "policy must not be tuned on GermanQuAD/DT-test"
+    },
+    {
+      "check": "webfaq_policy_delta",
+      "status": "fail",
+      "detail": "+0.0245 (min +0.05)"
+    },
+    {
+      "check": "near_ceiling_catastrophic",
+      "status": "pass",
+      "detail": "0.0014 (max 0.03)"
+    },
+    {
+      "check": "near_ceiling_policy_delta",
+      "status": "pass",
+      "detail": "-0.0005 (min -0.005)"
+    },
+    {
+      "check": "germanquad_catastrophic",
+      "status": "pass",
+      "detail": "0.0033 (max 0.03)"
+    },
+    {
+      "check": "germanquad_policy_delta",
+      "status": "pass",
+      "detail": "+0.0369 (min -0.005)"
+    },
+    {
+      "check": "dt_test_catastrophic",
+      "status": "pass",
+      "detail": "0.0000 (max 0.02)"
+    },
+    {
+      "check": "dt_test_policy_delta",
+      "status": "pass",
+      "detail": "+0.0175 (min -0.005)"
+    },
+    {
+      "check": "germanquad_beats_raw_rerank",
+      "status": "pass",
+      "detail": "policy +0.0369 vs raw +0.0087"
+    },
+    {
+      "check": "near_ceiling_beats_raw_rerank",
+      "status": "pass",
+      "detail": "policy -0.0005 vs raw -0.0088"
+    }
+  ],
+  "failing": [
+    {
+      "check": "webfaq_policy_delta",
+      "status": "fail",
+      "detail": "+0.0245 (min +0.05)"
+    }
+  ],
+  "thresholds": {
+    "webfaq_min_policy_delta": 0.05,
+    "near_ceiling_max_catastrophic": 0.03,
+    "near_ceiling_min_policy_delta": -0.005,
+    "germanquad_max_catastrophic": 0.03,
+    "germanquad_min_policy_delta": -0.005,
+    "dt_test_max_catastrophic": 0.02,
+    "dt_test_min_policy_delta": -0.005
+  },
+  "ignored_diagnostic_sets": [],
+  "raw_always_rerank_recommended": false
+}

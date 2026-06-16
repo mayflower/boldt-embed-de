@@ -70,3 +70,10 @@ outputs/v5-small-rag/train/bm25.json
 outputs/v5-small-rag/train/domain_map.json
 outputs/v5-small-rag/v5-reranker-boldt_run_card.json
 data/raw/v5/*.jsonl
+
+# v6 candidate union lists (large data artifacts; reports stay tracked)
+*_candidate_union.jsonl
+reranker_train_union_lists.jsonl
+
+# proxy/full dense candidate dumps (large data artifacts)
+*_dense_v6_candidates.jsonl

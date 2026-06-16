@@ -1,0 +1,30 @@
+{
+  "eval_set": "germanquad",
+  "role": "guardrail",
+  "ranking_mode": "policy_gated",
+  "n_queries": 1500,
+  "first_stage_ndcg@10": 0.905778,
+  "raw_rerank_ndcg@10": 0.914476,
+  "policy_ndcg@10": 0.942684,
+  "policy_delta": 0.036906,
+  "raw_delta": 0.008698,
+  "catastrophic_drop_rate": 0.003333,
+  "abstain_rate": 0.000667,
+  "lock_rate": 0.999333,
+  "blend_rate": 0.999333,
+  "margin_override_rate": 0.062,
+  "max_downshift_distribution": {
+    "0": 1,
+    "1": 194,
+    "2": 1305
+  },
+  "medium_hard_lift": 0.241368,
+  "no_room_delta": -0.001461,
+  "bucket_counts": {
+    "hard": 104,
+    "medium": 133,
+    "no_room": 1263
+  },
+  "first_stage_unranked_candidates": 37,
+  "queries_with_unranked_candidates": 37
+}

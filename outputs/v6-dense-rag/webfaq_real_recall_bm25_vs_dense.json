@@ -1,0 +1,24 @@
+{
+  "eval": "webfaq_real_corpus",
+  "corpus_docs": 1381,
+  "bm25": {
+    "retriever": "bm25_real_corpus",
+    "queries": 1576,
+    "recall@10": 0.6377,
+    "recall@20": 0.6421,
+    "recall@50": 0.6466,
+    "recall@100": 0.651,
+    "ndcg@10": 0.5859,
+    "positive_in_top100_rate": 0.651
+  },
+  "dense_v6": {
+    "retriever": "dense_boldt_v6",
+    "queries": 1576,
+    "recall@10": 0.7392,
+    "recall@20": 0.7906,
+    "recall@50": 0.8832,
+    "recall@100": 0.9638,
+    "ndcg@10": 0.6708,
+    "positive_in_top100_rate": 0.9638
+  }
+}

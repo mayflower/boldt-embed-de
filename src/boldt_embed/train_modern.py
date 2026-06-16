@@ -272,6 +272,98 @@ def v5_dense_run_card(dataset_report: Dict[str, Any], loss_plan: Dict[str, Any],
     }
 
 
+# ---------------------------------------------------------------- v6 dense RAG (stdlib)
+# v6 target is FIRST-STAGE RECALL (Recall@50/100 + candidate-list coverage), NOT reranker lift.
+FAQ_DOMAINS = ("faq_real", "faq", "webfaq", "webfaq2", "faq_synthetic")
+
+
+def _is_faq_domain(domain: Any) -> bool:
+    d = str(domain or "").lower()
+    return d in FAQ_DOMAINS or d.startswith("faq") or "faq" in d
+
+
+def domain_balanced_examples(examples: Sequence[Dict[str, Any]], *, faq_cap: float = 0.5,
+                             faq_domains: Sequence[str] = FAQ_DOMAINS):
+    """Cap the FAQ share to <= ``faq_cap`` of the kept set, then round-robin interleave domains so
+    NO_DUPLICATES batches are domain-balanced (FAQ never dominates a batch). Deterministic: FAQ is
+    stride-sampled (diversity-preserving) and domains are cycled in sorted order. Returns
+    (ordered_examples, report). Pure stdlib."""
+    faqset = {d.lower() for d in faq_domains}
+
+    def isfaq(e):
+        d = str(e.get("domain") or "").lower()
+        return d in faqset or d.startswith("faq") or "faq" in d
+
+    faq = [e for e in examples if isfaq(e)]
+    nonfaq = [e for e in examples if not isfaq(e)]
+    before: Dict[str, int] = {}
+    for e in examples:
+        before[str(e.get("domain") or "unknown")] = before.get(str(e.get("domain") or "unknown"), 0) + 1
+
+    kept_faq, capped = faq, False
+    if faq and 0.0 < faq_cap < 1.0:
+        max_faq = int((faq_cap / (1.0 - faq_cap)) * len(nonfaq))
+        if len(faq) > max_faq:
+            stride = len(faq) / max_faq if max_faq > 0 else 0.0
+            kept_faq = [faq[int(i * stride)] for i in range(max_faq)] if max_faq > 0 else []
+            capped = True
+    kept = kept_faq + nonfaq
+
+    kb: Dict[str, List[Dict[str, Any]]] = {}
+    for e in kept:
+        kb.setdefault(str(e.get("domain") or "unknown"), []).append(e)
+    domains = sorted(kb)
+    idx = {d: 0 for d in domains}
+    order: List[Dict[str, Any]] = []
+    remaining = len(kept)
+    while remaining > 0:
+        for d in domains:
+            if idx[d] < len(kb[d]):
+                order.append(kb[d][idx[d]])
+                idx[d] += 1
+                remaining -= 1
+    after = {d: len(v) for d, v in sorted(kb.items())}
+    return order, {
+        "faq_cap": faq_cap, "faq_capped": capped,
+        "faq_share_before": round(len(faq) / len(examples), 4) if examples else 0.0,
+        "faq_share_after": round(len(kept_faq) / len(kept), 4) if kept else 0.0,
+        "examples_before": len(examples), "examples_after": len(kept),
+        "by_domain_before": dict(sorted(before.items())), "by_domain_after": after,
+        "batch_strategy": "domain round-robin (balanced) + NO_DUPLICATES",
+    }
+
+
+def build_v6_dense_dataset(pairs: Sequence[Dict[str, Any]],
+                           hardnegs: Optional[Sequence[Dict[str, Any]]] = None,
+                           teacher_scores: Optional[Sequence[Dict[str, Any]]] = None,
+                           *, faq_cap: float = 0.5, teacher_threshold: float = 4.0) -> Dict[str, Any]:
+    """v6 dense-RAG dataset: same leakage-fail-closed + teacher-validation + hard-neg-margin handling
+    as v5, then FAQ-capped, domain-balanced ordering for first-stage-recall training. Pure stdlib."""
+    base = build_v5_dense_dataset(pairs, hardnegs, teacher_scores, teacher_threshold=teacher_threshold)
+    ordered, balance = domain_balanced_examples(base["examples"], faq_cap=faq_cap)
+    report = dict(base["report"])
+    report["domain_balance"] = balance
+    report["examples"] = len(ordered)
+    report["domain_mix"] = balance["by_domain_after"]
+    return {"examples": ordered, "report": report, "errors": base["errors"]}
+
+
+def v6_dense_run_card(dataset_report: Dict[str, Any], loss_plan: Dict[str, Any], *, run_id: str,
+                      model: str, output: str, max_steps: int, batch_size: int, bf16: bool,
+                      gradient_checkpointing: bool, lora: bool = False,
+                      timestamp: Optional[str] = None) -> Dict[str, Any]:
+    card = v5_dense_run_card(dataset_report, loss_plan, run_id=run_id, model=model, output=output,
+                             max_steps=max_steps, bf16=bf16,
+                             gradient_checkpointing=gradient_checkpointing, lora=lora,
+                             timestamp=timestamp)
+    card["batch_size"] = batch_size
+    card["domain_balance"] = dataset_report.get("domain_balance")
+    card["target_metric"] = "Recall@50/100 + candidate-list coverage (NOT reranker lift)"
+    card["purpose"] = ("v6 dense German RAG retriever: raise first-stage recall so candidate lists "
+                       "contain the positives a reranker would otherwise never see")
+    return card
+
+
 # --------------------------------------------------------------- ML layer (lazy import)
 def apply_bidirectional_to_st_module(transformer_module) -> None:
     """Apply the LLM2Vec bidirectional mask patch to a SentenceTransformers Transformer

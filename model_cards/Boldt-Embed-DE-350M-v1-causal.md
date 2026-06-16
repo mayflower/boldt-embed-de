@@ -155,11 +155,37 @@ bi+MNTP is competitive and beats causal in-domain (DT-test 0.967 vs 0.950), but 
 slight out-of-domain legal edge at the current budget. Re-decide on v2 results
 (`docs/v2-generalization-plan.md`).
 
+## v6 dense RAG retrieval (first-stage recall) — the active product target
+
+Measured over the **real** WebFAQ eval corpus (1,381 docs, 1,576 queries, qrels;
+`outputs/v6-dense-rag/webfaq_real_recall_bm25_vs_dense.json`), the v6 dense retriever **materially
+improves first-stage recall over BM25**:
+
+| metric | BM25 | dense Boldt-v6 |
+|---|--:|--:|
+| Recall@100 | 0.651 | **0.964** |
+| Recall@50 | 0.647 | 0.883 |
+| Recall@10 | 0.638 | 0.739 |
+| nDCG@10 | 0.586 | 0.671 |
+
+This is the genuine v6 win: the positives a reranker would otherwise never see are now retrieved
+(missing-positive rate 0.349 → 0.036). **Active RAG evals: WebFAQ, local RAG, GermanQuAD, DT-test.
+GerDaLIR / legal is diagnostic-only for the RAG track and never gates.**
+
+**Promotion rule (enforced by `validate_release_2026.py`):** this variant earns the German-RAG
+first-stage retrieval recommendation **only when the dense-recall gate passes**
+(`scripts/check_dense_recall_gate.py`). As of 2026-06-16 the gate is **advisory-fail**: Recall@100
+(0.964) and oracle nDCG@10 (0.966) pass, but top-50 recall (0.883) is below the 0.90 target, so it is
+**not yet recommended for production retrieval**. No serving wrapper is required to make this model
+safe — it is a standalone dense encoder.
+
 ## Known failure modes
 - **Out-of-domain legal** (GerDaLIR 0.078) trails `multilingual-e5-base` (0.134) — no legal data
   in training; do not rely on it for legal retrieval.
 - **Not legal advice** (see Limitations).
 - In-domain numbers (GermanQuAD/DT-test) are not representative of arbitrary German domains.
+- **Top-50 recall (0.883)** is below the 0.90 gate target — for ~12% of WebFAQ queries the positive
+  is not in the dense top-50 (it is recovered by top-100).
 
 ## License
 - **Code:** Apache-2.0.

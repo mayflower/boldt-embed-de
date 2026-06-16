@@ -499,6 +499,163 @@ def v5_reranker_run_card(report: Dict[str, Any], loss_plan: Dict[str, Any], cap:
     }
 
 
+# ------------------------------------------------- v6 RAW RAG reranker (positive-presence gated)
+def _doc(c: Dict[str, Any]) -> str:
+    return c.get("document") or c.get("text", "")
+
+
+def list_has_positive(row: Dict[str, Any]) -> bool:
+    """A candidate list contains the positive iff a candidate is the gold doc (doc_id in
+    positive_doc_ids), or carries label==1, or is a high_precision_positive. Lists WITHOUT a present
+    positive must never feed BCE/pairwise — their 'negatives' would be FALSE negatives."""
+    posids = set(row.get("positive_doc_ids") or [])
+    for c in row.get("candidates", []):
+        if (c.get("doc_id") and c.get("doc_id") in posids) or c.get("label") == 1 \
+                or c.get("high_precision_positive") is True:
+            return True
+    return False
+
+
+def partition_lists_by_positive_presence(rows: Sequence[Dict[str, Any]]):
+    """Split candidate lists into (positive_present, positive_absent). Pure stdlib."""
+    present = [r for r in rows if list_has_positive(r)]
+    absent = [r for r in rows if not list_has_positive(r)]
+    return present, absent
+
+
+def v6_pairwise_present_only(rows: Sequence[Dict[str, Any]], *, max_pairs_per_query: int = 8,
+                             min_teacher_margin: float = 2.0) -> List[Dict[str, Any]]:
+    """Pairwise (query, positive, negative) ONLY from positive-present lists, pairing a
+    high-precision gold (label==1) with a clear negative (label==0) when the teacher margin clears
+    ``min_teacher_margin``. Uncertain candidates (label None) are never used. Handles document/text."""
+    present, _ = partition_lists_by_positive_presence(rows)
+    out: List[Dict[str, Any]] = []
+    for r in present:
+        pos = [c for c in r.get("candidates", []) if c.get("label") == 1]
+        neg = [c for c in r.get("candidates", []) if c.get("label") == 0]
+        made = 0
+        for p in pos:
+            for n in neg:
+                ps, ns = p.get("teacher_score"), n.get("teacher_score")
+                if ps is None or ns is None or (float(ps) - float(ns)) < min_teacher_margin:
+                    continue
+                out.append({"query": r.get("query", ""), "positive": _doc(p), "negative": _doc(n)})
+                made += 1
+                if made >= max_pairs_per_query:
+                    break
+            if made >= max_pairs_per_query:
+                break
+    return out
+
+
+def v6_pointwise_present_only(rows: Sequence[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """Pointwise BCE ONLY from positive-present lists, confident labels only: high-precision golds
+    (label==1 & high_precision_positive) → 1.0, clear negatives (label==0) → 0.0. Uncertain excluded."""
+    present, _ = partition_lists_by_positive_presence(rows)
+    return scored_lists_to_pointwise_high_confidence(present)
+
+
+def build_v6_listwise_batches(rows: Sequence[Dict[str, Any]], temperature: float = 1.0,
+                              *, present_only: bool = True) -> List[Dict[str, Any]]:
+    """Enriched listwise batches for the v6 raw multi-loss trainer: {query, documents, target,
+    labels, high_precision, teacher_scores}. Listwise distillation is valid on any teacher-scored
+    list; by default we still restrict to positive-present lists (absent lists are diagnostics)."""
+    src = partition_lists_by_positive_presence(rows)[0] if present_only else list(rows)
+    out: List[Dict[str, Any]] = []
+    for r in src:
+        cands = r.get("candidates", [])
+        if len(cands) < 2:
+            continue
+        docs = [_doc(c) for c in cands]
+        tgt = [c.get("teacher_softmax_target") for c in cands]
+        if all(t is not None for t in tgt) and abs(sum(tgt) - 1.0) < 1e-3:
+            target = [float(t) for t in tgt]
+        else:
+            scores = [c.get("teacher_score") for c in cands]
+            target = softmax([float(s) if s is not None else -1e9 for s in scores], temperature)
+        out.append({
+            "query": r.get("query", ""), "documents": docs, "target": target,
+            "labels": [c.get("label") for c in cands],
+            "high_precision": [bool(c.get("high_precision_positive")) for c in cands],
+            "teacher_scores": [c.get("teacher_score") for c in cands],
+        })
+    return out
+
+
+def build_v6_reranker_dataset(rows: Sequence[Dict[str, Any]], *, temperature: float = 1.0,
+                              min_teacher_margin: float = 2.0, max_pairs_per_query: int = 8,
+                              positive_threshold: float = V3_POSITIVE_THRESHOLD) -> Dict[str, Any]:
+    """Build the v6 RAW reranker dataset. Listwise KL over positive-present lists is primary;
+    pairwise + pointwise BCE come ONLY from positive-present lists (absent lists are diagnostics, NOT
+    false negatives). Fails closed on public-benchmark/eval leakage. Pure stdlib."""
+    from .v5_data_mixer import leakage_reason
+    errors: List[str] = []
+    for i, r in enumerate(rows):
+        reason = leakage_reason(r)
+        if reason:
+            errors.append(f"list {i} ({r.get('query_id') or r.get('query', '?')}): "
+                          f"public-benchmark/eval leakage ({reason})")
+    present, absent = partition_lists_by_positive_presence(rows)
+    listwise = build_v6_listwise_batches(rows, temperature, present_only=True)
+    pairwise = v6_pairwise_present_only(rows, max_pairs_per_query=max_pairs_per_query,
+                                        min_teacher_margin=min_teacher_margin)
+    pointwise = v6_pointwise_present_only(rows)
+    rep = v5_reranker_training_report(present, positive_threshold=positive_threshold)
+    margins: List[float] = []
+    for r in present:
+        cands = r.get("candidates", [])
+        pos = [c for c in cands if c.get("label") == 1 and c.get("teacher_score") is not None]
+        if not pos:
+            continue
+        pscore = max(float(c["teacher_score"]) for c in pos)
+        for c in cands:
+            if c.get("label") == 0 and c.get("teacher_score") is not None:
+                margins.append(round(pscore - float(c["teacher_score"]), 4))
+    margin_hist: Dict[str, int] = {}
+    for m in margins:
+        b = "<0" if m < 0 else (">=5" if m >= 5 else f"{int(m)}-{int(m) + 1}")
+        margin_hist[b] = margin_hist.get(b, 0) + 1
+    report = {
+        "lists_in": len(rows), "lists_positive_present": len(present),
+        "lists_positive_absent_excluded": len(absent),
+        "positive_present_rate": round(len(present) / len(rows), 4) if rows else 0.0,
+        "listwise_batches": len(listwise), "pairwise_pairs": len(pairwise),
+        "pointwise_examples": len(pointwise),
+        "teacher_margin": {"pairs": len(margins),
+                           "avg": round(sum(margins) / len(margins), 4) if margins else None,
+                           "distribution": dict(sorted(margin_hist.items()))},
+        "examples_by_domain": rep["examples_by_domain"], "faq_share": rep.get("faq_share"),
+        "nonfaq_share": rep.get("nonfaq_share"), "not_faq_only": rep.get("not_faq_only"),
+        "uncertain_fraction": rep.get("uncertain_fraction"),
+        "candidates_by_source": rep["candidates_by_source"],
+        "absent_positive_diagnostics_only": True, "leakage_rows": len(errors),
+    }
+    return {"listwise": listwise, "pairwise": pairwise, "pointwise": pointwise,
+            "present": present, "absent": absent, "report": report, "errors": errors}
+
+
+def v6_raw_reranker_run_card(report: Dict[str, Any], loss_plan: Dict[str, Any], *, run_id: str,
+                             model_base: str, output: str, bf16: bool, gradient_checkpointing: bool,
+                             lora: bool = False, timestamp: Optional[str] = None) -> Dict[str, Any]:
+    return {
+        "run_id": run_id, "model_base": model_base, "lora": lora, "output": output,
+        "bf16": bf16, "gradient_checkpointing": gradient_checkpointing, "timestamp": timestamp,
+        "loss": loss_plan["loss"], "loss_components": loss_plan["components"],
+        "primary": loss_plan["primary"], "listwise_variant": loss_plan["listwise_variant"],
+        "uncertain_listwise_only": loss_plan["uncertain_listwise_only"],
+        "lists_positive_present": report["lists_positive_present"],
+        "lists_positive_absent_excluded": report["lists_positive_absent_excluded"],
+        "positive_present_rate": report["positive_present_rate"],
+        "absent_excluded_from_bce_pairwise": True,
+        "pairwise_pairs": report["pairwise_pairs"], "pointwise_examples": report["pointwise_examples"],
+        "teacher_margin": report["teacher_margin"],
+        "examples_by_domain": report["examples_by_domain"], "not_faq_only": report["not_faq_only"],
+        "evaluated_by": "RAW reranker lift over FIXED candidate lists (no serving policy); promotion "
+                        "uses the raw reranker gate, never a policy-gated workaround",
+        "no_serving_policy_in_promotion": True,
+    }
+
+
 def candidate_lists_to_listwise(rows: Sequence[Dict[str, Any]], temperature: float = 1.0
                                 ) -> List[Dict[str, Any]]:
     """Per-query listwise batch: target = softmax of teacher_scores when present, else the
@@ -739,6 +896,86 @@ def train_conservative_listwise_reranker(cfg, batches, output_dir, *, lambda_pre
             "mean_listwise_loss": _m(listwise_losses),
             "mean_preservation_loss": _m(preserve_losses),
             "pairwise_loss": None, "pointwise_loss": None}
+
+
+def train_v6_raw_reranker(cfg, batches, output_dir, *, weights=None, epochs=1, max_length=256,
+                          lr=2e-5, temperature=1.0, margin=0.2, min_teacher_margin=2.0,
+                          max_steps=-1, bf16=True, gradient_checkpointing=True, use_lora=False,
+                          device=None) -> Dict[str, Any]:
+    """v6 RAW reranker: listwise KL (PRIMARY) + pairwise margin (positive-present only) + pointwise
+    BCE (high-confidence only), all from a single forward pass over each list's candidates. NO
+    serving-policy loss. ``batches`` come from ``build_v6_listwise_batches`` (each carries
+    labels/high_precision/teacher_scores). ML-only."""
+    import torch
+
+    w = {"listwise": 1.0, "pairwise": 0.5, "pointwise_bce": 0.2}
+    w.update(weights or {})
+    device = device or ("cuda" if torch.cuda.is_available() else "cpu")
+    model, tok = _load_cross_encoder(cfg.model_name_or_path, device, bf16,
+                                     gradient_checkpointing, use_lora)
+    opt = torch.optim.AdamW(model.parameters(), lr=lr)
+    kl = torch.nn.KLDivLoss(reduction="batchmean")
+    bce = torch.nn.BCEWithLogitsLoss()
+    mrl = torch.nn.MarginRankingLoss(margin=margin)
+    model.train()
+    losses, lw_losses, pw_losses, pt_losses = [], [], [], []
+    n_pairwise = n_pointwise = step = 0
+    stop = False
+    for _ in range(epochs):
+        if stop:
+            break
+        for b in batches:
+            enc = _encode_pairs(tok, [(b["query"], d) for d in b["documents"]],
+                                cfg.input_template, max_length, device)
+            logits = model(**enc).logits.squeeze(-1)
+            student_logp = torch.log_softmax(logits / max(temperature, 1e-6), dim=0)
+            target = torch.tensor(b["target"], dtype=torch.float32, device=device)
+            lw = kl(student_logp.unsqueeze(0), target.unsqueeze(0))
+            loss = w["listwise"] * lw
+            lw_losses.append(float(lw.item()))
+            labels = b["labels"]; hp = b["high_precision"]; ts = b["teacher_scores"]
+            # pointwise BCE on confident labels only (high-precision gold / clear negative)
+            idx, tgt = [], []
+            for i, lab in enumerate(labels):
+                if lab == 1 and hp[i]:
+                    idx.append(i); tgt.append(1.0)
+                elif lab == 0:
+                    idx.append(i); tgt.append(0.0)
+            if idx:
+                pt = bce(logits[idx], torch.tensor(tgt, dtype=torch.float32, device=device))
+                loss = loss + w["pointwise_bce"] * pt
+                pt_losses.append(float(pt.item())); n_pointwise += len(idx)
+            # pairwise margin: high-precision pos vs clear neg, teacher margin gated
+            pos_i = [i for i, lab in enumerate(labels) if lab == 1 and hp[i] and ts[i] is not None]
+            neg_i = [i for i, lab in enumerate(labels) if lab == 0 and ts[i] is not None]
+            sp, sn = [], []
+            for pi in pos_i:
+                for ni in neg_i:
+                    if float(ts[pi]) - float(ts[ni]) >= min_teacher_margin:
+                        sp.append(pi); sn.append(ni)
+            if sp:
+                pw = mrl(logits[sp], logits[sn],
+                         torch.ones(len(sp), dtype=logits.dtype, device=device))
+                loss = loss + w["pairwise"] * pw
+                pw_losses.append(float(pw.item())); n_pairwise += len(sp)
+            opt.zero_grad(); loss.backward(); opt.step()
+            losses.append(float(loss.item()))
+            step += 1
+            if max_steps and max_steps > 0 and step >= max_steps:
+                stop = True
+                break
+
+    def _m(xs):
+        return round(sum(xs) / len(xs), 6) if xs else None
+    model.save_pretrained(output_dir); tok.save_pretrained(output_dir)
+    return {"status": "ok", "objective": "v6_raw_listwise+pairwise+pointwise", "output_dir": output_dir,
+            "num_lists": len(batches), "steps": step, "weights": w,
+            "uses_serving_policy": False,
+            "pairwise_pairs_used": n_pairwise, "pointwise_examples_used": n_pointwise,
+            "final_loss": losses[-1] if losses else None,
+            "mean_listwise_loss": _m(lw_losses), "mean_pairwise_loss": _m(pw_losses),
+            "mean_pointwise_loss": _m(pt_losses),
+            "gpu_name": torch.cuda.get_device_name(0) if torch.cuda.is_available() else None}
 
 
 def score_with_student_reranker(model_path, pairs, template, *, max_length=256,

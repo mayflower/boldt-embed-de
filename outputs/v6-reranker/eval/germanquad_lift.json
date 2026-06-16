@@ -1,0 +1,31 @@
+{
+  "eval_set": "germanquad",
+  "role": "guardrail",
+  "ranking_mode": "raw",
+  "n_queries": 1500,
+  "first_stage_ndcg@10": 0.927643,
+  "raw_reranker_ndcg@10": 0.841223,
+  "delta_ndcg@10": -0.08642,
+  "mrr@10": 0.812356,
+  "catastrophic_drop_rate": 0.207333,
+  "positive_present_rate": 1.0,
+  "recall@10_first_stage": 0.982,
+  "recall@10_reranked": 0.929333,
+  "candidate_set_unchanged": true,
+  "candidate_set_changed_queries": 0,
+  "by_hardness_bucket": {
+    "hard": {
+      "n": 63,
+      "delta": 0.381169
+    },
+    "medium": {
+      "n": 151,
+      "delta": 0.064702
+    },
+    "no_room": {
+      "n": 1286,
+      "delta": -0.127071
+    }
+  },
+  "reranker": "outputs/v6-reranker/checkpoints/boldt-rag-reranker-v6"
+}

@@ -1,0 +1,20 @@
+{
+  "eval_set": "webfaq_train",
+  "n_queries": 6000,
+  "corpus_docs": 9960,
+  "list_size": 60,
+  "rrf_k": 60,
+  "positive_present_rate": 0.6788,
+  "union_recall": {
+    "recall@10": 0.6308,
+    "recall@50": 0.6715,
+    "recall@60": 0.6788
+  },
+  "union_ndcg@10": 0.5619,
+  "gold_source_contribution": {
+    "bm25_only": 9,
+    "dense_only": 543,
+    "both": 3658,
+    "absent": 1790
+  }
+}

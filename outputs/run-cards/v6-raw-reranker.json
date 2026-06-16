@@ -1,0 +1,66 @@
+{
+  "run_id": "v6-raw-reranker",
+  "model_base": "Boldt/Boldt-DC-350M",
+  "lora": false,
+  "output": "outputs/v6-reranker/checkpoints/boldt-rag-reranker-v6",
+  "bf16": true,
+  "gradient_checkpointing": false,
+  "timestamp": null,
+  "loss": "listwise_kl+pairwise+pointwise_confident",
+  "loss_components": [
+    "KLDivLoss(listwise)",
+    "MarginRankingLoss",
+    "BCEWithLogitsLoss(high_confidence_only)"
+  ],
+  "primary": "listwise",
+  "listwise_variant": "listwise_kl",
+  "uncertain_listwise_only": true,
+  "lists_positive_present": 6506,
+  "lists_positive_absent_excluded": 994,
+  "positive_present_rate": 0.8675,
+  "absent_excluded_from_bce_pairwise": true,
+  "pairwise_pairs": 51990,
+  "pointwise_examples": 381259,
+  "teacher_margin": {
+    "pairs": 375331,
+    "avg": 13.7395,
+    "distribution": {
+      "0-1": 1435,
+      "1-2": 936,
+      "2-3": 1161,
+      "3-4": 1720,
+      "4-5": 3795,
+      "<0": 2052,
+      ">=5": 364232
+    }
+  },
+  "examples_by_domain": {
+    "faq_real": 2006,
+    "german_stress": 1200,
+    "long_doc_chunks": 800,
+    "qa_passage_non_eval": 2500
+  },
+  "not_faq_only": true,
+  "evaluated_by": "RAW reranker lift over FIXED candidate lists (no serving policy); promotion uses the raw reranker gate, never a policy-gated workaround",
+  "no_serving_policy_in_promotion": true,
+  "training_result": {
+    "status": "ok",
+    "objective": "v6_raw_listwise+pairwise+pointwise",
+    "output_dir": "outputs/v6-reranker/checkpoints/boldt-rag-reranker-v6",
+    "num_lists": 6506,
+    "steps": 6506,
+    "weights": {
+      "listwise": 1.0,
+      "pairwise": 0.5,
+      "pointwise_bce": 0.2
+    },
+    "uses_serving_policy": false,
+    "pairwise_pairs_used": 343258,
+    "pointwise_examples_used": 381259,
+    "final_loss": 0.09191041439771652,
+    "mean_listwise_loss": 0.427721,
+    "mean_pairwise_loss": 0.012286,
+    "mean_pointwise_loss": 0.028634,
+    "gpu_name": "NVIDIA RTX A6000"
+  }
+}

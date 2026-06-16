@@ -1,0 +1,116 @@
+{
+  "run_id": "v6-dense-rag",
+  "model": "outputs/v3-real-domain/checkpoints/boldt-modern-causal-v3",
+  "lora": false,
+  "output": "outputs/v6-dense-rag/checkpoints/boldt-dense-rag-v6",
+  "max_steps": 500,
+  "bf16": true,
+  "gradient_checkpointing": false,
+  "loss_stack": [
+    "CachedMultipleNegativesRankingLoss",
+    "MatryoshkaLoss(dims=[1024, 768, 512, 256, 128, 64])",
+    "MarginMSELoss"
+  ],
+  "batch_sampler": "NO_DUPLICATES",
+  "matryoshka_dims": [
+    1024,
+    768,
+    512,
+    256,
+    128,
+    64
+  ],
+  "num_examples": 28158,
+  "domain_mix": {
+    "faq_real": 3226,
+    "german_stress": 2366,
+    "long_doc_chunks": 1574,
+    "qa_passage_non_eval": 4992,
+    "web": 8000,
+    "wiki_non_eval": 8000
+  },
+  "hard_negative_margins": {
+    "triplets": 33948,
+    "queries_with_hardnegs": 5658,
+    "avg_margin": 11.0377,
+    "margin_distribution": {
+      "0-1": 403,
+      "1-2": 587,
+      "2-3": 753,
+      "3-4": 1235,
+      "4-5": 1487,
+      "<0": 405,
+      ">=5": 29078
+    }
+  },
+  "teacher_validation": {
+    "validated_synthetic": 0,
+    "real_pairs": 22500,
+    "provisional_excluded": 0,
+    "teacher_threshold": 4.0
+  },
+  "has_teacher_scores": true,
+  "has_distill_vectors": false,
+  "timestamp": null,
+  "purpose": "v6 dense German RAG retriever: raise first-stage recall so candidate lists contain the positives a reranker would otherwise never see",
+  "batch_size": 64,
+  "domain_balance": {
+    "faq_cap": 0.5,
+    "faq_capped": false,
+    "faq_share_before": 0.1146,
+    "faq_share_after": 0.1146,
+    "examples_before": 28158,
+    "examples_after": 28158,
+    "by_domain_before": {
+      "faq_real": 3226,
+      "german_stress": 2366,
+      "long_doc_chunks": 1574,
+      "qa_passage_non_eval": 4992,
+      "web": 8000,
+      "wiki_non_eval": 8000
+    },
+    "by_domain_after": {
+      "faq_real": 3226,
+      "german_stress": 2366,
+      "long_doc_chunks": 1574,
+      "qa_passage_non_eval": 4992,
+      "web": 8000,
+      "wiki_non_eval": 8000
+    },
+    "batch_strategy": "domain round-robin (balanced) + NO_DUPLICATES"
+  },
+  "target_metric": "Recall@50/100 + candidate-list coverage (NOT reranker lift)",
+  "bidirectional": false,
+  "executed_loss_stack": [
+    "CachedMultipleNegativesRankingLoss(in-batch negatives)",
+    "MatryoshkaLoss"
+  ],
+  "margin_mse_wired": false,
+  "training_result": {
+    "status": "ok",
+    "output_dir": "outputs/v6-dense-rag/checkpoints/boldt-dense-rag-v6",
+    "base_model": "outputs/v3-real-domain/checkpoints/boldt-modern-causal-v3",
+    "num_examples": 28158,
+    "uses_explicit_negatives": false,
+    "bidirectional": false,
+    "gpu_name": "NVIDIA RTX A6000",
+    "loss_stack": {
+      "base_contrastive": "CachedMultipleNegativesRankingLoss",
+      "matryoshka_dims": [
+        1024,
+        768,
+        512,
+        256,
+        128,
+        64
+      ],
+      "wrapped": "CachedMultipleNegativesRankingLoss -> MatryoshkaLoss(dims=[1024, 768, 512, 256, 128, 64])",
+      "distillation": [
+        "MarginMSELoss"
+      ],
+      "uses_guide_model": false,
+      "teacher_distillation_active": true
+    },
+    "run_id": "v6-dense-rag"
+  }
+}

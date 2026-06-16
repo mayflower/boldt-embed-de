@@ -1,0 +1,35 @@
+{
+  "eval_set": "webfaq",
+  "role": "primary",
+  "ranking_mode": "raw",
+  "n_queries": 1576,
+  "first_stage_ndcg@10": 0.640148,
+  "raw_reranker_ndcg@10": 0.675977,
+  "delta_ndcg@10": 0.035829,
+  "mrr@10": 0.659549,
+  "catastrophic_drop_rate": 0.050127,
+  "positive_present_rate": 0.965736,
+  "recall@10_first_stage": 0.684645,
+  "recall@10_reranked": 0.727157,
+  "candidate_set_unchanged": true,
+  "candidate_set_changed_queries": 0,
+  "by_hardness_bucket": {
+    "hard": {
+      "n": 497,
+      "delta": 0.116806
+    },
+    "impossible": {
+      "n": 54,
+      "delta": 0.0
+    },
+    "medium": {
+      "n": 90,
+      "delta": 0.225646
+    },
+    "no_room": {
+      "n": 935,
+      "delta": -0.023416
+    }
+  },
+  "reranker": "outputs/v6-reranker/checkpoints/boldt-rag-reranker-v6"
+}

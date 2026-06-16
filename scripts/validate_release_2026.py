@@ -58,18 +58,56 @@ V4_RAG_RECOMMENDED_PHRASE = "Recommended for German FAQ/RAG reranking"
 V4_RAG_CARD_DISCLAIMERS = ["not legal advice", "not a dense retriever",
                            "candidate lists only", "lift over"]
 
-# v5 small-RAG: the reranker may be recommended ONLY with the abstention policy AND only if the
-# v5 abstain gate passes. always-rerank must NEVER be recommended.
+# SCOPE RESET (v6): the product is a Boldt dense German RAG embedder + a STANDALONE reranker, each
+# measured DIRECTLY under the harness. Policy-gated serving (rerank-or-abstain / bounded
+# margin_override) is DIAGNOSTIC ONLY and must NEVER be recommended as a production workaround.
+# Reranker promotion requires RAW reranker lift over FIXED candidate lists (the raw v4/v5 gates);
+# policy-gated variants do not count for model promotion.
 V5_SMALL_RAG_REQUIRED_ARTIFACTS = [
     "V5_RESULTS.json",                 # honest run summary
     "eval/v5_rag_lift_gate.json",      # raw (always-rerank) hardness gate
-    "abstain/fit_report.json",         # policy fit (dev only)
-    "abstain/eval_webfaq.json",        # policy eval — primary
-    "abstain/eval_germanquad.json",    # policy eval — guardrail
-    "abstain/eval_dt_test.json",       # policy eval — guardrail
-    "abstain/gate.json",               # policy promotion gate
+    "abstain/fit_report.json",         # policy fit (dev only) — diagnostic
+    "abstain/eval_webfaq.json",        # policy eval — diagnostic
+    "abstain/eval_germanquad.json",    # policy eval — diagnostic
+    "abstain/eval_dt_test.json",       # policy eval — diagnostic
+    "abstain/gate.json",               # policy promotion gate — diagnostic
 ]
+# A RAW reranker recommendation (lift over FIXED candidate lists) is allowed ONLY if the RAW gate
+# passes — never via a serving policy.
+V5_RAW_RECOMMENDED_PHRASE = "Recommended for German RAG reranking over fixed candidate lists"
+RAW_RECOMMENDED_PHRASES = ("Recommended for German FAQ/RAG reranking",   # v4 raw-lift phrase
+                           V5_RAW_RECOMMENDED_PHRASE)                    # v5 raw-lift phrase
+# Kept as a KNOWN-BANNED example: a policy-gated serving recommendation, never allowed.
 V5_RECOMMENDED_PHRASE = "Recommended for German RAG reranking with the abstention policy"
+POLICY_SERVING_TOKENS = ("policy-gated", "policy gated", "bounded policy", "bounded margin_override",
+                         "bounded margin override", "bounded rerank", "abstention policy",
+                         "abstain policy", "rerank-or-abstain", "rerank or abstain", "serving policy",
+                         "margin_override policy")
+RECOMMEND_TOKENS = ("recommend", "production default", "production-ready", "production ready",
+                    "promote to production")
+# A policy line is fine when it is negated or explicitly framed as diagnostics/analysis.
+DIAGNOSTIC_NEGATION = ("not ", "never", "no ", "without", "diagnostic", "analysis only",
+                       "only diagnostic", "experimental", "do not", "don't", "cannot", "isn't")
+BANNED_POLICY_RECOMMENDATION_PHRASES = (
+    V5_RECOMMENDED_PHRASE.lower(), "recommended with the abstention policy",
+    "recommended with policy", "recommended with the bounded policy",
+    "recommended via the bounded policy", "policy-gated reranker is recommended",
+    "recommended as a policy-gated",
+)
+# v6 active RAG track: a Boldt DENSE embedder + a RAW reranker, each gated on its OWN gate. The
+# dense embedder may be recommended only if the dense-recall gate passes AND recall/eval reports
+# exist; the reranker only if the RAW reranker gate passes. GerDaLIR/legal is diagnostic-only.
+V6_DENSE_RECOMMENDED_PHRASE = "Recommended for German RAG first-stage retrieval"
+V6_RAW_RECOMMENDED_PHRASE = "Recommended for German RAG reranking (raw, over fixed candidate lists)"
+V6_DENSE_DIR = ("outputs", "v6-dense-rag")
+V6_RERANKER_DIR = ("outputs", "v6-reranker")
+V6_DENSE_REQUIRED_ARTIFACTS = ["dense_recall_gate.json", "webfaq_real_recall_bm25_vs_dense.json",
+                               "first_stage_audit_webfaq.json"]
+V6_RAW_RERANKER_REQUIRED_ARTIFACTS = ["raw_gate.json", "eval/webfaq_lift.json",
+                                      "eval/germanquad_lift.json", "eval/dt_test_lift.json"]
+V6_RAG_EVAL_SETS = ("webfaq", "local_rag", "germanquad", "dt_test")   # gerdalir/legal = diagnostic
+POLICY_RESULT_MODE_TOKENS = ("bounded", "policy", "abstain", "margin_override")
+
 CARD_TYPES = {
     "Boldt-Embed-DE-350M-v1-causal.md": "embedder",
     "Boldt-Embed-DE-350M-v1-bi.md": "embedder",
@@ -226,8 +264,44 @@ def check_v5_small_rag_artifacts(root: Path) -> List[Issue]:
     return issues
 
 
-def _v5_abstain_gate_passed(root: Path) -> Optional[bool]:
-    p = root / "outputs" / "v5-small-rag" / "abstain" / "gate.json"
+def check_no_policy_gated_recommendation(name: str, text: str) -> List[Issue]:
+    """A model card must NEVER recommend a policy-gated serving workaround (rerank-or-abstain /
+    bounded margin_override). Policy work may be MENTIONED only as diagnostics/analysis — a line that
+    is negated or explicitly diagnostic is fine. Pure function (testable on text)."""
+    issues: List[Issue] = []
+    seen: set = set()
+    low = text.lower()
+    for p in BANNED_POLICY_RECOMMENDATION_PHRASES:
+        if p in low and p not in seen:
+            seen.add(p)
+            issues.append(("card_recommends_policy_gated_serving", f"{name}: '{p}'"))
+    for raw_line in text.split("\n"):
+        line = raw_line.lower()
+        if (any(t in line for t in POLICY_SERVING_TOKENS) and any(r in line for r in RECOMMEND_TOKENS)
+                and not any(nz in line for nz in DIAGNOSTIC_NEGATION)):
+            key = raw_line.strip()[:100]
+            if key not in seen:
+                seen.add(key)
+                issues.append(("card_recommends_policy_gated_serving", f"{name}: {key}"))
+    return issues
+
+
+def check_reranker_raw_recommendation(text: str, *, v4_gate_passed: Optional[bool],
+                                      v5_raw_gate_passed: Optional[bool]) -> List[Issue]:
+    """A RAW reranker recommendation (lift over FIXED candidate lists) is allowed ONLY if the
+    corresponding RAW gate passed. While a raw gate fails, the reranker stays NOT recommended."""
+    issues: List[Issue] = []
+    if "Recommended for German FAQ/RAG reranking" in text and v4_gate_passed is not True:
+        issues.append(("raw_reranker_recommended_without_passing_gate",
+                       "v4 FAQ/RAG raw recommendation but the v4 raw gate did not pass"))
+    if V5_RAW_RECOMMENDED_PHRASE in text and v5_raw_gate_passed is not True:
+        issues.append(("raw_reranker_recommended_without_passing_gate",
+                       "v5 raw recommendation but the v5 raw gate did not pass"))
+    return issues
+
+
+def _v5_raw_gate_passed(root: Path) -> Optional[bool]:
+    p = root / "outputs" / "v5-small-rag" / "eval" / "v5_rag_lift_gate.json"
     if not p.exists():
         return None
     try:
@@ -237,24 +311,125 @@ def _v5_abstain_gate_passed(root: Path) -> Optional[bool]:
 
 
 def check_v5_small_rag_card(root: Path) -> List[Issue]:
-    """The reranker card may claim the v5 abstention recommendation ONLY if the v5 abstain gate
-    passed, and must NEVER recommend always-rerank."""
+    """v5 reranker card: policy-gated serving (incl. the abstention recommendation) is NEVER
+    allowed (diagnostics only); always-rerank must never be recommended; and a RAW v5 recommendation
+    is allowed only if the RAW v5 gate passed."""
     issues: List[Issue] = []
     card = root / "model_cards" / "Boldt-Reranker-DE-350M-v1.md"
     if not card.exists():
         return [("missing_card", "Boldt-Reranker-DE-350M-v1.md")]
     text = card.read_text(encoding="utf-8")
-    if V5_RECOMMENDED_PHRASE in text and _v5_abstain_gate_passed(root) is not True:
-        issues.append(("v5_card_recommended_without_passing_gate",
-                       "card claims the v5 abstention recommendation but the v5 gate did not pass"))
-    low = text.lower()
-    if "always-rerank" in low and "recommend" in low:
-        # crude co-occurrence guard: never recommend always-rerank
-        for line in low.splitlines():
-            if "always-rerank" in line and "recommend" in line and "not" not in line and "never" not in line:
-                issues.append(("v5_card_recommends_always_rerank", line.strip()[:80]))
-                break
+    for _k, d in check_no_policy_gated_recommendation("Boldt-Reranker-DE-350M-v1.md", text):
+        issues.append(("v5_card_recommends_policy_gated_serving", d))
+    for line in text.lower().split("\n"):
+        if "always-rerank" in line and "recommend" in line and "not" not in line and "never" not in line:
+            issues.append(("v5_card_recommends_always_rerank", line.strip()[:80]))
+            break
+    if V5_RAW_RECOMMENDED_PHRASE in text and _v5_raw_gate_passed(root) is not True:
+        issues.append(("v5_card_raw_recommended_without_passing_gate",
+                       "card claims a raw v5 RAG recommendation but the raw v5 gate did not pass"))
     return issues
+
+
+# --------------------------------------------------------------- v6 active product track
+def _gate_status_pass(path: Path) -> Optional[bool]:
+    if not path.exists():
+        return None
+    try:
+        return json.loads(path.read_text(encoding="utf-8")).get("status") == "pass"
+    except Exception:
+        return None
+
+
+def _v6_dense_gate_passed(root: Path) -> Optional[bool]:
+    return _gate_status_pass(root.joinpath(*V6_DENSE_DIR) / "dense_recall_gate.json")
+
+
+def _v6_raw_reranker_gate_passed(root: Path) -> Optional[bool]:
+    return _gate_status_pass(root.joinpath(*V6_RERANKER_DIR) / "raw_gate.json")
+
+
+def check_v6_dense_recommendation(root: Path) -> List[Issue]:
+    """A dense-embedder card may claim the v6 retrieval recommendation ONLY if the dense-recall gate
+    passed AND the recall/eval reports exist (provenance). Rule 1 + 'no dense rec without reports'."""
+    issues: List[Issue] = []
+    dense_dir = root.joinpath(*V6_DENSE_DIR)
+    recall_report = dense_dir / "webfaq_real_recall_bm25_vs_dense.json"
+    for fname in ("Boldt-Embed-DE-350M-v1-causal.md", "Boldt-Embed-DE-350M-v1-bi.md"):
+        card = root / "model_cards" / fname
+        if not card.exists():
+            continue
+        if V6_DENSE_RECOMMENDED_PHRASE in card.read_text(encoding="utf-8"):
+            if not recall_report.exists():
+                issues.append(("dense_recommended_without_recall_reports", fname))
+            if _v6_dense_gate_passed(root) is not True:
+                issues.append(("dense_recommended_without_passing_dense_gate", fname))
+    return issues
+
+
+def check_v6_raw_reranker_recommendation(root: Path) -> List[Issue]:
+    """The reranker card may claim the v6 RAW recommendation ONLY if the v6 RAW reranker gate passed."""
+    card = root / "model_cards" / "Boldt-Reranker-DE-350M-v1.md"
+    if not card.exists():
+        return []
+    if V6_RAW_RECOMMENDED_PHRASE in card.read_text(encoding="utf-8") \
+            and _v6_raw_reranker_gate_passed(root) is not True:
+        return [("v6_reranker_recommended_without_passing_raw_gate",
+                 "card claims the v6 raw recommendation but the v6 raw reranker gate did not pass")]
+    return []
+
+
+def check_no_policy_result_as_promotion_evidence(root: Path) -> List[Issue]:
+    """No policy-gated/bounded/abstain result may serve as promotion evidence: every v6 eval-lift
+    report and the raw gate must be evaluated in 'raw' ranking mode."""
+    issues: List[Issue] = []
+    eval_dir = root.joinpath(*V6_RERANKER_DIR) / "eval"
+    if eval_dir.exists():
+        for p in sorted(eval_dir.glob("*_lift.json")):
+            try:
+                mode = str(json.loads(p.read_text(encoding="utf-8")).get("ranking_mode", "")).lower()
+            except Exception:
+                continue
+            if mode and (mode != "raw" or any(t in mode for t in POLICY_RESULT_MODE_TOKENS)):
+                issues.append(("policy_result_as_promotion_evidence", f"{p.name}: ranking_mode={mode}"))
+    gate = root.joinpath(*V6_RERANKER_DIR) / "raw_gate.json"
+    if gate.exists():
+        try:
+            g = json.loads(gate.read_text(encoding="utf-8"))
+            if str(g.get("evaluated_ranking_mode", "raw")).lower() != "raw" \
+                    or g.get("policy_gated_result_used") is True:
+                issues.append(("policy_result_as_promotion_evidence", "raw_gate.json not raw-only"))
+        except Exception:
+            pass
+    return issues
+
+
+def check_no_public_eval_leakage_v6(root: Path) -> List[Issue]:
+    """Surface public-eval leakage flagged by the v6 gates (in addition to the manifest-level check)."""
+    issues: List[Issue] = []
+    for gate_path in (root.joinpath(*V6_RERANKER_DIR) / "raw_gate.json",):
+        if not gate_path.exists():
+            continue
+        try:
+            g = json.loads(gate_path.read_text(encoding="utf-8"))
+        except Exception:
+            continue
+        for c in g.get("checks", []):
+            if c.get("check") == "no_public_eval_leakage" and c.get("status") == "fail":
+                issues.append(("public_eval_leakage", f"{gate_path.name}: {c.get('detail')}"))
+    return issues
+
+
+def check_v6_dense_artifacts(root: Path) -> List[Issue]:
+    d = root.joinpath(*V6_DENSE_DIR)
+    return [("missing_v6_dense_artifact", a) for a in V6_DENSE_REQUIRED_ARTIFACTS
+            if not (d / a).exists()]
+
+
+def check_v6_raw_reranker_artifacts(root: Path) -> List[Issue]:
+    d = root.joinpath(*V6_RERANKER_DIR)
+    return [("missing_v6_raw_reranker_artifact", a) for a in V6_RAW_RERANKER_REQUIRED_ARTIFACTS
+            if not (d / a).exists()]
 
 
 def _summary_unknown_license_rows(summary: Dict[str, object]) -> int:
@@ -306,7 +481,9 @@ def run_checks(root: Path = ROOT, results_dir: Path = None,
                require_v2_artifacts: bool = False,
                require_v3_artifacts: bool = False,
                require_v4_rag_artifacts: bool = False,
-               require_v5_small_rag_artifacts: bool = False) -> Dict[str, object]:
+               require_v5_small_rag_artifacts: bool = False,
+               require_v6_dense_artifacts: bool = False,
+               require_v6_raw_reranker_artifacts: bool = False) -> Dict[str, object]:
     tracked = git_tracked_files(root)
     results_dir = results_dir or (root / "outputs")
     checks: Dict[str, List[Issue]] = {
@@ -318,6 +495,7 @@ def run_checks(root: Path = ROOT, results_dir: Path = None,
         "reranker_promotion": check_reranker_promotion(results_dir),
         "model_cards": [],
     }
+    checks["policy_gated_serving"] = []          # always-on: never recommend a serving policy
     for fname, ctype in CARD_TYPES.items():
         path = root / "model_cards" / fname
         if not path.exists():
@@ -326,6 +504,20 @@ def run_checks(root: Path = ROOT, results_dir: Path = None,
         text = path.read_text(encoding="utf-8")
         checks["model_cards"] += check_overclaims(fname, text)
         checks["model_cards"] += check_card_sections(fname, text, ctype)
+        checks["policy_gated_serving"] += check_no_policy_gated_recommendation(fname, text)
+    # always-on: a RAW reranker recommendation is gated on the RAW gates (policy variants don't count)
+    rcard = root / "model_cards" / "Boldt-Reranker-DE-350M-v1.md"
+    if rcard.exists():
+        checks["reranker_raw_recommendation"] = check_reranker_raw_recommendation(
+            rcard.read_text(encoding="utf-8"),
+            v4_gate_passed=_v4_gate_passed(root / "outputs" / "v4-rag-reranker"),
+            v5_raw_gate_passed=_v5_raw_gate_passed(root))
+    # always-on v6 active-track enforcement: recommendations gated on the real gates; no policy
+    # result as promotion evidence; surface public-eval leakage flagged by the v6 gates.
+    checks["v6_dense_recommendation"] = check_v6_dense_recommendation(root)
+    checks["v6_raw_reranker_recommendation"] = check_v6_raw_reranker_recommendation(root)
+    checks["no_policy_result_as_promotion_evidence"] = check_no_policy_result_as_promotion_evidence(root)
+    checks["public_eval_leakage_v6"] = check_no_public_eval_leakage_v6(root)
     checklist = root / "RELEASE_CHECKLIST.md"
     checks["checklist"] = (check_checklist_references_runcards(checklist.read_text(encoding="utf-8"))
                            if checklist.exists() else [("missing", "RELEASE_CHECKLIST.md")])
@@ -344,6 +536,11 @@ def run_checks(root: Path = ROOT, results_dir: Path = None,
     if require_v5_small_rag_artifacts:
         checks["v5_small_rag_artifacts"] = check_v5_small_rag_artifacts(root)
         checks["v5_small_rag_card"] = check_v5_small_rag_card(root)
+    # v6 active track: dense embedder + RAW reranker artifact-readiness (RELEASE gate).
+    if require_v6_dense_artifacts:
+        checks["v6_dense_artifacts"] = check_v6_dense_artifacts(root)
+    if require_v6_raw_reranker_artifacts:
+        checks["v6_raw_reranker_artifacts"] = check_v6_raw_reranker_artifacts(root)
     issues = [i for group in checks.values() for i in group]
     return {"status": "pass" if not issues else "fail", "issue_count": len(issues),
             "checks": {k: [list(i) for i in v] for k, v in checks.items()}}
@@ -371,12 +568,18 @@ def main() -> int:
                     help="RELEASE gate: v4 RAG reranker artifacts + card-vs-gate (no legal/admin requirement)")
     ap.add_argument("--require-v5-small-rag-artifacts", action="store_true",
                     help="RELEASE gate: v5 small-RAG artifacts + abstention-policy card-vs-gate")
+    ap.add_argument("--require-v6-dense-artifacts", action="store_true",
+                    help="RELEASE gate: v6 dense-embedder recall/eval reports + dense-recall gate")
+    ap.add_argument("--require-v6-raw-reranker-artifacts", action="store_true",
+                    help="RELEASE gate: v6 RAW reranker gate + raw lift reports (no policy)")
     args = ap.parse_args()
     report = run_checks(results_dir=Path(args.results_dir) if args.results_dir else None,
                         require_v2_artifacts=args.require_v2_artifacts,
                         require_v3_artifacts=args.require_v3_artifacts,
                         require_v4_rag_artifacts=args.require_v4_rag_artifacts,
-                        require_v5_small_rag_artifacts=args.require_v5_small_rag_artifacts)
+                        require_v5_small_rag_artifacts=args.require_v5_small_rag_artifacts,
+                        require_v6_dense_artifacts=args.require_v6_dense_artifacts,
+                        require_v6_raw_reranker_artifacts=args.require_v6_raw_reranker_artifacts)
     print(json.dumps(report, ensure_ascii=False, indent=2) if args.format == "json"
           else render_markdown(report))
     return 0 if report["status"] == "pass" else 1

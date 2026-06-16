@@ -1,0 +1,74 @@
+{
+  "status": "fail",
+  "checks": [
+    {
+      "check": "no_policy_gated_card",
+      "status": "pass",
+      "detail": "model card must not recommend a policy workaround"
+    },
+    {
+      "check": "no_public_eval_leakage",
+      "status": "pass",
+      "detail": "no public-eval leakage in candidate lists"
+    },
+    {
+      "check": "webfaq_delta",
+      "status": "fail",
+      "detail": "+0.0358 (min +0.05)"
+    },
+    {
+      "check": "webfaq_positive_present",
+      "status": "pass",
+      "detail": "0.966 (min 0.8)"
+    },
+    {
+      "check": "germanquad_delta",
+      "status": "fail",
+      "detail": "-0.0864 (min -0.005)"
+    },
+    {
+      "check": "germanquad_catastrophic",
+      "status": "fail",
+      "detail": "0.2073 (max 0.03)"
+    },
+    {
+      "check": "dt_test_delta",
+      "status": "pass",
+      "detail": "+0.0036 (min -0.005)"
+    },
+    {
+      "check": "dt_test_catastrophic",
+      "status": "pass",
+      "detail": "0.0070 (max 0.02)"
+    }
+  ],
+  "failing": [
+    {
+      "check": "webfaq_delta",
+      "status": "fail",
+      "detail": "+0.0358 (min +0.05)"
+    },
+    {
+      "check": "germanquad_delta",
+      "status": "fail",
+      "detail": "-0.0864 (min -0.005)"
+    },
+    {
+      "check": "germanquad_catastrophic",
+      "status": "fail",
+      "detail": "0.2073 (max 0.03)"
+    }
+  ],
+  "thresholds": {
+    "webfaq_min_delta": 0.05,
+    "local_rag_min_delta": 0.03,
+    "germanquad_min_delta": -0.005,
+    "dt_test_min_delta": -0.005,
+    "germanquad_max_catastrophic": 0.03,
+    "dt_test_max_catastrophic": 0.02,
+    "primary_min_positive_present_rate": 0.8
+  },
+  "ignored_diagnostic_sets": [],
+  "evaluated_ranking_mode": "raw",
+  "policy_gated_result_used": false
+}

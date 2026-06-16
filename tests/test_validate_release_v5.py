@@ -31,15 +31,13 @@ def _root(card_text, gate_status=None, with_artifacts=False):
 
 
 class TestV5Card(unittest.TestCase):
-    def test_recommended_without_passing_gate_is_flagged(self):
+    def test_abstention_recommendation_is_banned_regardless_of_gate(self):
+        # SCOPE RESET: the abstention/policy-gated recommendation is NEVER allowed (diagnostics only).
         card = f"# card\n{V.V5_RECOMMENDED_PHRASE}.\n"
-        issues = V.check_v5_small_rag_card(_root(card, gate_status="fail"))
-        self.assertTrue(any(k == "v5_card_recommended_without_passing_gate" for k, _ in issues))
-
-    def test_recommended_with_passing_gate_is_allowed(self):
-        card = f"# card\n{V.V5_RECOMMENDED_PHRASE}.\n"
-        issues = V.check_v5_small_rag_card(_root(card, gate_status="pass"))
-        self.assertFalse(any(k == "v5_card_recommended_without_passing_gate" for k, _ in issues))
+        for status in ("fail", "pass"):
+            issues = V.check_v5_small_rag_card(_root(card, gate_status=status))
+            self.assertTrue(any(k == "v5_card_recommends_policy_gated_serving" for k, _ in issues),
+                            f"abstention phrase must be banned even with gate={status}")
 
     def test_experimental_card_is_clean(self):
         card = "# card\nExperimental; not recommended for production reranking.\n"

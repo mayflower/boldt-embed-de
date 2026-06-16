@@ -1,0 +1,43 @@
+{
+  "status": "pass",
+  "errors": [],
+  "num_selected": 716,
+  "target_size": 1000,
+  "excluded_public_or_listed_source": 0,
+  "near_ceiling_definition": {
+    "min_first_stage_ndcg10": 0.95,
+    "min_oracle_ndcg10": 0.98,
+    "min_candidates": 20,
+    "min_sources": 1
+  },
+  "by_domain": {
+    "faq_real": 716
+  },
+  "candidate_source_distribution": {
+    "bm25": 716
+  },
+  "first_stage_ndcg_distribution": {
+    "[0.95,0.97)": 0,
+    "[0.97,0.99)": 0,
+    "[0.99,1.0)": 0,
+    ">=1.0": 716
+  },
+  "oracle_ndcg_distribution": {
+    "[0.98,0.99)": 0,
+    "[0.99,1.0)": 0,
+    ">=1.0": 716
+  },
+  "multi_source_fraction": 0.0,
+  "leakage_check": {
+    "public_eval_sources_excluded": 0,
+    "exclude_tokens": [
+      "dt_test",
+      "germanquad"
+    ]
+  },
+  "training_overlap": {
+    "checked_against_n_train_queries": 5660,
+    "overlap_count": 0,
+    "overlap_query_ids": []
+  }
+}

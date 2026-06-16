@@ -1,0 +1,50 @@
+{
+  "policy_id": "bounded_margin_override_v1",
+  "policy_type": "bounded_margin_override",
+  "model_checkpoint": "outputs/v5-small-rag/checkpoints/boldt-rag-reranker-v5-conservative",
+  "recommended_mode": "policy_gated_only",
+  "raw_always_rerank_recommended": false,
+  "features_allowed_at_inference": [
+    "first_stage_rank",
+    "first_stage_score",
+    "reranker_score",
+    "candidate_source",
+    "num_candidates",
+    "num_candidate_sources"
+  ],
+  "features_forbidden_at_inference": [
+    "qrels",
+    "label",
+    "oracle_ndcg",
+    "hardness_bucket",
+    "eval_set_name",
+    "positive_doc_ids"
+  ],
+  "bounds": {
+    "preserve_first_stage_top_k": 3,
+    "max_downshift": 2,
+    "max_upshift_without_margin": 5,
+    "margin_override": 3.0,
+    "blend_alpha_high_confidence": 0.85,
+    "blend_alpha_default": 0.65
+  },
+  "applicability": {
+    "task": "German RAG reranking over fixed candidate lists",
+    "not_for": [
+      "unconditional reranking",
+      "standalone retrieval",
+      "legal advice"
+    ]
+  },
+  "validation": {
+    "required_eval_sets": [
+      "webfaq_heldout",
+      "germanquad_guardrail",
+      "dt_test_guardrail",
+      "near_ceiling_heldout"
+    ],
+    "max_germanquad_catastrophic": 0.03,
+    "min_webfaq_delta_ndcg10": 0.05,
+    "min_dt_test_delta_ndcg10": -0.005
+  }
+}
