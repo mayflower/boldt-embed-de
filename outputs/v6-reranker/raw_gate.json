@@ -70,5 +70,12 @@
   },
   "ignored_diagnostic_sets": [],
   "evaluated_ranking_mode": "raw",
-  "policy_gated_result_used": false
+  "policy_gated_result_used": false,
+  "model_promotable": false,
+  "promotion_blocker": "raw_reranker_gate_failed",
+  "failed_checks": [
+    "webfaq_delta_below_target",
+    "germanquad_negative_delta",
+    "germanquad_catastrophic_rate"
+  ]
 }

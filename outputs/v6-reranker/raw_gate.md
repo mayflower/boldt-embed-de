@@ -20,3 +20,9 @@ _Decides whether the reranker MODEL is promotable. RAW lift over fixed candidate
 - ✅ dt_test_catastrophic: 0.0070 (max 0.02)
 
 **Verdict: NOT promoted** — failing: ['webfaq_delta', 'germanquad_delta', 'germanquad_catastrophic'].
+
+**Run-card metadata:** `model_promotable: false`, `promotion_blocker: raw_reranker_gate_failed`,
+`failed_checks: [webfaq_delta_below_target, germanquad_negative_delta, germanquad_catastrophic_rate]`.
+The run card `outputs/run-cards/v6-raw-reranker.json` is stamped `invalid_for_promotion: true`. This
+is a RAW-gate failure (the model over-reranks near-ceiling guardrail lists), **not** a forced research
+run — no serving policy may substitute.

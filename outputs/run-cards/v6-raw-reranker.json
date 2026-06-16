@@ -62,5 +62,14 @@
     "mean_pairwise_loss": 0.012286,
     "mean_pointwise_loss": 0.028634,
     "gpu_name": "NVIDIA RTX A6000"
-  }
+  },
+  "invalid_for_promotion": true,
+  "forced_research_run": false,
+  "promotion_blocker": "raw_reranker_gate_failed",
+  "failed_checks": [
+    "webfaq_delta_below_target",
+    "germanquad_negative_delta",
+    "germanquad_catastrophic_rate"
+  ],
+  "raw_reranker_gate_status": "fail"
 }

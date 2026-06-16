@@ -112,5 +112,18 @@
       "teacher_distillation_active": true
     },
     "run_id": "v6-dense-rag"
+  },
+  "dense_recall_gate": {
+    "status": "fail",
+    "blocking": false,
+    "advisory": true,
+    "positives_absent": false,
+    "stop_file_written": false,
+    "reason": "advisory fail due to Recall@50 0.883 < 0.90; positives present (Recall@100 0.964) so no STOP condition and reranker training is not blocked",
+    "recall_at_10": 0.739,
+    "recall_at_50": 0.883,
+    "recall_at_100": 0.964,
+    "ndcg_at_10": 0.671,
+    "missing_positive_rate": 0.036
   }
 }

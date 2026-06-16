@@ -43,7 +43,7 @@
     "local_rag_recall_at_100": 0.9
   },
   "positives_absent": false,
-  "stop_reason": "Reranker cannot recover missing positives. Improve dense retrieval or candidate generation first.",
+  "stop_reason": null,
   "metrics": {
     "webfaq": {
       "recall_at_100": 0.9638,
@@ -52,5 +52,9 @@
       "missing_positive_rate": 0.0343,
       "candidate_union_size": 200
     }
-  }
+  },
+  "blocking": false,
+  "advisory": true,
+  "stop_file_written": false,
+  "advisory_reason": "Advisory fail: Recall@50 0.883 < 0.90 target. Positives ARE present (Recall@100 0.964, positives_absent=false), so NO STOP condition — no STOP file written and reranker training is NOT blocked."
 }
