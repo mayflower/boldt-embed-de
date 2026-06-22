@@ -1,0 +1,27 @@
+{
+  "recall@10": 0.7303,
+  "recall@20": 0.7627,
+  "recall@50": 0.8433,
+  "recall@100": 0.9327,
+  "recall@200": 0.9886,
+  "ndcg@10": 0.6779,
+  "mrr@10": 0.6613,
+  "missing_positive_rate": 0.0114,
+  "oracle_ndcg@10": 0.9886,
+  "n_queries": 1576,
+  "embedding_dim": 768,
+  "matryoshka": {
+    "dim_768": {
+      "ndcg@10": 0.6779,
+      "recall@50": 0.8433,
+      "recall@100": 0.9327
+    }
+  },
+  "throughput": {
+    "docs_per_sec": 661.4,
+    "queries_per_sec": 2876.4
+  },
+  "model": "e5-base",
+  "eval_set": "webfaq",
+  "role": "primary"
+}

@@ -1,0 +1,29 @@
+{
+  "experiment_id": "v6.1-dense-top50",
+  "goal": "improve Boldt dense RAG embedder WebFAQ Recall@50 while preserving Recall@100 and general guardrails",
+  "base_checkpoint": "outputs/v6-dense-rag/checkpoints/boldt-dense-rag-v6",
+  "target_metrics": {
+    "webfaq_recall_at_50_min": 0.90,
+    "webfaq_recall_at_100_min": 0.96,
+    "webfaq_missing_positive_rate_max": 0.04,
+    "webfaq_ndcg_at_10_min": 0.67,
+    "germanquad_ndcg_at_10_min": 0.88,
+    "dt_test_ndcg_at_10_min": 0.94,
+    "matryoshka_256_retention_min": 0.95
+  },
+  "training_mix": {
+    "webfaq_real": 0.45,
+    "web_nonfaq": 0.20,
+    "wiki_non_eval": 0.20,
+    "german_stress": 0.10,
+    "local_rag": 0.05
+  },
+  "hard_negative_sources": [
+    "bm25_near_miss",
+    "dense_v6_rank_51_to_200",
+    "teacher_reranker_false_positive",
+    "e5_dense_near_miss"
+  ],
+  "public_benchmarks_eval_only": true,
+  "reranker_training_enabled": false
+}

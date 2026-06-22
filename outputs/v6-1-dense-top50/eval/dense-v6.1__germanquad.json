@@ -1,0 +1,43 @@
+{
+  "recall@10": 0.9727,
+  "recall@20": 0.9853,
+  "recall@50": 0.9913,
+  "recall@100": 0.996,
+  "recall@200": 0.9967,
+  "ndcg@10": 0.878,
+  "mrr@10": 0.8469,
+  "missing_positive_rate": 0.0033,
+  "oracle_ndcg@10": 0.9967,
+  "n_queries": 1500,
+  "embedding_dim": 1024,
+  "matryoshka": {
+    "dim_1024": {
+      "ndcg@10": 0.878,
+      "recall@50": 0.9913,
+      "recall@100": 0.996
+    },
+    "dim_512": {
+      "ndcg@10": 0.8732,
+      "recall@50": 0.9933,
+      "recall@100": 0.996
+    },
+    "dim_256": {
+      "ndcg@10": 0.855,
+      "recall@50": 0.986,
+      "recall@100": 0.994
+    },
+    "dim_128": {
+      "ndcg@10": 0.8197,
+      "recall@50": 0.9773,
+      "recall@100": 0.988
+    }
+  },
+  "matryoshka_256_retention": 0.9738,
+  "throughput": {
+    "docs_per_sec": 261.1,
+    "queries_per_sec": 3102.9
+  },
+  "model": "dense-v6.1",
+  "eval_set": "germanquad",
+  "role": "guardrail"
+}

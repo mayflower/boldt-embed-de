@@ -1,0 +1,394 @@
+{
+  "dense-v6.1": {
+    "webfaq": {
+      "recall@10": 0.8014,
+      "recall@20": 0.8579,
+      "recall@50": 0.9334,
+      "recall@100": 0.9765,
+      "recall@200": 0.9886,
+      "ndcg@10": 0.7044,
+      "mrr@10": 0.6737,
+      "missing_positive_rate": 0.0114,
+      "oracle_ndcg@10": 0.9886,
+      "n_queries": 1576,
+      "embedding_dim": 1024,
+      "matryoshka": {
+        "dim_1024": {
+          "ndcg@10": 0.7044,
+          "recall@50": 0.9334,
+          "recall@100": 0.9765
+        },
+        "dim_512": {
+          "ndcg@10": 0.704,
+          "recall@50": 0.927,
+          "recall@100": 0.9765
+        },
+        "dim_256": {
+          "ndcg@10": 0.7049,
+          "recall@50": 0.9283,
+          "recall@100": 0.9708
+        },
+        "dim_128": {
+          "ndcg@10": 0.696,
+          "recall@50": 0.9124,
+          "recall@100": 0.9588
+        }
+      },
+      "matryoshka_256_retention": 1.0007,
+      "throughput": {
+        "docs_per_sec": 412.0,
+        "queries_per_sec": 2452.8
+      },
+      "model": "dense-v6.1",
+      "eval_set": "webfaq",
+      "role": "primary"
+    },
+    "germanquad": {
+      "recall@10": 0.9727,
+      "recall@20": 0.9853,
+      "recall@50": 0.9913,
+      "recall@100": 0.996,
+      "recall@200": 0.9967,
+      "ndcg@10": 0.878,
+      "mrr@10": 0.8469,
+      "missing_positive_rate": 0.0033,
+      "oracle_ndcg@10": 0.9967,
+      "n_queries": 1500,
+      "embedding_dim": 1024,
+      "matryoshka": {
+        "dim_1024": {
+          "ndcg@10": 0.878,
+          "recall@50": 0.9913,
+          "recall@100": 0.996
+        },
+        "dim_512": {
+          "ndcg@10": 0.8732,
+          "recall@50": 0.9933,
+          "recall@100": 0.996
+        },
+        "dim_256": {
+          "ndcg@10": 0.855,
+          "recall@50": 0.986,
+          "recall@100": 0.994
+        },
+        "dim_128": {
+          "ndcg@10": 0.8197,
+          "recall@50": 0.9773,
+          "recall@100": 0.988
+        }
+      },
+      "matryoshka_256_retention": 0.9738,
+      "throughput": {
+        "docs_per_sec": 261.1,
+        "queries_per_sec": 3102.9
+      },
+      "model": "dense-v6.1",
+      "eval_set": "germanquad",
+      "role": "guardrail"
+    },
+    "dt_test": {
+      "recall@10": 0.989,
+      "recall@20": 0.993,
+      "recall@50": 0.998,
+      "recall@100": 0.999,
+      "recall@200": 0.999,
+      "ndcg@10": 0.9748,
+      "mrr@10": 0.9702,
+      "missing_positive_rate": 0.001,
+      "oracle_ndcg@10": 0.999,
+      "n_queries": 1000,
+      "embedding_dim": 1024,
+      "matryoshka": {
+        "dim_1024": {
+          "ndcg@10": 0.9748,
+          "recall@50": 0.998,
+          "recall@100": 0.999
+        },
+        "dim_512": {
+          "ndcg@10": 0.9718,
+          "recall@50": 0.997,
+          "recall@100": 0.998
+        },
+        "dim_256": {
+          "ndcg@10": 0.9667,
+          "recall@50": 0.997,
+          "recall@100": 0.998
+        },
+        "dim_128": {
+          "ndcg@10": 0.955,
+          "recall@50": 0.992,
+          "recall@100": 0.995
+        }
+      },
+      "matryoshka_256_retention": 0.9917,
+      "throughput": {
+        "docs_per_sec": 296.6,
+        "queries_per_sec": 3032.4
+      },
+      "model": "dense-v6.1",
+      "eval_set": "dt_test",
+      "role": "guardrail"
+    }
+  },
+  "dense-v6": {
+    "webfaq": {
+      "recall@10": 0.7392,
+      "recall@20": 0.7906,
+      "recall@50": 0.8832,
+      "recall@100": 0.9638,
+      "recall@200": 0.9956,
+      "ndcg@10": 0.6708,
+      "mrr@10": 0.6491,
+      "missing_positive_rate": 0.0044,
+      "oracle_ndcg@10": 0.9956,
+      "n_queries": 1576,
+      "embedding_dim": 1024,
+      "matryoshka": {
+        "dim_1024": {
+          "ndcg@10": 0.6708,
+          "recall@50": 0.8832,
+          "recall@100": 0.9638
+        },
+        "dim_512": {
+          "ndcg@10": 0.6687,
+          "recall@50": 0.8883,
+          "recall@100": 0.9664
+        },
+        "dim_256": {
+          "ndcg@10": 0.6702,
+          "recall@50": 0.8883,
+          "recall@100": 0.9689
+        },
+        "dim_128": {
+          "ndcg@10": 0.6599,
+          "recall@50": 0.8813,
+          "recall@100": 0.9683
+        }
+      },
+      "matryoshka_256_retention": 0.9991,
+      "throughput": {
+        "docs_per_sec": 473.0,
+        "queries_per_sec": 2460.3
+      },
+      "model": "dense-v6",
+      "eval_set": "webfaq",
+      "role": "primary"
+    },
+    "germanquad": {
+      "recall@10": 0.974,
+      "recall@20": 0.9873,
+      "recall@50": 0.9913,
+      "recall@100": 0.996,
+      "recall@200": 0.9987,
+      "ndcg@10": 0.8864,
+      "mrr@10": 0.8575,
+      "missing_positive_rate": 0.0013,
+      "oracle_ndcg@10": 0.9987,
+      "n_queries": 1500,
+      "embedding_dim": 1024,
+      "matryoshka": {
+        "dim_1024": {
+          "ndcg@10": 0.8864,
+          "recall@50": 0.9913,
+          "recall@100": 0.996
+        },
+        "dim_512": {
+          "ndcg@10": 0.8777,
+          "recall@50": 0.9933,
+          "recall@100": 0.996
+        },
+        "dim_256": {
+          "ndcg@10": 0.8609,
+          "recall@50": 0.99,
+          "recall@100": 0.994
+        },
+        "dim_128": {
+          "ndcg@10": 0.8375,
+          "recall@50": 0.982,
+          "recall@100": 0.9887
+        }
+      },
+      "matryoshka_256_retention": 0.9712,
+      "throughput": {
+        "docs_per_sec": 262.1,
+        "queries_per_sec": 3094.9
+      },
+      "model": "dense-v6",
+      "eval_set": "germanquad",
+      "role": "guardrail"
+    },
+    "dt_test": {
+      "recall@10": 0.993,
+      "recall@20": 0.995,
+      "recall@50": 0.997,
+      "recall@100": 0.999,
+      "recall@200": 0.999,
+      "ndcg@10": 0.9773,
+      "mrr@10": 0.9722,
+      "missing_positive_rate": 0.001,
+      "oracle_ndcg@10": 0.999,
+      "n_queries": 1000,
+      "embedding_dim": 1024,
+      "matryoshka": {
+        "dim_1024": {
+          "ndcg@10": 0.9773,
+          "recall@50": 0.997,
+          "recall@100": 0.999
+        },
+        "dim_512": {
+          "ndcg@10": 0.9749,
+          "recall@50": 0.998,
+          "recall@100": 0.998
+        },
+        "dim_256": {
+          "ndcg@10": 0.9711,
+          "recall@50": 0.995,
+          "recall@100": 0.998
+        },
+        "dim_128": {
+          "ndcg@10": 0.9587,
+          "recall@50": 0.994,
+          "recall@100": 0.995
+        }
+      },
+      "matryoshka_256_retention": 0.9937,
+      "throughput": {
+        "docs_per_sec": 293.4,
+        "queries_per_sec": 3035.2
+      },
+      "model": "dense-v6",
+      "eval_set": "dt_test",
+      "role": "guardrail"
+    }
+  },
+  "bm25": {
+    "webfaq": {
+      "recall@10": 0.6377,
+      "recall@20": 0.6421,
+      "recall@50": 0.6466,
+      "recall@100": 0.651,
+      "recall@200": 0.6574,
+      "ndcg@10": 0.5859,
+      "mrr@10": 0.5687,
+      "missing_positive_rate": 0.3426,
+      "oracle_ndcg@10": 0.6574,
+      "n_queries": 1576,
+      "model": "bm25",
+      "eval_set": "webfaq",
+      "role": "primary"
+    },
+    "germanquad": {
+      "recall@10": 0.9613,
+      "recall@20": 0.9753,
+      "recall@50": 0.9813,
+      "recall@100": 0.9887,
+      "recall@200": 0.9927,
+      "ndcg@10": 0.9058,
+      "mrr@10": 0.8874,
+      "missing_positive_rate": 0.0073,
+      "oracle_ndcg@10": 0.9927,
+      "n_queries": 1500,
+      "model": "bm25",
+      "eval_set": "germanquad",
+      "role": "guardrail"
+    },
+    "dt_test": {
+      "recall@10": 0.992,
+      "recall@20": 0.994,
+      "recall@50": 0.996,
+      "recall@100": 0.998,
+      "recall@200": 0.998,
+      "ndcg@10": 0.9774,
+      "mrr@10": 0.9727,
+      "missing_positive_rate": 0.002,
+      "oracle_ndcg@10": 0.998,
+      "n_queries": 1000,
+      "model": "bm25",
+      "eval_set": "dt_test",
+      "role": "guardrail"
+    }
+  },
+  "e5-base": {
+    "webfaq": {
+      "recall@10": 0.7303,
+      "recall@20": 0.7627,
+      "recall@50": 0.8433,
+      "recall@100": 0.9327,
+      "recall@200": 0.9886,
+      "ndcg@10": 0.6779,
+      "mrr@10": 0.6613,
+      "missing_positive_rate": 0.0114,
+      "oracle_ndcg@10": 0.9886,
+      "n_queries": 1576,
+      "embedding_dim": 768,
+      "matryoshka": {
+        "dim_768": {
+          "ndcg@10": 0.6779,
+          "recall@50": 0.8433,
+          "recall@100": 0.9327
+        }
+      },
+      "throughput": {
+        "docs_per_sec": 661.4,
+        "queries_per_sec": 2876.4
+      },
+      "model": "e5-base",
+      "eval_set": "webfaq",
+      "role": "primary"
+    },
+    "germanquad": {
+      "recall@10": 0.9753,
+      "recall@20": 0.9827,
+      "recall@50": 0.9893,
+      "recall@100": 0.9953,
+      "recall@200": 0.9987,
+      "ndcg@10": 0.9243,
+      "mrr@10": 0.9073,
+      "missing_positive_rate": 0.0013,
+      "oracle_ndcg@10": 0.9987,
+      "n_queries": 1500,
+      "embedding_dim": 768,
+      "matryoshka": {
+        "dim_768": {
+          "ndcg@10": 0.9243,
+          "recall@50": 0.9893,
+          "recall@100": 0.9953
+        }
+      },
+      "throughput": {
+        "docs_per_sec": 301.8,
+        "queries_per_sec": 3054.4
+      },
+      "model": "e5-base",
+      "eval_set": "germanquad",
+      "role": "guardrail"
+    },
+    "dt_test": {
+      "recall@10": 0.998,
+      "recall@20": 0.999,
+      "recall@50": 1.0,
+      "recall@100": 1.0,
+      "recall@200": 1.0,
+      "ndcg@10": 0.9942,
+      "mrr@10": 0.9929,
+      "missing_positive_rate": 0.0,
+      "oracle_ndcg@10": 1.0,
+      "n_queries": 1000,
+      "embedding_dim": 768,
+      "matryoshka": {
+        "dim_768": {
+          "ndcg@10": 0.9942,
+          "recall@50": 1.0,
+          "recall@100": 1.0
+        }
+      },
+      "throughput": {
+        "docs_per_sec": 353.6,
+        "queries_per_sec": 3068.7
+      },
+      "model": "e5-base",
+      "eval_set": "dt_test",
+      "role": "guardrail"
+    }
+  }
+}

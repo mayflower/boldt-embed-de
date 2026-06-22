@@ -1,0 +1,83 @@
+{
+  "status": "pass",
+  "checks": [
+    {
+      "check": "webfaq_recall_at_50",
+      "status": "pass",
+      "detail": "0.9346 (min 0.9)"
+    },
+    {
+      "check": "webfaq_recall_at_100",
+      "status": "pass",
+      "detail": "0.9791 (min 0.96)"
+    },
+    {
+      "check": "webfaq_missing_positive_rate",
+      "status": "pass",
+      "detail": "0.0076 (max 0.04)"
+    },
+    {
+      "check": "webfaq_ndcg_at_10",
+      "status": "pass",
+      "detail": "0.7012 (min 0.67)"
+    },
+    {
+      "check": "germanquad_ndcg_at_10",
+      "status": "pass",
+      "detail": "0.8814 (min 0.88)"
+    },
+    {
+      "check": "dt_test_ndcg_at_10",
+      "status": "pass",
+      "detail": "0.9748 (min 0.94)"
+    },
+    {
+      "check": "matryoshka_256_retention",
+      "status": "pass",
+      "detail": "0.9981 (min 0.95)"
+    },
+    {
+      "check": "no_public_eval_leakage",
+      "status": "pass",
+      "detail": "no public-eval leakage"
+    }
+  ],
+  "failing": [],
+  "thresholds": {
+    "webfaq_recall_at_50_min": 0.9,
+    "webfaq_recall_at_100_min": 0.96,
+    "webfaq_missing_positive_rate_max": 0.04,
+    "webfaq_ndcg_at_10_min": 0.67,
+    "germanquad_ndcg_at_10_min": 0.88,
+    "dt_test_ndcg_at_10_min": 0.94,
+    "matryoshka_256_retention_min": 0.95
+  },
+  "recommendation": "Dense embedder CAN be recommended for German RAG first-stage retrieval. The reranker remains experimental unless the raw reranker gate passes (independent decision).",
+  "failed_targets": [],
+  "independent_of_reranker": true,
+  "based_on": "dense retrieval quality only",
+  "model": "dense-v6.2",
+  "metrics": {
+    "webfaq": {
+      "recall@50": 0.9346,
+      "recall@100": 0.9791,
+      "missing_positive_rate": 0.0076,
+      "ndcg@10": 0.7012,
+      "matryoshka_256_retention": 0.9981
+    },
+    "germanquad": {
+      "recall@50": 0.9933,
+      "recall@100": 0.996,
+      "missing_positive_rate": 0.0027,
+      "ndcg@10": 0.8814,
+      "matryoshka_256_retention": 0.9753
+    },
+    "dt_test": {
+      "recall@50": 0.998,
+      "recall@100": 0.999,
+      "missing_positive_rate": 0.001,
+      "ndcg@10": 0.9748,
+      "matryoshka_256_retention": 0.9944
+    }
+  }
+}

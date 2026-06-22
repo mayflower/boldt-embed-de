@@ -1,0 +1,12 @@
+{
+  "extends": "configs/autoresearch/base_dense.json",
+  "name": "dense_proxy_default_20min",
+  "training": {
+    "budget_minutes": 20
+  },
+  "runtime": {
+    "dry_run": true,
+    "allow_gpu": false,
+    "write_checkpoints": false
+  }
+}

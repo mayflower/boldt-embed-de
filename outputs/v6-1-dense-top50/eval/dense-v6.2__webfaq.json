@@ -1,0 +1,43 @@
+{
+  "recall@10": 0.7919,
+  "recall@20": 0.8534,
+  "recall@50": 0.9346,
+  "recall@100": 0.9791,
+  "recall@200": 0.9924,
+  "ndcg@10": 0.7012,
+  "mrr@10": 0.6725,
+  "missing_positive_rate": 0.0076,
+  "oracle_ndcg@10": 0.9924,
+  "n_queries": 1576,
+  "embedding_dim": 1024,
+  "matryoshka": {
+    "dim_1024": {
+      "ndcg@10": 0.7012,
+      "recall@50": 0.9346,
+      "recall@100": 0.9791
+    },
+    "dim_512": {
+      "ndcg@10": 0.7027,
+      "recall@50": 0.9308,
+      "recall@100": 0.9772
+    },
+    "dim_256": {
+      "ndcg@10": 0.6999,
+      "recall@50": 0.9308,
+      "recall@100": 0.9797
+    },
+    "dim_128": {
+      "ndcg@10": 0.6891,
+      "recall@50": 0.9226,
+      "recall@100": 0.9683
+    }
+  },
+  "matryoshka_256_retention": 0.9981,
+  "throughput": {
+    "docs_per_sec": 405.3,
+    "queries_per_sec": 2423.8
+  },
+  "model": "dense-v6.2",
+  "eval_set": "webfaq",
+  "role": "primary"
+}

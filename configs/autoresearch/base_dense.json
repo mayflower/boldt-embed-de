@@ -1,0 +1,52 @@
+{
+  "task": "dense_retriever",
+  "base_model": "Boldt/Boldt-DC-350M",
+  "reference_model": "mayflowergmbh/Boldt-Embed-DE-350M",
+  "budget_minutes": 20,
+  "seed": 1337,
+  "pooling": "mean",
+  "normalize_embeddings": true,
+  "matryoshka_dims": [1024, 768, 512, 256, 128, 64],
+  "primary_metric": "webfaq_recall_at_100",
+  "guardrails": {
+    "germanquad_ndcg10_min_delta": -0.005,
+    "dt_test_ndcg10_min_delta": -0.005,
+    "matryoshka_256_min_retention": 0.95,
+    "leakage_hits_max": 0
+  },
+  "data_mixture": {
+    "mmarco_de": 0.45,
+    "clips_mqa_de": 0.25,
+    "webfaq_train": 0.20,
+    "german_stress": 0.10
+  },
+  "loss": {
+    "type": "cached_mnrl_matryoshka_distillation",
+    "temperature": 0.03,
+    "matryoshka_weight": 1.0,
+    "distillation_weight": 0.5,
+    "margin_mse_weight": 0.25
+  },
+  "training": {
+    "max_steps": null,
+    "budget_minutes": 20,
+    "batch_size": 32,
+    "grad_accumulation": 1,
+    "learning_rate": 0.00002,
+    "warmup_ratio": 0.05,
+    "max_query_length": 256,
+    "max_document_length": 1024,
+    "dtype": "bfloat16"
+  },
+  "runtime": {
+    "dry_run": true,
+    "allow_gpu": false,
+    "write_checkpoints": false,
+    "cuda_visible_devices": null,
+    "eval_model_name": "dense-v6.1",
+    "eval_sets": "webfaq,germanquad,dt_test",
+    "train_pairs": "data/processed/v6/rag_pairs_teacher_validated.jsonl",
+    "hard_negatives": "data/processed/v6_1/dense_top50_hardnegatives.jsonl",
+    "train_base_model": "outputs/v6-dense-rag/checkpoints/boldt-dense-rag-v6"
+  }
+}

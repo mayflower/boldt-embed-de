@@ -364,6 +364,132 @@ def v6_dense_run_card(dataset_report: Dict[str, Any], loss_plan: Dict[str, Any],
     return card
 
 
+# ---------------------------------------------------------------- v6.1 dense top-50 (stdlib)
+def build_v6_1_dense_dataset(pairs: Sequence[Dict[str, Any]],
+                             hardnegs: Sequence[Dict[str, Any]], *,
+                             max_triplets_per_query: Optional[int] = None,
+                             top50: int = 50, window: int = 200) -> Dict[str, Any]:
+    """v6.1 dense Recall@50 dataset (pure stdlib). Returns contrastive PAIRS (query, positive) from
+    rag_pairs + RANK-PROMOTION TRIPLETS (query, positive, top50-blocker) from the dense top-50 hard
+    negatives — only for queries whose positive sits at dense rank ``top50``..``window``. Fails
+    closed on public-benchmark/eval leakage. The triplets' negatives are already teacher-vetted (the
+    mining veto used teacher margins)."""
+    from .v5_data_mixer import leakage_reason
+    errors: List[str] = []
+    pair_examples: List[Dict[str, Any]] = []
+    for i, r in enumerate(pairs):
+        reason = leakage_reason(r)
+        if reason:
+            errors.append(f"pair {i} ({r.get('source') or r.get('query', '?')}): leakage ({reason})")
+            continue
+        q = r.get("query")
+        p = r.get("positive") or r.get("document")
+        if isinstance(q, str) and q.strip() and isinstance(p, str) and p.strip():
+            pair_examples.append({"query": q, "positive": p, "domain": r.get("domain", "unknown")})
+
+    triplets: List[Dict[str, Any]] = []
+    rank_51_100 = rank_101_200 = 0
+    domain_mix: Dict[str, int] = {}
+    margins: List[float] = []
+    for i, r in enumerate(hardnegs):
+        reason = leakage_reason(r)
+        if reason:
+            errors.append(f"hardneg {i} ({r.get('query_id', '?')}): leakage ({reason})")
+            continue
+        pr = r.get("positive_rank_v6")
+        if not (isinstance(pr, int) and top50 < pr <= window):
+            continue
+        q, pos = r.get("query"), r.get("positive")
+        if not (q and pos):
+            continue
+        dom = r.get("domain", "unknown")
+        negs = r.get("negatives") or []
+        if max_triplets_per_query is not None:
+            negs = negs[:max_triplets_per_query]
+        used = 0
+        for n in negs:
+            neg = n.get("text")
+            if not neg:
+                continue
+            triplets.append({"query": q, "positive": pos, "negative": neg, "domain": dom,
+                             "positive_rank_v6": pr, "negative_rank_v6": n.get("negative_rank_v6"),
+                             "teacher_score": n.get("teacher_score"),
+                             "margin_to_positive": n.get("margin_to_positive")})
+            if n.get("margin_to_positive") is not None:
+                margins.append(float(n["margin_to_positive"]))
+            used += 1
+        if used:
+            domain_mix[dom] = domain_mix.get(dom, 0) + 1
+            if pr <= 100:
+                rank_51_100 += 1
+            else:
+                rank_101_200 += 1
+
+    margin_hist: Dict[str, int] = {}
+    for m in margins:
+        margin_hist[_margin_bucket(m)] = margin_hist.get(_margin_bucket(m), 0) + 1
+    report = {
+        "pair_examples": len(pair_examples), "rank_promotion_triplets": len(triplets),
+        "rank_promotion_queries": rank_51_100 + rank_101_200,
+        "positive_rank_51_100": rank_51_100, "positive_rank_101_200": rank_101_200,
+        "domain_mix": dict(sorted(domain_mix.items())),
+        "has_teacher_margins": bool(margins),
+        "hard_negative_margins": {"with_margin": len(margins),
+                                  "avg": round(sum(margins) / len(margins), 4) if margins else None,
+                                  "distribution": dict(sorted(margin_hist.items()))},
+        "leakage_rows": len(errors), "window": window, "top50": top50,
+    }
+    return {"pair_examples": pair_examples, "triplet_examples": triplets, "report": report,
+            "errors": errors}
+
+
+def plan_v6_1_loss_stack(*, has_teacher_margins: bool,
+                         matryoshka_dims: Optional[Sequence[int]] = None) -> Dict[str, Any]:
+    """v6.1 loss stack (stdlib): CachedMNRL -> Matryoshka, with RANK-PROMOTION realized as CMNRL over
+    (query, positive, top50-blocker) triplets (pushes sim(q,pos) above the blockers). MarginMSE is
+    teacher-margin-prepared (the triplets are teacher-vetted) but not wired as a separate loss in this
+    run. NO_DUPLICATES sampler."""
+    dims = list(matryoshka_dims or MATRYOSHKA_DEFAULT)
+    stack = ["CachedMultipleNegativesRankingLoss", f"MatryoshkaLoss(dims={dims})",
+             "RankPromotion(CMNRL over query/positive/top50_blocker triplets)"]
+    return {
+        "base_contrastive": "CachedMultipleNegativesRankingLoss",
+        "matryoshka_dims": dims,
+        "rank_promotion": ("CMNRL with explicit top-50 false-positive negatives — the positive is "
+                           "pushed above the docs that currently outrank it (Recall@50 lever)"),
+        "margin_mse": (["MarginMSELoss(teacher margins; data-level teacher-vetted negatives)"]
+                       if has_teacher_margins else []),
+        "margin_mse_wired_as_separate_loss": False,
+        "batch_sampler": "NO_DUPLICATES",
+        "loss_stack": stack,
+    }
+
+
+def v6_1_dense_run_card(dataset_report: Dict[str, Any], loss_plan: Dict[str, Any], *, run_id: str,
+                        base_model: str, output: str, max_steps: int, batch_size: int, bf16: bool,
+                        gradient_checkpointing: bool, timestamp: Optional[str] = None) -> Dict[str, Any]:
+    return {
+        "run_id": run_id, "base_checkpoint": base_model, "output": output, "max_steps": max_steps,
+        "batch_size": batch_size, "bf16": bf16, "gradient_checkpointing": gradient_checkpointing,
+        "timestamp": timestamp, "loss_stack": loss_plan["loss_stack"],
+        "rank_promotion": loss_plan["rank_promotion"], "matryoshka_dims": loss_plan["matryoshka_dims"],
+        "batch_sampler": loss_plan["batch_sampler"],
+        "margin_mse": loss_plan["margin_mse"],
+        "margin_mse_wired_as_separate_loss": loss_plan["margin_mse_wired_as_separate_loss"],
+        "pair_examples": dataset_report["pair_examples"],
+        "rank_promotion_triplets": dataset_report["rank_promotion_triplets"],
+        "rank_promotion_queries": dataset_report["rank_promotion_queries"],
+        "positive_rank_51_100": dataset_report["positive_rank_51_100"],
+        "positive_rank_101_200": dataset_report["positive_rank_101_200"],
+        "domain_mix": dataset_report["domain_mix"],
+        "hard_negative_margins": dataset_report["hard_negative_margins"],
+        "reranker_trained": False,
+        "target_metric": "WebFAQ Recall@50 >= 0.90 while preserving Recall@100/guardrails/Matryoshka",
+        "purpose": ("v6.1 dense retriever: pull WebFAQ positives from ranks 51-200 into the top-50 "
+                    "via rank-promotion over dense-v6 top-50 blockers; DENSE-ONLY, no reranker"),
+    }
+
+
 # --------------------------------------------------------------- ML layer (lazy import)
 def apply_bidirectional_to_st_module(transformer_module) -> None:
     """Apply the LLM2Vec bidirectional mask patch to a SentenceTransformers Transformer
@@ -497,6 +623,57 @@ def train_modern_embedder(student_cfg, examples: Sequence[Dict[str, Any]], outpu
     if extra_report:
         report.update(extra_report)
     return report
+
+
+def train_v6_1_dense_embedder(base_model: str, pair_examples: Sequence[Dict[str, Any]],
+                              triplet_examples: Sequence[Dict[str, Any]], output_dir: str, *,
+                              matryoshka_dims: Optional[Sequence[int]] = None, epochs: int = 1,
+                              max_steps: int = -1, batch_size: int = 64, lr: float = 2e-5,
+                              max_seq_length: int = 256, bf16: bool = True,
+                              gradient_checkpointing: bool = False, device: Optional[str] = None
+                              ) -> Dict[str, Any]:
+    """v6.1 dense training (GPU). Continues from ``base_model`` and trains CachedMNRL -> Matryoshka
+    over a DatasetDict of contrastive PAIRS (query, positive) + RANK-PROMOTION TRIPLETS
+    (query, positive, top50-blocker). The triplets' explicit hard negatives ARE the rank-promotion
+    loss: CMNRL pushes sim(q,positive) above the blockers. NO_DUPLICATES sampler. ML-only."""
+    import torch
+    from datasets import Dataset, DatasetDict
+    from sentence_transformers import (SentenceTransformerTrainer,
+                                       SentenceTransformerTrainingArguments)
+    from sentence_transformers import losses as L
+    from sentence_transformers.training_args import BatchSamplers
+
+    dims = list(matryoshka_dims or MATRYOSHKA_DEFAULT)
+    model = load_student_sentence_transformer(base_model, max_seq_length=max_seq_length, device=device)
+    loss = L.MatryoshkaLoss(model, L.CachedMultipleNegativesRankingLoss(model), matryoshka_dims=dims)
+
+    parts = {}
+    if pair_examples:
+        parts["pairs"] = Dataset.from_dict({"anchor": [e["query"] for e in pair_examples],
+                                            "positive": [e["positive"] for e in pair_examples]})
+    if triplet_examples:
+        parts["triplets"] = Dataset.from_dict({
+            "anchor": [e["query"] for e in triplet_examples],
+            "positive": [e["positive"] for e in triplet_examples],
+            "negative": [e["negative"] for e in triplet_examples]})
+    if not parts:
+        raise ValueError("no training examples (pairs or triplets) for v6.1")
+    train_dataset = DatasetDict(parts) if len(parts) > 1 else next(iter(parts.values()))
+
+    args = SentenceTransformerTrainingArguments(
+        output_dir=output_dir, num_train_epochs=epochs, max_steps=max_steps,
+        per_device_train_batch_size=batch_size, learning_rate=lr, bf16=bf16,
+        gradient_checkpointing=gradient_checkpointing, batch_sampler=BatchSamplers.NO_DUPLICATES)
+    trainer = SentenceTransformerTrainer(model=model, args=args, train_dataset=train_dataset,
+                                         loss=loss)
+    trainer.train()
+    model.save(output_dir)
+    return {"status": "ok", "output_dir": output_dir, "base_model": base_model,
+            "datasets": sorted(parts), "num_pairs": len(pair_examples),
+            "num_rank_promotion_triplets": len(triplet_examples), "matryoshka_dims": dims,
+            "max_steps": max_steps, "rank_promotion": "CMNRL explicit top-50 blocker negatives",
+            "reranker_trained": False,
+            "gpu_name": torch.cuda.get_device_name(0) if torch.cuda.is_available() else None}
 
 
 def export_sentence_transformers_model(model, output_dir: str) -> str:

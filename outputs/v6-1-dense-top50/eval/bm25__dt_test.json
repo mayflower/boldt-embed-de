@@ -1,0 +1,15 @@
+{
+  "recall@10": 0.992,
+  "recall@20": 0.994,
+  "recall@50": 0.996,
+  "recall@100": 0.998,
+  "recall@200": 0.998,
+  "ndcg@10": 0.9774,
+  "mrr@10": 0.9727,
+  "missing_positive_rate": 0.002,
+  "oracle_ndcg@10": 0.998,
+  "n_queries": 1000,
+  "model": "bm25",
+  "eval_set": "dt_test",
+  "role": "guardrail"
+}

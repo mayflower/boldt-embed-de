@@ -1,0 +1,43 @@
+{
+  "recall@10": 0.986,
+  "recall@20": 0.991,
+  "recall@50": 0.998,
+  "recall@100": 0.999,
+  "recall@200": 0.999,
+  "ndcg@10": 0.9748,
+  "mrr@10": 0.9712,
+  "missing_positive_rate": 0.001,
+  "oracle_ndcg@10": 0.999,
+  "n_queries": 1000,
+  "embedding_dim": 1024,
+  "matryoshka": {
+    "dim_1024": {
+      "ndcg@10": 0.9748,
+      "recall@50": 0.998,
+      "recall@100": 0.999
+    },
+    "dim_512": {
+      "ndcg@10": 0.9721,
+      "recall@50": 0.998,
+      "recall@100": 0.998
+    },
+    "dim_256": {
+      "ndcg@10": 0.9693,
+      "recall@50": 0.989,
+      "recall@100": 0.997
+    },
+    "dim_128": {
+      "ndcg@10": 0.9604,
+      "recall@50": 0.992,
+      "recall@100": 0.993
+    }
+  },
+  "matryoshka_256_retention": 0.9944,
+  "throughput": {
+    "docs_per_sec": 292.5,
+    "queries_per_sec": 3016.4
+  },
+  "model": "dense-v6.2",
+  "eval_set": "dt_test",
+  "role": "guardrail"
+}

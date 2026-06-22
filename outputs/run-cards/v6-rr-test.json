@@ -1,0 +1,39 @@
+{
+  "run_id": "v6-rr-test",
+  "model_base": "Boldt/Boldt-DC-350M",
+  "lora": false,
+  "output": "/tmp/tmpnqgzbe55/ckpt",
+  "bf16": false,
+  "gradient_checkpointing": false,
+  "timestamp": null,
+  "loss": "listwise_kl+pairwise+pointwise_confident",
+  "loss_components": [
+    "KLDivLoss(listwise)",
+    "MarginRankingLoss",
+    "BCEWithLogitsLoss(high_confidence_only)"
+  ],
+  "primary": "listwise",
+  "listwise_variant": "listwise_kl",
+  "uncertain_listwise_only": true,
+  "lists_positive_present": 4,
+  "lists_positive_absent_excluded": 1,
+  "positive_present_rate": 0.8,
+  "absent_excluded_from_bce_pairwise": true,
+  "pairwise_pairs": 8,
+  "pointwise_examples": 12,
+  "teacher_margin": {
+    "pairs": 8,
+    "avg": 7.25,
+    "distribution": {
+      ">=5": 8
+    }
+  },
+  "examples_by_domain": {
+    "qa_passage_non_eval": 4
+  },
+  "not_faq_only": true,
+  "evaluated_by": "RAW reranker lift over FIXED candidate lists (no serving policy); promotion uses the raw reranker gate, never a policy-gated workaround",
+  "no_serving_policy_in_promotion": true,
+  "forced_research_run": false,
+  "invalid_for_promotion": false
+}

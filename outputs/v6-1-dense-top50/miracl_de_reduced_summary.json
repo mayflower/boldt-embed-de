@@ -1,0 +1,134 @@
+{
+  "dense-v6.2": {
+    "miracl_de_reduced": {
+      "recall@10": 0.778,
+      "recall@20": 0.8267,
+      "recall@50": 0.8764,
+      "recall@100": 0.8994,
+      "recall@200": 0.9289,
+      "ndcg@10": 0.7002,
+      "mrr@10": 0.7518,
+      "missing_positive_rate": 0.0361,
+      "oracle_ndcg@10": 0.9639,
+      "n_queries": 305,
+      "embedding_dim": 1024,
+      "matryoshka": {
+        "dim_1024": {
+          "ndcg@10": 0.7002,
+          "recall@50": 0.8764,
+          "recall@100": 0.8994
+        },
+        "dim_512": {
+          "ndcg@10": 0.7067,
+          "recall@50": 0.8633,
+          "recall@100": 0.8972
+        },
+        "dim_256": {
+          "ndcg@10": 0.6911,
+          "recall@50": 0.8431,
+          "recall@100": 0.8719
+        },
+        "dim_128": {
+          "ndcg@10": 0.642,
+          "recall@50": 0.8171,
+          "recall@100": 0.8414
+        }
+      },
+      "matryoshka_256_retention": 0.987,
+      "throughput": {
+        "docs_per_sec": 473.5,
+        "queries_per_sec": 1640.9
+      },
+      "model": "dense-v6.2",
+      "eval_set": "miracl_de_reduced",
+      "role": "primary"
+    }
+  },
+  "e5-base": {
+    "miracl_de_reduced": {
+      "recall@10": 0.9484,
+      "recall@20": 0.9722,
+      "recall@50": 0.9763,
+      "recall@100": 0.9829,
+      "recall@200": 0.987,
+      "ndcg@10": 0.8933,
+      "mrr@10": 0.9026,
+      "missing_positive_rate": 0.0066,
+      "oracle_ndcg@10": 0.9934,
+      "n_queries": 305,
+      "embedding_dim": 768,
+      "matryoshka": {
+        "dim_768": {
+          "ndcg@10": 0.8933,
+          "recall@50": 0.9763,
+          "recall@100": 0.9829
+        }
+      },
+      "throughput": {
+        "docs_per_sec": 603.4,
+        "queries_per_sec": 2704.7
+      },
+      "model": "e5-base",
+      "eval_set": "miracl_de_reduced",
+      "role": "primary"
+    }
+  },
+  "e5-large": {
+    "miracl_de_reduced": {
+      "recall@10": 0.9618,
+      "recall@20": 0.9698,
+      "recall@50": 0.9788,
+      "recall@100": 0.9878,
+      "recall@200": 0.9927,
+      "ndcg@10": 0.9168,
+      "mrr@10": 0.9318,
+      "missing_positive_rate": 0.0,
+      "oracle_ndcg@10": 1.0,
+      "n_queries": 305,
+      "embedding_dim": 1024,
+      "matryoshka": {
+        "dim_1024": {
+          "ndcg@10": 0.9168,
+          "recall@50": 0.9788,
+          "recall@100": 0.9878
+        }
+      },
+      "throughput": {
+        "docs_per_sec": 193.7,
+        "queries_per_sec": 867.3
+      },
+      "model": "e5-large",
+      "eval_set": "miracl_de_reduced",
+      "role": "primary"
+    }
+  },
+  "bge-m3": {
+    "miracl_de_reduced": {
+      "recall@10": 0.9573,
+      "recall@20": 0.9791,
+      "recall@50": 0.9843,
+      "recall@100": 0.9854,
+      "recall@200": 0.9886,
+      "ndcg@10": 0.9198,
+      "mrr@10": 0.9419,
+      "missing_positive_rate": 0.0033,
+      "oracle_ndcg@10": 0.9967,
+      "n_queries": 305,
+      "embedding_dim": 1024,
+      "matryoshka": {
+        "dim_1024": {
+          "ndcg@10": 0.9198,
+          "recall@50": 0.9843,
+          "recall@100": 0.9854
+        }
+      },
+      "throughput": {
+        "docs_per_sec": 196.4,
+        "queries_per_sec": 936.3
+      },
+      "model": "bge-m3",
+      "eval_set": "miracl_de_reduced",
+      "role": "primary"
+    }
+  }
+}

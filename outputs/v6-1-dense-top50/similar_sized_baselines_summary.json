@@ -1,0 +1,168 @@
+{
+  "bge-m3": {
+    "webfaq": {
+      "recall@10": 0.7113,
+      "recall@20": 0.7367,
+      "recall@50": 0.8261,
+      "recall@100": 0.9042,
+      "recall@200": 0.9543,
+      "ndcg@10": 0.6732,
+      "mrr@10": 0.6609,
+      "missing_positive_rate": 0.0457,
+      "oracle_ndcg@10": 0.9543,
+      "n_queries": 1576,
+      "embedding_dim": 1024,
+      "matryoshka": {
+        "dim_1024": {
+          "ndcg@10": 0.6732,
+          "recall@50": 0.8261,
+          "recall@100": 0.9042
+        }
+      },
+      "throughput": {
+        "docs_per_sec": 202.5,
+        "queries_per_sec": 1047.5
+      },
+      "model": "bge-m3",
+      "eval_set": "webfaq",
+      "role": "primary"
+    },
+    "germanquad": {
+      "recall@10": 0.9693,
+      "recall@20": 0.98,
+      "recall@50": 0.9907,
+      "recall@100": 0.996,
+      "recall@200": 0.9973,
+      "ndcg@10": 0.9235,
+      "mrr@10": 0.9083,
+      "missing_positive_rate": 0.0027,
+      "oracle_ndcg@10": 0.9973,
+      "n_queries": 1500,
+      "embedding_dim": 1024,
+      "matryoshka": {
+        "dim_1024": {
+          "ndcg@10": 0.9235,
+          "recall@50": 0.9907,
+          "recall@100": 0.996
+        }
+      },
+      "throughput": {
+        "docs_per_sec": 101.6,
+        "queries_per_sec": 1104.0
+      },
+      "model": "bge-m3",
+      "eval_set": "germanquad",
+      "role": "guardrail"
+    },
+    "dt_test": {
+      "recall@10": 0.998,
+      "recall@20": 0.999,
+      "recall@50": 1.0,
+      "recall@100": 1.0,
+      "recall@200": 1.0,
+      "ndcg@10": 0.996,
+      "mrr@10": 0.9952,
+      "missing_positive_rate": 0.0,
+      "oracle_ndcg@10": 1.0,
+      "n_queries": 1000,
+      "embedding_dim": 1024,
+      "matryoshka": {
+        "dim_1024": {
+          "ndcg@10": 0.996,
+          "recall@50": 1.0,
+          "recall@100": 1.0
+        }
+      },
+      "throughput": {
+        "docs_per_sec": 114.8,
+        "queries_per_sec": 1107.5
+      },
+      "model": "bge-m3",
+      "eval_set": "dt_test",
+      "role": "guardrail"
+    }
+  },
+  "e5-large": {
+    "webfaq": {
+      "recall@10": 0.7227,
+      "recall@20": 0.7418,
+      "recall@50": 0.8261,
+      "recall@100": 0.9194,
+      "recall@200": 0.9816,
+      "ndcg@10": 0.68,
+      "mrr@10": 0.6664,
+      "missing_positive_rate": 0.0184,
+      "oracle_ndcg@10": 0.9816,
+      "n_queries": 1576,
+      "embedding_dim": 1024,
+      "matryoshka": {
+        "dim_1024": {
+          "ndcg@10": 0.68,
+          "recall@50": 0.8261,
+          "recall@100": 0.9194
+        }
+      },
+      "throughput": {
+        "docs_per_sec": 212.6,
+        "queries_per_sec": 940.2
+      },
+      "model": "e5-large",
+      "eval_set": "webfaq",
+      "role": "primary"
+    },
+    "germanquad": {
+      "recall@10": 0.9767,
+      "recall@20": 0.9867,
+      "recall@50": 0.9927,
+      "recall@100": 0.9947,
+      "recall@200": 0.998,
+      "ndcg@10": 0.9295,
+      "mrr@10": 0.9139,
+      "missing_positive_rate": 0.002,
+      "oracle_ndcg@10": 0.998,
+      "n_queries": 1500,
+      "embedding_dim": 1024,
+      "matryoshka": {
+        "dim_1024": {
+          "ndcg@10": 0.9295,
+          "recall@50": 0.9927,
+          "recall@100": 0.9947
+        }
+      },
+      "throughput": {
+        "docs_per_sec": 101.2,
+        "queries_per_sec": 979.2
+      },
+      "model": "e5-large",
+      "eval_set": "germanquad",
+      "role": "guardrail"
+    },
+    "dt_test": {
+      "recall@10": 1.0,
+      "recall@20": 1.0,
+      "recall@50": 1.0,
+      "recall@100": 1.0,
+      "recall@200": 1.0,
+      "ndcg@10": 0.9962,
+      "mrr@10": 0.9949,
+      "missing_positive_rate": 0.0,
+      "oracle_ndcg@10": 1.0,
+      "n_queries": 1000,
+      "embedding_dim": 1024,
+      "matryoshka": {
+        "dim_1024": {
+          "ndcg@10": 0.9962,
+          "recall@50": 1.0,
+          "recall@100": 1.0
+        }
+      },
+      "throughput": {
+        "docs_per_sec": 113.3,
+        "queries_per_sec": 986.4
+      },
+      "model": "e5-large",
+      "eval_set": "dt_test",
+      "role": "guardrail"
+    }
+  }
+}

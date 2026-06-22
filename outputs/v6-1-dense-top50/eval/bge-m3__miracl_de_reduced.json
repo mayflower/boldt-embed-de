@@ -1,0 +1,27 @@
+{
+  "recall@10": 0.9573,
+  "recall@20": 0.9791,
+  "recall@50": 0.9843,
+  "recall@100": 0.9854,
+  "recall@200": 0.9886,
+  "ndcg@10": 0.9198,
+  "mrr@10": 0.9419,
+  "missing_positive_rate": 0.0033,
+  "oracle_ndcg@10": 0.9967,
+  "n_queries": 305,
+  "embedding_dim": 1024,
+  "matryoshka": {
+    "dim_1024": {
+      "ndcg@10": 0.9198,
+      "recall@50": 0.9843,
+      "recall@100": 0.9854
+    }
+  },
+  "throughput": {
+    "docs_per_sec": 196.4,
+    "queries_per_sec": 936.3
+  },
+  "model": "bge-m3",
+  "eval_set": "miracl_de_reduced",
+  "role": "primary"
+}

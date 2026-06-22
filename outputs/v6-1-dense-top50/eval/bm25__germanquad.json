@@ -1,0 +1,15 @@
+{
+  "recall@10": 0.9613,
+  "recall@20": 0.9753,
+  "recall@50": 0.9813,
+  "recall@100": 0.9887,
+  "recall@200": 0.9927,
+  "ndcg@10": 0.9058,
+  "mrr@10": 0.8874,
+  "missing_positive_rate": 0.0073,
+  "oracle_ndcg@10": 0.9927,
+  "n_queries": 1500,
+  "model": "bm25",
+  "eval_set": "germanquad",
+  "role": "guardrail"
+}

@@ -1,0 +1,15 @@
+{
+  "recall@10": 0.6377,
+  "recall@20": 0.6421,
+  "recall@50": 0.6466,
+  "recall@100": 0.651,
+  "recall@200": 0.6574,
+  "ndcg@10": 0.5859,
+  "mrr@10": 0.5687,
+  "missing_positive_rate": 0.3426,
+  "oracle_ndcg@10": 0.6574,
+  "n_queries": 1576,
+  "model": "bm25",
+  "eval_set": "webfaq",
+  "role": "primary"
+}

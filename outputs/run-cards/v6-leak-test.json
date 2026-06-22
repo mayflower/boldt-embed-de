@@ -1,0 +1,63 @@
+{
+  "run_id": "v6-leak-test",
+  "model": "outputs/v3-real-domain/checkpoints/boldt-modern-causal-v3",
+  "lora": false,
+  "output": "/tmp/tmpbvdp04a0/ckpt",
+  "max_steps": 3000,
+  "bf16": false,
+  "gradient_checkpointing": false,
+  "loss_stack": [
+    "CachedMultipleNegativesRankingLoss",
+    "MatryoshkaLoss(dims=[1024, 768, 512, 256, 128, 64])"
+  ],
+  "batch_sampler": "NO_DUPLICATES",
+  "matryoshka_dims": [
+    1024,
+    768,
+    512,
+    256,
+    128,
+    64
+  ],
+  "num_examples": 2,
+  "domain_mix": {
+    "faq_real": 1,
+    "germanquad": 1
+  },
+  "hard_negative_margins": {
+    "triplets": 0,
+    "queries_with_hardnegs": 0,
+    "avg_margin": null,
+    "margin_distribution": {}
+  },
+  "teacher_validation": {
+    "validated_synthetic": 0,
+    "real_pairs": 4,
+    "provisional_excluded": 0,
+    "teacher_threshold": 4.0
+  },
+  "has_teacher_scores": false,
+  "has_distill_vectors": false,
+  "timestamp": null,
+  "purpose": "v6 dense German RAG retriever: raise first-stage recall so candidate lists contain the positives a reranker would otherwise never see",
+  "batch_size": 64,
+  "domain_balance": {
+    "faq_cap": 0.5,
+    "faq_capped": true,
+    "faq_share_before": 0.75,
+    "faq_share_after": 0.5,
+    "examples_before": 4,
+    "examples_after": 2,
+    "by_domain_before": {
+      "faq_real": 3,
+      "germanquad": 1
+    },
+    "by_domain_after": {
+      "faq_real": 1,
+      "germanquad": 1
+    },
+    "batch_strategy": "domain round-robin (balanced) + NO_DUPLICATES"
+  },
+  "target_metric": "Recall@50/100 + candidate-list coverage (NOT reranker lift)",
+  "bidirectional": false
+}

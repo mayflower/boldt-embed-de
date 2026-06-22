@@ -1,0 +1,43 @@
+{
+  "run_id": "v6-1-leak-test",
+  "base_checkpoint": "outputs/v6-dense-rag/checkpoints/boldt-dense-rag-v6",
+  "output": "/tmp/tmp7cmt2_u9/ckpt",
+  "max_steps": 1000,
+  "batch_size": 64,
+  "bf16": false,
+  "gradient_checkpointing": false,
+  "timestamp": null,
+  "loss_stack": [
+    "CachedMultipleNegativesRankingLoss",
+    "MatryoshkaLoss(dims=[1024, 768, 512, 256, 128, 64])",
+    "RankPromotion(CMNRL over query/positive/top50_blocker triplets)"
+  ],
+  "rank_promotion": "CMNRL with explicit top-50 false-positive negatives — the positive is pushed above the docs that currently outrank it (Recall@50 lever)",
+  "matryoshka_dims": [
+    1024,
+    768,
+    512,
+    256,
+    128,
+    64
+  ],
+  "batch_sampler": "NO_DUPLICATES",
+  "margin_mse": [],
+  "margin_mse_wired_as_separate_loss": false,
+  "pair_examples": 0,
+  "rank_promotion_triplets": 3,
+  "rank_promotion_queries": 1,
+  "positive_rank_51_100": 1,
+  "positive_rank_101_200": 0,
+  "domain_mix": {
+    "faq_real": 1
+  },
+  "hard_negative_margins": {
+    "with_margin": 0,
+    "avg": null,
+    "distribution": {}
+  },
+  "reranker_trained": false,
+  "target_metric": "WebFAQ Recall@50 >= 0.90 while preserving Recall@100/guardrails/Matryoshka",
+  "purpose": "v6.1 dense retriever: pull WebFAQ positives from ranks 51-200 into the top-50 via rank-promotion over dense-v6 top-50 blockers; DENSE-ONLY, no reranker"
+}
