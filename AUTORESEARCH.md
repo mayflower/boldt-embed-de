@@ -205,8 +205,19 @@ reuses the existing v6.1 scripts without editing them: it trains via
 path) and then evaluates **that** checkpoint by calling `eval_v6_1_dense_top50.py`'s own
 `dense_eval`/`bm25_eval` functions in-process, so a trial grades exactly the model it produced.
 Training is given the budget minus an eval reserve (`runtime.eval_reserve_seconds`, default 300s)
-so evaluation can always finish; documents use `max(max_query_length, max_document_length)` as the
-sequence length so they are not truncated. Leakage status comes from the prepared manifest. If the
+so evaluation can always finish. The sequence length is `max(max_query_length, max_document_length)`
+but **capped so `batch_size × seq_length` stays at the v6.1-proven memory point (256 × 32)** — at the
+default batch 32 a 1024-token document request is capped to 256 (32 × 1024 OOMs the 48 GB A6000), and
+a config needing longer documents must lower `batch_size` to buy the length (the cap is recorded in
+the plan as `max_seq_length_requested` / `seq_capped_for_memory`, never silent). The recipe forwards
+the tunable knobs to the trainer: `learning_rate`, `warmup_ratio`, `loss.temperature`
+(→ CMNRL `scale = 1/temperature`), `batch_size` (= the contrastive in-batch-negative count),
+`max_seq_length`, and `dtype`/`bf16` — so tuning these in `current.json` changes a **real** run, not
+just the dry-run plan. When a verified-clean prepared manifest is supplied, real training uses the
+manifest's **certified cleaned** file (fail-closed if it is missing), so the leakage gate's status
+and the data actually trained on are provably the same file. Data-distribution knobs (`data_mixture`,
+hard negatives) are realized in the `train_pairs`/`hard_negatives` files and must pass the leakage
+scan; `pooling`/`matryoshka_dims` remain plan-only for now. Leakage status comes from the prepared manifest. If the
 required local data or scripts are missing it returns a clear `status: "fail"` with the missing
 integration points listed — it never fabricates metrics. A **real, successful** trial also emits a
 canonical run card via `experiment_registry` (`outputs/run-cards/autoresearch-<run_id>.json`) so

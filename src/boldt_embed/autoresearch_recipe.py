@@ -26,7 +26,7 @@ import subprocess
 import sys
 import time
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -78,6 +78,20 @@ def build_training_plan(config: Dict[str, Any]) -> Dict[str, Any]:
     a real trial would actually vary (pooling, dims, mixture, loss, optimizer)."""
     training = config.get("training", {}) or {}
     loss = config.get("loss", {}) or {}
+    batch_size = int(training.get("batch_size", 32))
+    max_query = int(training.get("max_query_length", 256))
+    max_doc = int(training.get("max_document_length", 256))
+    # The trainer applies ONE max_seq_length to the whole encoder, so we'd use the larger of
+    # query/doc to avoid truncating documents to the (shorter) query length. BUT batch_size ×
+    # seq_length drives activation memory: 32 × 1024 OOMs the 48 GB A6000 (~45 GB peak). Cap the
+    # effective seq so batch × seq never exceeds the v6.1-proven operating point (256 × 32 tokens),
+    # and never below the query length (queries must not truncate). A config that wants longer
+    # documents must "buy" the length by lowering batch_size. Both values are recorded so the cap
+    # is visible in the run card rather than silent.
+    SAFE_BATCH_TOKENS = 256 * 32
+    requested_seq = max(max_query, max_doc)
+    seq_cap = max(max_query, SAFE_BATCH_TOKENS // max(batch_size, 1))
+    effective_seq = min(requested_seq, seq_cap)
     return {
         "task": config.get("task", "dense_retriever"),
         "base_model": config.get("base_model", "Boldt/Boldt-DC-350M"),
@@ -94,14 +108,13 @@ def build_training_plan(config: Dict[str, Any]) -> Dict[str, Any]:
         "margin_mse_weight": loss.get("margin_mse_weight", 0.25),
         "learning_rate": training.get("learning_rate", 2e-5),
         "warmup_ratio": training.get("warmup_ratio", 0.05),
-        "batch_size": training.get("batch_size", 32),
+        "batch_size": batch_size,
         "grad_accumulation": training.get("grad_accumulation", 1),
-        "max_query_length": training.get("max_query_length", 256),
-        "max_document_length": training.get("max_document_length", 1024),
-        # The trainer applies ONE max_seq_length to the whole encoder, so use the larger of the
-        # two so documents are not silently truncated to the (shorter) query length.
-        "max_seq_length": max(int(training.get("max_query_length", 256)),
-                              int(training.get("max_document_length", 1024))),
+        "max_query_length": max_query,
+        "max_document_length": max_doc,
+        "max_seq_length": effective_seq,
+        "max_seq_length_requested": requested_seq,
+        "seq_capped_for_memory": effective_seq < requested_seq,
         "max_steps": training.get("max_steps"),
         "dtype": training.get("dtype", "bfloat16"),
     }
@@ -244,7 +257,61 @@ def _leakage_from_manifest(runtime: Dict[str, Any]) -> Dict[str, Any]:
     except Exception:
         return {"hits": None, "status": "unreadable"}
     lk = man.get("leakage") or {}
-    return {"hits": lk.get("hits"), "status": lk.get("status", "unknown")}
+    status = lk.get("status", "unknown")
+    hits = lk.get("hits")
+    # A 'clean' manifest means the TRAINED data is verified clean — either zero hits, or the
+    # flagged rows were dropped to a cleaned candidate file that training actually uses. The
+    # manifest's `hits` is the RAW pre-clean count (provenance); the effective leakage of the
+    # trained data is 0, so report 0 so the scorer's fail-closed gate passes on verified-clean data.
+    if status == "clean":
+        hits = 0
+    return {"hits": hits, "status": status}
+
+
+def _clean_train_pairs_from_manifest(runtime: Dict[str, Any]) -> Tuple[Optional[str], Optional[str]]:
+    """When a CLEAN prepared manifest is supplied, return the verified-clean training file the
+    leakage gate certified, so REAL training provably uses the SAME data the gate passed on (not
+    the raw, possibly-leaky ``runtime.train_pairs`` inherited from the base config).
+
+    Returns ``(clean_path | None, error | None)``:
+      - clean path  → train on this instead of the configured pairs;
+      - (None,None) → no manifest, not verified clean, or genuinely zero-hit (use configured pairs);
+      - (None,err)  → FAIL CLOSED: the manifest claims clean but its cleaned file can't be located —
+                      we never train on raw data while reporting "leakage clean".
+    """
+    mp = runtime.get("prepared_manifest")
+    if not mp:
+        return None, None
+    p = Path(mp) if Path(mp).is_absolute() else (ROOT / mp)
+    try:
+        man = json.loads(p.read_text(encoding="utf-8"))
+    except Exception:
+        return None, None  # the leakage gate already reports 'unreadable' → not promotable
+    lk = man.get("leakage") or {}
+    if lk.get("status") != "clean":
+        return None, None  # not verified clean → use configured data (won't be promotable)
+    # Locate the scan's certified cleaned-candidates file (the exact file the gate verified).
+    rep = lk.get("report") or {}
+    ccp = None
+    rep_path = rep.get("path")
+    if rep_path:
+        rp = Path(rep_path) if Path(rep_path).is_absolute() else (ROOT / rep_path)
+        try:
+            ccp = json.loads(rp.read_text(encoding="utf-8")).get("cleaned_candidates_path")
+        except Exception:
+            ccp = None
+    if not ccp:  # fall back to a summary embedded directly in the manifest
+        ccp = (rep.get("summary") or {}).get("cleaned_candidates_path")
+    if ccp:
+        cpath = Path(ccp) if Path(ccp).is_absolute() else (ROOT / ccp)
+        if cpath.exists():
+            return ccp, None
+        return None, f"prepared manifest is clean but its cleaned file is missing: {ccp}"
+    # 'clean' with no cleaned file is only valid when there was genuinely nothing to drop.
+    if lk.get("hits") in (0, None):
+        return None, None
+    return None, ("prepared manifest reports clean but records neither a cleaned_candidates_path "
+                  "nor zero raw hits — refusing to train on unverified data")
 
 
 def _evaluate_in_process(ev, label: str, model_spec: Dict[str, Any], eval_sets: List[str],
@@ -308,6 +375,31 @@ def _map_eval_summary(summary: Dict[str, Any], model_name: str,
     return metrics
 
 
+def _build_train_cmd(train_script, *, train_base, train_pairs, hard_negs, ckpt, steps, plan,
+                     run_id) -> List[str]:
+    """Build the v6.1 training subprocess command, forwarding the tunable knobs from the plan.
+
+    lr / warmup_ratio / temperature now reach REAL training (not just the dry-run plan); the
+    contrastive batch size = ``batch_size`` (cached MNRL uses every in-batch item as a negative).
+    """
+    cmd = [sys.executable, str(train_script),
+           "--base-model", str(train_base),
+           "--train-pairs", str(train_pairs),
+           "--hard-negatives", str(hard_negs),
+           "--output", str(ckpt),
+           "--max-steps", str(steps),
+           "--batch-size", str(plan["batch_size"]),
+           "--max-seq-length", str(plan["max_seq_length"]),
+           "--lr", str(plan["learning_rate"]),
+           "--warmup-ratio", str(plan["warmup_ratio"]),
+           "--run-id", f"{run_id}-train"]
+    if plan.get("temperature") is not None:
+        cmd += ["--temperature", str(plan["temperature"])]
+    if plan.get("dtype") == "bfloat16":
+        cmd.append("--bf16")
+    return cmd
+
+
 def _subprocess(cmd: List[str], *, cwd: Path, env: Dict[str, str], timeout: float,
                 log: List[Dict[str, Any]]) -> subprocess.CompletedProcess:
     log.append({"cmd": cmd, "timeout_s": round(timeout, 1)})
@@ -369,6 +461,17 @@ def _run_real(config: Dict[str, Any], out_dir: Path, run_id: str,
     train_pairs = runtime.get("train_pairs")
     hard_negs = runtime.get("hard_negatives")
     train_base = runtime.get("train_base_model")
+    # Leakage-safety: when a verified-clean prepared manifest is supplied, REAL training must use
+    # the file the leakage gate certified — not the raw pairs the base config points at. This ties
+    # "leakage: clean" to the data actually trained on (fail-closed if the cleaned file is missing).
+    clean_pairs, clean_err = _clean_train_pairs_from_manifest(runtime)
+    if clean_err:
+        return fail(f"leakage-safety: {clean_err}")
+    if do_train and clean_pairs:
+        cmd_log.append({"note": "training on manifest-certified clean data",
+                        "train_pairs_override": clean_pairs,
+                        "train_pairs_configured": train_pairs})
+        train_pairs = clean_pairs
     if do_train:
         if not train_script.exists():
             missing.append(f"{train_script.relative_to(ROOT)} (train script)")
@@ -399,17 +502,9 @@ def _run_real(config: Dict[str, Any], out_dir: Path, run_id: str,
             return fail(f"insufficient budget to train and still evaluate "
                         f"(need > {eval_reserve:.0f}s reserved for eval)")
         steps = plan.get("max_steps") or int(runtime.get("max_steps", 1000))
-        train_cmd = [sys.executable, str(train_script),
-                     "--base-model", str(train_base),
-                     "--train-pairs", str(train_pairs),
-                     "--hard-negatives", str(hard_negs),
-                     "--output", str(ckpt),
-                     "--max-steps", str(steps),
-                     "--batch-size", str(plan["batch_size"]),
-                     "--max-seq-length", str(plan["max_seq_length"]),
-                     "--run-id", f"{run_id}-train"]
-        if plan["dtype"] == "bfloat16":
-            train_cmd.append("--bf16")
+        train_cmd = _build_train_cmd(train_script, train_base=train_base, train_pairs=train_pairs,
+                                     hard_negs=hard_negs, ckpt=ckpt, steps=steps, plan=plan,
+                                     run_id=run_id)
         try:
             proc = _subprocess(train_cmd, cwd=ROOT, env=env, timeout=timeout, log=cmd_log)
         except subprocess.TimeoutExpired:

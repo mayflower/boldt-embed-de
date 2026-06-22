@@ -39,6 +39,10 @@ def main() -> int:
     ap.add_argument("--max-steps", type=int, default=1000)
     ap.add_argument("--batch-size", type=int, default=64)
     ap.add_argument("--max-seq-length", type=int, default=256)
+    ap.add_argument("--lr", type=float, default=2e-5)
+    ap.add_argument("--warmup-ratio", type=float, default=0.0)
+    ap.add_argument("--temperature", type=float, default=None,
+                    help="contrastive temperature (CMNRL scale=1/temperature); None=SBERT default")
     ap.add_argument("--bf16", action="store_true")
     ap.add_argument("--gradient-checkpointing", action="store_true")
     ap.add_argument("--run-id", default="v6-1-dense-top50")
@@ -60,7 +64,10 @@ def main() -> int:
                                   output=args.output, max_steps=args.max_steps,
                                   batch_size=args.batch_size, bf16=args.bf16,
                                   gradient_checkpointing=args.gradient_checkpointing)
-    out = {"run_card": card, "loss_plan": plan, "dataset_report": report, "errors": errors}
+    optimizer = {"lr": args.lr, "warmup_ratio": args.warmup_ratio, "temperature": args.temperature}
+    card["optimizer"] = optimizer
+    out = {"run_card": card, "loss_plan": plan, "dataset_report": report, "errors": errors,
+           "optimizer": optimizer}
 
     report_path = pathlib.Path(args.report or f"outputs/v6-1-dense-top50/{args.run_id}_run_card.json")
     report_path.parent.mkdir(parents=True, exist_ok=True)
@@ -92,7 +99,8 @@ def main() -> int:
     result = TM.train_v6_1_dense_embedder(
         args.base_model, ds["pair_examples"], ds["triplet_examples"], args.output,
         matryoshka_dims=plan["matryoshka_dims"], max_steps=args.max_steps,
-        batch_size=args.batch_size, max_seq_length=args.max_seq_length, bf16=args.bf16,
+        batch_size=args.batch_size, lr=args.lr, warmup_ratio=args.warmup_ratio,
+        temperature=args.temperature, max_seq_length=args.max_seq_length, bf16=args.bf16,
         gradient_checkpointing=args.gradient_checkpointing)
     card["training_result"] = result
     out["run_card"] = card

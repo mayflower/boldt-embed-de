@@ -1,0 +1,7 @@
+{
+  "sets": [
+    {"name": "webfaq_heldout", "role": "primary", "path": "outputs/v4-rag-reranker/eval/webfaq/queries.jsonl"},
+    {"name": "germanquad", "role": "guardrail", "path": "data/processed/eval/germanquad_queries.jsonl"},
+    {"name": "dt_test", "role": "guardrail", "path": "data/processed/eval/dt_test_queries.jsonl"}
+  ]
+}

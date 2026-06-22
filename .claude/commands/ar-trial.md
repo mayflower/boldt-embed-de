@@ -16,10 +16,12 @@ verdict. Mode requested: `$ARGUMENTS` (treat empty as `dry`).
   ```
 
 - **real** → real trial on the RTX A6000 via the project env (uses the baseline + prepared manifest
-  if present so scoring and the leakage gate are meaningful):
+  so scoring and the leakage gate are meaningful). `--allow-checkpoints` makes it **train** (~5–7 min
+  at the config's `max_steps`, on the manifest-certified clean data); drop that flag for a fast
+  eval-only re-measure of the baseline:
 
   ```bash
-  conda run -n boldtembed python scripts/ar_loop.py --real --allow-gpu --status keep \
+  conda run -n boldtembed python scripts/ar_loop.py --real --allow-gpu --allow-checkpoints --status keep \
     --baseline outputs/autoresearch/baseline/metrics.json \
     --prepared-manifest outputs/autoresearch/prepared/prepare_manifest.json
   ```

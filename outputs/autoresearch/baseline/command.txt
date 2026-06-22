@@ -1,0 +1,1 @@
+python scripts/ar_run_trial.py --config configs/autoresearch/experiments/current.json --out outputs/autoresearch/baseline --real --allow-gpu --notes baseline = dense-v6.1 eval under the AR harness

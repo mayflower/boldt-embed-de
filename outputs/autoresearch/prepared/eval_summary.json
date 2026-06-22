@@ -1,0 +1,39 @@
+{
+  "sets": [
+    {
+      "name": "webfaq_heldout",
+      "role": "primary",
+      "path": "outputs/v4-rag-reranker/eval/webfaq/queries.jsonl",
+      "optional": false,
+      "exists": true,
+      "repo_relative": "outputs/v4-rag-reranker/eval/webfaq/queries.jsonl",
+      "size_bytes": 925836,
+      "sha256": "c7ab36f3d84c734d917c4166ebec60c804ebd515833b6147296d25a5db3c0715",
+      "record_count": 1576
+    },
+    {
+      "name": "germanquad",
+      "role": "guardrail",
+      "path": "data/processed/eval/germanquad_queries.jsonl",
+      "optional": false,
+      "exists": true,
+      "repo_relative": "data/processed/eval/germanquad_queries.jsonl",
+      "size_bytes": 139882,
+      "sha256": "20672cfed2d594ced77f79d5fc2664303aaa07b5428a604454763b0606f989ec",
+      "record_count": 1500
+    },
+    {
+      "name": "dt_test",
+      "role": "guardrail",
+      "path": "data/processed/eval/dt_test_queries.jsonl",
+      "optional": false,
+      "exists": true,
+      "repo_relative": "data/processed/eval/dt_test_queries.jsonl",
+      "size_bytes": 84777,
+      "sha256": "7c87ab0349cc9cd2454eb74cc4249989ea1f90b78c21c4def15a20c3ba64b4e7",
+      "record_count": 1000
+    }
+  ],
+  "missing_required": [],
+  "missing_optional": []
+}

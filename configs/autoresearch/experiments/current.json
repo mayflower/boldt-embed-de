@@ -1,7 +1,13 @@
 {
   "extends": "configs/autoresearch/base_dense.json",
-  "name": "dense_proxy_default_20min",
+  "name": "dense_real_300step_20min",
+  "loss": {
+    "temperature": 0.05
+  },
   "training": {
+    "learning_rate": 0.00002,
+    "warmup_ratio": 0.05,
+    "max_steps": 300,
     "budget_minutes": 20
   },
   "runtime": {

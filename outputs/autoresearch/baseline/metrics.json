@@ -1,0 +1,79 @@
+{
+  "run_id": "baseline",
+  "status": "ok",
+  "mode": "real",
+  "budget_minutes": 20,
+  "elapsed_seconds": 32.527,
+  "deadline_respected": true,
+  "invalid_for_default_loop": false,
+  "config_path": "configs/autoresearch/experiments/current.json",
+  "baseline_path": null,
+  "prepared_manifest": null,
+  "git": {
+    "commit": "1c8744386b809766e75f5e4c6a219592e50fd5e6",
+    "dirty": true
+  },
+  "metrics": {
+    "webfaq": {
+      "recall@100": 0.9765,
+      "ndcg@10": 0.7044,
+      "mrr@10": 0.6737
+    },
+    "germanquad": {
+      "ndcg@10": 0.878
+    },
+    "dt_test": {
+      "ndcg@10": 0.9748
+    },
+    "matryoshka": {
+      "retention_256": 1.0007
+    },
+    "leakage": {
+      "hits": null,
+      "status": "not_checked"
+    },
+    "system": {
+      "vram_gb": 3.77,
+      "throughput_pairs_per_sec": 2439.0
+    }
+  },
+  "training_plan": {
+    "task": "dense_retriever",
+    "base_model": "Boldt/Boldt-DC-350M",
+    "reference_model": "mayflowergmbh/Boldt-Embed-DE-350M",
+    "seed": 1337,
+    "pooling": "mean",
+    "normalize_embeddings": true,
+    "matryoshka_dims": [
+      1024,
+      768,
+      512,
+      256,
+      128,
+      64
+    ],
+    "data_mixture": {
+      "mmarco_de": 0.45,
+      "clips_mqa_de": 0.25,
+      "webfaq_train": 0.2,
+      "german_stress": 0.1
+    },
+    "loss_type": "cached_mnrl_matryoshka_distillation",
+    "temperature": 0.03,
+    "matryoshka_weight": 1.0,
+    "distillation_weight": 0.5,
+    "margin_mse_weight": 0.25,
+    "learning_rate": 2e-05,
+    "warmup_ratio": 0.05,
+    "batch_size": 32,
+    "grad_accumulation": 1,
+    "max_query_length": 256,
+    "max_document_length": 1024,
+    "max_seq_length": 1024,
+    "max_steps": null,
+    "dtype": "bfloat16"
+  },
+  "eval_model": "dense-v6.1",
+  "leakage_status": "not_checked",
+  "trained": false
+}

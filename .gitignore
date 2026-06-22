@@ -87,3 +87,7 @@ outputs/autoresearch/checkpoints/
 # v7 EmbedFilter: SVD basis tensors are large binaries (also covered by the global *.pt rule);
 # the small metadata.json sidecars + sweep reports under outputs/v7-embedfilter/ ARE tracked.
 outputs/embedfilter/**/*.pt
+
+# AutoResearch prepared data: large generated candidate/clean training JSONL are local working
+# files (regenerable from the leakage scan); the small reports + manifest under prepared/ ARE tracked.
+outputs/autoresearch/prepared/*.jsonl
