@@ -74,8 +74,15 @@ class CausalEmbedder:
         is_query: bool = False,
         dim: Optional[int] = None,
         max_length: Optional[int] = None,
-    ):  # pragma: no cover - requires torch + weights, not run in CI
-        import torch
+        embed_filter: Optional[str] = None,
+    ):
+        # `dim` (prefix Matryoshka) and `embed_filter` (spectral bulk) are competing reduction
+        # methods — refuse to silently combine them. Checked before any torch import.
+        if dim is not None and embed_filter is not None:
+            raise ValueError(
+                "pass either `dim` (prefix Matryoshka) or `embed_filter` (spectral bulk), not both"
+            )
+        import torch  # pragma: no cover - requires torch + weights, not run in CI
         import torch.nn.functional as F
 
         self._load()
@@ -94,6 +101,10 @@ class CausalEmbedder:
             hidden = self._model(**batch).last_hidden_state  # [B, T, H]
         mask = batch["attention_mask"]
         pooled = self._pool(hidden, mask)
+        if embed_filter is not None:
+            from .embed_filter import load_embed_filter_basis
+            basis, _ = load_embed_filter_basis(embed_filter, expected_hidden_dim=pooled.shape[1])
+            return F.normalize(pooled @ basis.to(pooled.device, pooled.dtype), p=2, dim=1)
         if self.config.normalize_embeddings:
             pooled = F.normalize(pooled, p=2, dim=1)
         if dim is not None:

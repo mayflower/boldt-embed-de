@@ -477,13 +477,32 @@ def git_tracked_files(root: Path) -> List[str]:
         return []
 
 
+def _v7_embedfilter_advisory(root: Path) -> Dict[str, object]:
+    """ADVISORY (non-blocking) v7 EmbedFilter status — never contributes to the release verdict.
+    EmbedFilter is an experimental postprocessor; it is recommended nowhere until its own advisory
+    gate passes on a real saved sweep."""
+    sweep = root / "outputs" / "v7-embedfilter" / "sweep.json"
+    if not sweep.exists():
+        return {"status": "advisory_no_data",
+                "note": "no v7 sweep.json — EmbedFilter experimental / not run"}
+    import importlib.util
+    spec = importlib.util.spec_from_file_location(
+        "check_embedfilter_gate", root / "scripts" / "check_embedfilter_gate.py")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    verdict = mod.embedfilter_gate(json.loads(sweep.read_text(encoding="utf-8")).get("rows", []))
+    verdict["advisory"] = True
+    return verdict
+
+
 def run_checks(root: Path = ROOT, results_dir: Path = None,
                require_v2_artifacts: bool = False,
                require_v3_artifacts: bool = False,
                require_v4_rag_artifacts: bool = False,
                require_v5_small_rag_artifacts: bool = False,
                require_v6_dense_artifacts: bool = False,
-               require_v6_raw_reranker_artifacts: bool = False) -> Dict[str, object]:
+               require_v6_raw_reranker_artifacts: bool = False,
+               require_v7_embedfilter_artifacts: bool = False) -> Dict[str, object]:
     tracked = git_tracked_files(root)
     results_dir = results_dir or (root / "outputs")
     checks: Dict[str, List[Issue]] = {
@@ -542,8 +561,12 @@ def run_checks(root: Path = ROOT, results_dir: Path = None,
     if require_v6_raw_reranker_artifacts:
         checks["v6_raw_reranker_artifacts"] = check_v6_raw_reranker_artifacts(root)
     issues = [i for group in checks.values() for i in group]
-    return {"status": "pass" if not issues else "fail", "issue_count": len(issues),
-            "checks": {k: [list(i) for i in v] for k, v in checks.items()}}
+    out: Dict[str, object] = {"status": "pass" if not issues else "fail",
+                              "issue_count": len(issues),
+                              "checks": {k: [list(i) for i in v] for k, v in checks.items()}}
+    if require_v7_embedfilter_artifacts:   # advisory only — separate key, never affects status
+        out["v7_embedfilter_advisory"] = _v7_embedfilter_advisory(root)
+    return out
 
 
 def render_markdown(report: Dict[str, object]) -> str:
@@ -570,6 +593,9 @@ def main() -> int:
                     help="RELEASE gate: v5 small-RAG artifacts + abstention-policy card-vs-gate")
     ap.add_argument("--require-v6-dense-artifacts", action="store_true",
                     help="RELEASE gate: v6 dense-embedder recall/eval reports + dense-recall gate")
+    ap.add_argument("--require-v7-embedfilter-artifacts", action="store_true",
+                    help="ADVISORY (non-blocking): include the v7 EmbedFilter gate verdict in the "
+                         "report; never changes the release pass/fail")
     ap.add_argument("--require-v6-raw-reranker-artifacts", action="store_true",
                     help="RELEASE gate: v6 RAW reranker gate + raw lift reports (no policy)")
     args = ap.parse_args()
@@ -579,7 +605,8 @@ def main() -> int:
                         require_v4_rag_artifacts=args.require_v4_rag_artifacts,
                         require_v5_small_rag_artifacts=args.require_v5_small_rag_artifacts,
                         require_v6_dense_artifacts=args.require_v6_dense_artifacts,
-                        require_v6_raw_reranker_artifacts=args.require_v6_raw_reranker_artifacts)
+                        require_v6_raw_reranker_artifacts=args.require_v6_raw_reranker_artifacts,
+                        require_v7_embedfilter_artifacts=args.require_v7_embedfilter_artifacts)
     print(json.dumps(report, ensure_ascii=False, indent=2) if args.format == "json"
           else render_markdown(report))
     return 0 if report["status"] == "pass" else 1

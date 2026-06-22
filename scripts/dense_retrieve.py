@@ -47,6 +47,9 @@ def main() -> int:
     ap.add_argument("--max-length", type=int, default=512)
     ap.add_argument("--query-instruction", default="")
     ap.add_argument("--limit", type=int, default=None)
+    ap.add_argument("--embed-filter", default=None,
+                    help="EmbedFilter basis dir/.pt: project embeddings (spectral bulk) instead of "
+                         "using the raw model output. Default off → behavior unchanged.")
     ap.add_argument("--out", required=True)
     args = ap.parse_args()
 
@@ -71,10 +74,27 @@ def main() -> int:
     model = SentenceTransformer(args.embedder, device=dev)
     model.max_seq_length = args.max_length
     cap = args.max_length * 8
+    # With an EmbedFilter we must project the RAW pooled vectors, so skip ST normalization and
+    # normalize after projecting; without it, behavior is exactly as before (normalize in encode).
+    norm = args.embed_filter is None
     c_emb = model.encode([c["document"][:cap] for c in corpus], batch_size=64,
-                         normalize_embeddings=True, convert_to_tensor=True, show_progress_bar=False)
+                         normalize_embeddings=norm, convert_to_tensor=True, show_progress_bar=False)
     q_emb = model.encode([(args.query_instruction + q["query"]) for q in queries], batch_size=64,
-                         normalize_embeddings=True, convert_to_tensor=True, show_progress_bar=False)
+                         normalize_embeddings=norm, convert_to_tensor=True, show_progress_bar=False)
+    if args.embed_filter:
+        import torch.nn.functional as F
+
+        from boldt_embed.embed_filter import load_embed_filter_basis
+        basis, ef_meta = load_embed_filter_basis(args.embed_filter,
+                                                 expected_hidden_dim=c_emb.shape[1])
+        basis = basis.to(c_emb.device, c_emb.dtype)
+        c_emb = F.normalize(c_emb @ basis, p=2, dim=1)
+        q_emb = F.normalize(q_emb @ basis, p=2, dim=1)
+        pdim = int(c_emb.shape[1])
+        sidecar = {"embed_filter": args.embed_filter, "projected_dim": pdim, "metadata": ef_meta}
+        pathlib.Path(str(args.out) + ".embedfilter.json").write_text(
+            json.dumps(sidecar, ensure_ascii=False, indent=2), encoding="utf-8")
+        print(f"[dense] EmbedFilter projected to {pdim}-d -> {args.out}.embedfilter.json")
     cids = [c["doc_id"] for c in corpus]
     ctext = {c["doc_id"]: c["document"] for c in corpus}
     topk = min(args.k + 5, len(cids))

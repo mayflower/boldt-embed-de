@@ -519,3 +519,12 @@ python scripts/run_real_reranker.py      --device-index 0
 python scripts/run_eval_suite.py --save  # stand-in; add --model <ckpt> for real model
 # public MMTEB (NOT RUN here): python scripts/run_mteb_benchmark_template.py --model <export>
 ```
+
+## v7 EmbedFilter (planned / dry-run only)
+
+Status: **experimental postprocessor, NOT run here.** No numbers are claimed until a real
+`outputs/v7-embedfilter/sweep.json` exists, produced by `scripts/eval_embed_filter_sweep.py`
+(after building bases with `scripts/build_embed_filter.py`) and judged by
+`scripts/check_embedfilter_gate.py`. EmbedFilter competes against prefix Matryoshka at equal
+dimensions; see `docs/v7-embedfilter-plan.md`. No production recommendation until the advisory
+gate passes.

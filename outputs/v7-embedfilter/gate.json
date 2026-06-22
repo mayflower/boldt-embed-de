@@ -1,0 +1,28 @@
+{
+  "status": "fail",
+  "advisory": true,
+  "has_real_metrics": true,
+  "checks": [
+    {
+      "check": "tau2_512_within_tol_of_full",
+      "status": "pass",
+      "detail": "mean Δndcg/full=-0.0004, Δrecall/full=0.0005 (need ≥ -0.005)"
+    },
+    {
+      "check": "tau4_256_matches_or_beats_prefix256",
+      "status": "fail",
+      "detail": "mean Δndcg/prefix=-0.0043, Δrecall/prefix=-0.0013 (need ≥ 0)"
+    },
+    {
+      "check": "germanquad_dttest_guardrail",
+      "status": "fail",
+      "detail": "worst guardrail Δndcg/full=-0.02 (need ≥ -0.005)"
+    }
+  ],
+  "failed": [
+    "tau4_256_matches_or_beats_prefix256",
+    "germanquad_dttest_guardrail"
+  ],
+  "recommendation": "EmbedFilter does NOT clear the advisory gate — prefer prefix Matryoshka.",
+  "note": "advisory only; never auto-promotes; no production claim unless this passes on real saved outputs"
+}

@@ -46,6 +46,8 @@ _SRC_MODULES = [
     "synthetic_queries", "local_llm_generation", "negative_mining_2026", "train_modern",
     "llm2vec_boldt", "reranker_modern", "hybrid_eval", "experiment_registry",
     "v2_experiment_config", "source_manifest",
+    # v7 EmbedFilter / spectral Matryoshka (stdlib core)
+    "embed_filter",
 ]
 _SCRIPTS = [
     "validate_repo", "run_smoke_tests", "run_local_benchmark",
@@ -64,6 +66,9 @@ _SCRIPTS = [
     "validate_data_sources_v2", "build_v2_candidates", "summarize_teacher_cache",
     "build_reranker_candidates_v2", "check_reranker_promotion_gate",
     "run_v2_generalization_experiment", "summarize_v2_results",
+    # v7 EmbedFilter / spectral Matryoshka
+    "build_embed_filter", "eval_embed_filter_sweep", "diagnose_unembedding_lens",
+    "check_embedfilter_gate",
 ]
 _DOCS = [
     "RESEARCH_NOTES_2026", "ARCHITECTURE_PLAN", "DATA_PLAN",
@@ -93,6 +98,7 @@ REQUIRED_FILES += [f"src/boldt_embed/{m}.py" for m in _SRC_MODULES]
 REQUIRED_FILES += [f"scripts/{s}.py" for s in _SCRIPTS]
 REQUIRED_FILES += [f"docs/{d}.md" for d in _DOCS]
 REQUIRED_FILES += ["docs/research/llm2embed-2026.md"]
+REQUIRED_FILES += ["configs/experiments/v7_embedfilter.json", "docs/v7-embedfilter-plan.md"]
 REQUIRED_FILES += [
     "schemas/training_pair.schema.json", "schemas/benchmark_result.schema.json",
     "docs/data/data-sources.md", "docs/data/license-policy.md", "docs/data/leakage-policy.md",

@@ -1,0 +1,25 @@
+{
+  "run_id": "v7-embedfilter-sweep-20260622T084956",
+  "run_type": "eval",
+  "command": "python scripts/eval_embed_filter_sweep.py --config configs/experiments/v7_embedfilter.json --out outputs/v7-embedfilter/sweep.json",
+  "commit": "5a95a3125b146a7b34199bf8185fe6f48a64e2d9",
+  "date": "2026-06-22T08:49:56.412983+00:00",
+  "hardware": "Linux-6.11.0-1013-gcp-x86_64-with-glibc2.39",
+  "gpu": null,
+  "python": "3.12.13",
+  "torch": "2.6.0+cu124",
+  "transformers": "5.9.0",
+  "sentence_transformers": "5.5.1",
+  "input_artifacts": [
+    "configs/experiments/v7_embedfilter.json"
+  ],
+  "output_artifacts": [
+    "outputs/v7-embedfilter/sweep.json"
+  ],
+  "model": "outputs/v6-1-dense-top50/checkpoints/boldt-dense-rag-v6-1",
+  "dataset": "webfaq_heldout,germanquad,dt_test,gerdalir",
+  "metrics": {
+    "rows": 40
+  },
+  "notes": "v7 EmbedFilter head-to-head sweep (full vs prefix vs embedfilter)"
+}

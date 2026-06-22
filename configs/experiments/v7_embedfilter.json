@@ -1,0 +1,12 @@
+{
+  "experiment": "v7_embedfilter",
+  "base_model": "Boldt/Boldt-DC-350M",
+  "candidate_embedder": "outputs/v6-1-dense-top50/checkpoints/boldt-dense-rag-v6-1",
+  "taus": [1, 2, 4, 8, 16],
+  "compare_prefix_dims": [1024, 512, 256, 128, 64],
+  "active_eval_sets": ["webfaq_heldout", "local_rag", "germanquad", "dt_test"],
+  "diagnostic_eval_sets": ["gerdalir"],
+  "primary_metrics": ["nDCG@10", "Recall@100"],
+  "promotion_policy": "advisory_only_until_real_outputs_exist",
+  "notes": "EmbedFilter basis is the SVD bulk slice of the BASE model unembedding (Boldt/Boldt-DC-350M lm_head), applied as a postprocessor to the fine-tuned candidate_embedder's pooled output. Compared head-to-head against prefix Matryoshka at equal dims. local_rag has no eval set on disk yet and is skipped (not fabricated)."
+}

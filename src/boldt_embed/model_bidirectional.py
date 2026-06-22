@@ -79,8 +79,13 @@ class BidirectionalEmbedder:
         self._model = model
 
     def encode(self, texts: Sequence[str], *, pooling: Optional[str] = None,
-               dim: Optional[int] = None):  # pragma: no cover - requires torch
-        import torch
+               dim: Optional[int] = None, embed_filter: Optional[str] = None):
+        # `dim` and `embed_filter` are competing reductions — refuse to combine (pre-torch check).
+        if dim is not None and embed_filter is not None:
+            raise ValueError(
+                "pass either `dim` (prefix Matryoshka) or `embed_filter` (spectral bulk), not both"
+            )
+        import torch  # pragma: no cover - requires torch
         import torch.nn.functional as F
 
         self._load()
@@ -97,6 +102,10 @@ class BidirectionalEmbedder:
         else:  # eos / last_token
             lengths = mask.sum(1) - 1
             pooled = hidden[torch.arange(hidden.size(0)), lengths]
+        if embed_filter is not None:
+            from .embed_filter import load_embed_filter_basis
+            basis, _ = load_embed_filter_basis(embed_filter, expected_hidden_dim=pooled.shape[1])
+            return F.normalize(pooled @ basis.to(pooled.device, pooled.dtype), p=2, dim=1)
         if self.config.normalize_embeddings:
             pooled = F.normalize(pooled, p=2, dim=1)
         if dim is not None:

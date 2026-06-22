@@ -83,3 +83,7 @@ reranker_train_union_lists.jsonl
 # outputs/autoresearch/baseline/ ARE tracked.
 outputs/autoresearch/runs/
 outputs/autoresearch/checkpoints/
+
+# v7 EmbedFilter: SVD basis tensors are large binaries (also covered by the global *.pt rule);
+# the small metadata.json sidecars + sweep reports under outputs/v7-embedfilter/ ARE tracked.
+outputs/embedfilter/**/*.pt

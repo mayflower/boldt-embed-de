@@ -129,6 +129,27 @@ def plan_loss_stack(student_cfg, has_teacher_scores: bool, use_guide: bool = Fal
     }
 
 
+def plan_edge_spectrum_regularizer(reg_cfg: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+    """Stdlib plan for the OPTIONAL, default-OFF v7 edge-spectrum regularizer. Reports whether it
+    would be active. EXPERIMENTAL — this is NOT the paper's evaluated method; it only discourages
+    pooled embeddings from carrying energy in the dropped edge singular subspace."""
+    reg = reg_cfg or {}
+    enabled = bool(reg.get("enabled", False))
+    lam = float(reg.get("lambda", 0.0) or 0.0)
+    active = enabled and lam > 0.0
+    return {
+        "name": "edge_spectrum_regularizer",
+        "enabled": enabled,
+        "lambda": lam,
+        "active": active,
+        "embed_filter_artifact": reg.get("embed_filter_artifact"),
+        "apply_to": reg.get("apply_to", "pooled_embeddings"),
+        "normalize_before": bool(reg.get("normalize_before", False)),
+        "status": "active" if active else ("enabled_zero_lambda" if enabled else "disabled"),
+        "note": "experimental; not the paper's evaluated method; default off",
+    }
+
+
 # ---------------------------------------------------------------- v5 dense RAG (stdlib)
 def _margin_bucket(m: float) -> str:
     if m < 0:
@@ -558,6 +579,44 @@ def build_losses(model, student_cfg, has_teacher_scores: bool, guide_model=None,
     return out
 
 
+def edge_spectrum_penalty(pooled, bulk_basis, normalize_before: bool = False):
+    """Mean squared norm of the part of ``pooled`` OUTSIDE the kept bulk subspace — the residual
+    after reconstructing from the bulk basis. ``bulk_basis``: [H, K] (orthonormal columns). Lazy
+    torch. Used only by the opt-in v7 edge-spectrum regularizer."""
+    x = pooled
+    if normalize_before:
+        import torch.nn.functional as F
+        x = F.normalize(x, dim=1)
+    recon = (x @ bulk_basis) @ bulk_basis.t()      # projection back onto the bulk subspace
+    residual = x - recon
+    return residual.pow(2).sum(dim=1).mean()
+
+
+def make_edge_regularized_loss(base_loss, model, bulk_basis, lam: float,
+                               normalize_before: bool = False):
+    """Wrap an SBERT loss so it adds ``lam * edge_spectrum_penalty(anchor_pooled)``. Lazy torch.
+    EXPERIMENTAL — instantiated ONLY when the regularizer is explicitly enabled (default off)."""
+    import torch.nn as nn
+
+    class _EdgeRegLoss(nn.Module):
+        def __init__(self):
+            super().__init__()
+            self.base = base_loss
+            self.model = model
+            self.register_buffer("basis", bulk_basis)
+            self.lam = float(lam)
+            self.normalize_before = bool(normalize_before)
+
+        def forward(self, sentence_features, labels=None):
+            loss = self.base(sentence_features, labels)
+            pooled = self.model(sentence_features[0])["sentence_embedding"]
+            pen = edge_spectrum_penalty(pooled, self.basis.to(pooled.device, pooled.dtype),
+                                        self.normalize_before)
+            return loss + self.lam * pen
+
+    return _EdgeRegLoss()
+
+
 def train_modern_embedder(student_cfg, examples: Sequence[Dict[str, Any]], output_dir: str,
                           *, epochs: int = 1, max_steps: int = -1, batch_size: int = 32,
                           mini_batch_size: int = 8, lr: float = 2e-5, bf16: bool = True,
@@ -566,6 +625,7 @@ def train_modern_embedder(student_cfg, examples: Sequence[Dict[str, Any]], outpu
                           max_seq_length: int = 512, bidirectional: Optional[bool] = None,
                           use_distillation: Optional[bool] = None,
                           base_model: Optional[str] = None,
+                          edge_reg: Optional[Dict[str, Any]] = None,
                           extra_report: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     """Real training entry point (GPU). Builds the dataset, model, loss stack, and runs the
     SentenceTransformerTrainer with NO_DUPLICATES batch sampling. ML-only.
@@ -604,6 +664,16 @@ def train_modern_embedder(student_cfg, examples: Sequence[Dict[str, Any]], outpu
     has_scores = dataset_metadata(examples)["has_teacher_scores"]
     loss_objs = build_losses(model, student_cfg, has_scores, guide_model=guide,
                              use_distillation=use_distillation)
+    primary_loss = loss_objs["primary"]
+    reg_plan = plan_edge_spectrum_regularizer(edge_reg)
+    if reg_plan["active"]:   # opt-in only — default config leaves this disabled
+        from boldt_embed.embed_filter import load_embed_filter_basis
+        hdim = model.get_sentence_embedding_dimension()
+        basis, _ = load_embed_filter_basis(reg_plan["embed_filter_artifact"],
+                                           expected_hidden_dim=hdim)
+        primary_loss = make_edge_regularized_loss(
+            primary_loss, model, basis.to(model.device), reg_plan["lambda"],
+            reg_plan["normalize_before"])
 
     args = SentenceTransformerTrainingArguments(
         output_dir=output_dir, num_train_epochs=epochs, max_steps=max_steps,
@@ -611,13 +681,14 @@ def train_modern_embedder(student_cfg, examples: Sequence[Dict[str, Any]], outpu
         gradient_checkpointing=gradient_checkpointing,
         batch_sampler=BatchSamplers.NO_DUPLICATES)
     trainer = SentenceTransformerTrainer(model=model, args=args, train_dataset=train_ds,
-                                         loss=loss_objs["primary"])
+                                         loss=primary_loss)
     trainer.train()
     model.save(output_dir)
     report = {"status": "ok", "output_dir": output_dir, "base_model": base,
               "num_examples": len(examples), "uses_explicit_negatives": use_neg,
               "bidirectional": bidirectional,
               "gpu_name": torch.cuda.get_device_name(0) if torch.cuda.is_available() else None,
+              "edge_spectrum_regularizer": reg_plan,
               "loss_stack": plan_loss_stack(student_cfg, has_scores, use_guide=guide is not None,
                                             use_distillation=use_distillation)}
     if extra_report:

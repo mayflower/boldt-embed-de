@@ -101,6 +101,23 @@ benchmark datasets (GermanQuAD/GerDaLIR/MMTEB) are held out; training uses non-b
 permissive corpora. No number is a quality claim unless produced by a saved command under
 `outputs/` with run metadata; the local hashing benchmark validates *plumbing* only.
 
+## v7 EmbedFilter experiment (experimental)
+
+An experimental **postprocessor** (arXiv 2606.07502): project embeddings onto the centered "bulk"
+slice of the unembedding matrix's SVD — an alternative to prefix Matryoshka truncation at the same
+output dim. It is **implemented as an experimental postprocessor** and gated; there is **no
+production recommendation until the v7 advisory gate passes** on real saved outputs. It **competes
+against prefix Matryoshka at the same dimensions** and does not improve quality unless
+`outputs/v7-embedfilter/sweep.json` shows it. Build bases with `scripts/build_embed_filter.py`,
+run the head-to-head with `scripts/eval_embed_filter_sweep.py`, and judge it with
+`scripts/check_embedfilter_gate.py`. See `docs/v7-embedfilter-plan.md`.
+
+**First real run (2026-06-22, dense-v6.1 on RTX A6000): advisory gate FAILED.** EmbedFilter matches
+prefix Matryoshka at 512-d but is worse on the primary WebFAQ set at ≤256-d and regresses the
+GermanQuAD guardrail (−0.02 nDCG@10 at 256-d) → **prefix Matryoshka remains the reduction method; no
+production recommendation.** (It does improve the OOD-legal GerDaLIR diagnostic, which is retired.)
+Full numbers in `docs/v7-embedfilter-plan.md` and `outputs/v7-embedfilter/sweep.json`.
+
 ## Install
 
 ```bash

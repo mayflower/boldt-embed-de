@@ -1,0 +1,33 @@
+{
+  "kind": "embed_filter",
+  "model": "Boldt/Boldt-DC-350M",
+  "hidden_dim": 1024,
+  "tau": 4,
+  "keep_dim": 256,
+  "left": 384,
+  "right": 640,
+  "strategy": "bulk_center",
+  "source_matrix": "output_embeddings",
+  "vocab_size": 32000,
+  "artifact_format": "basis.pt:[hidden_dim,keep_dim] + metadata.json",
+  "device": "cuda",
+  "svd_dtype": "float32",
+  "basis_shape": [
+    1024,
+    256
+  ],
+  "singular_value_stats": {
+    "n": 1024,
+    "max": 86.28123474121094,
+    "min": 1.4153664112091064,
+    "kept_first": 4.33196496963501,
+    "kept_last": 3.902801752090454,
+    "energy_kept_frac": 0.169719
+  },
+  "torch": "2.6.0+cu124",
+  "transformers": "5.9.0",
+  "command": "python scripts/build_embed_filter.py --model Boldt/Boldt-DC-350M --tau 4 --out outputs/embedfilter/boldt-dc-350m_tau4",
+  "commit": "5a95a3125b146a7b34199bf8185fe6f48a64e2d9",
+  "timestamp_utc": "2026-06-22T08:47:05.688890+00:00",
+  "warnings": []
+}

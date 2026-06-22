@@ -1,0 +1,17 @@
+{
+  "base_model": "Boldt/Boldt-DC-350M",
+  "student_variant": "bidirectional",
+  "matryoshka_dims": [1024, 768, 512, 256, 128, 64],
+  "target_dim": 1024,
+  "losses": ["cached_gist_or_cached_mnrl", "matryoshka", "distillation", "margin_mse"],
+  "train_eval_split_policy": "public_benchmarks_eval_only",
+  "hardware_profile": "single_gpu_48gb",
+  "edge_spectrum_regularizer": {
+    "enabled": false,
+    "embed_filter_artifact": "outputs/embedfilter/boldt-dc-350m_tau4",
+    "lambda": 0.0,
+    "apply_to": "pooled_embeddings",
+    "normalize_before": false,
+    "note": "EXPERIMENTAL and DEFAULT OFF. Not the paper's evaluated method. Discourages pooled embeddings from carrying energy in the dropped edge singular subspace. Do not enable for a real run without explicit approval."
+  }
+}

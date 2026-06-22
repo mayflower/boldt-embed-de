@@ -95,8 +95,10 @@ def main() -> int:
     bidi_eff = bidi if bidi is not None else (cfg.student_variant == "bidirectional")
     plan = TM.plan_loss_stack(cfg, meta["has_teacher_scores"], use_guide=bool(args.guide_model),
                               use_distillation=distill)
+    reg_plan = TM.plan_edge_spectrum_regularizer(cfg.raw.get("edge_spectrum_regularizer"))
     print(f"[dataset] {json.dumps(meta, ensure_ascii=False)}")
     print(f"[loss-stack] {json.dumps(plan, ensure_ascii=False)} bidirectional={bidi_eff}")
+    print(f"[edge-spectrum-regularizer] {json.dumps(reg_plan, ensure_ascii=False)}")
 
     if args.dry_run:
         assert "torch" not in sys.modules, "dry-run must not import torch"
@@ -116,7 +118,7 @@ def main() -> int:
         batch_size=args.batch_size, mini_batch_size=args.mini_batch_size, lr=args.lr,
         bf16=args.bf16, gradient_checkpointing=args.gradient_checkpointing,
         use_lora=args.lora, guide_model_name=args.guide_model, bidirectional=bidi,
-        use_distillation=distill,
+        use_distillation=distill, edge_reg=cfg.raw.get("edge_spectrum_regularizer"),
         extra_report={"hard_negatives": args.hard_negatives, "teacher_cache": args.teacher_cache})
     card = ER.emit_run_card(args.run_id, "train_embedder", "scripts/train_modern_embedder.py",
                             model=cfg.base_model, dataset=args.teacher_cache,
