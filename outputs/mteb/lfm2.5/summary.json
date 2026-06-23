@@ -1,0 +1,31 @@
+{
+  "meta": {
+    "command": "run_mteb_retrieval_de.py",
+    "commit": "c746ff99be260da6214c5b2de4d1ff51c896b1e0",
+    "model": "LiquidAI/LFM2.5-Embedding-350M",
+    "label": "lfm2.5",
+    "tasks": [
+      "GermanQuAD-Retrieval",
+      "GerDaLIRSmall",
+      "MIRACLRetrievalHardNegatives",
+      "MultiLongDocRetrieval"
+    ],
+    "langs": [
+      "deu"
+    ],
+    "batch_size": 32,
+    "max_seq_length": 512,
+    "loader": "st",
+    "query_prompt": "query:",
+    "doc_prompt": "document:",
+    "hardware": "Linux-6.11.0-1013-gcp-x86_64-with-glibc2.39",
+    "mteb_version": "2.16.0"
+  },
+  "elapsed_seconds": 597.1,
+  "scores": {
+    "GermanQuAD-Retrieval": 0.9134528130671506,
+    "GerDaLIRSmall": 0.15018,
+    "MIRACLRetrievalHardNegatives": 0.5203,
+    "MultiLongDocRetrieval": 0.23696
+  }
+}

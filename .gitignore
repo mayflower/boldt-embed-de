@@ -91,3 +91,7 @@ outputs/embedfilter/**/*.pt
 # AutoResearch prepared data: large generated candidate/clean training JSONL are local working
 # files (regenerable from the leakage scan); the small reports + manifest under prepared/ ARE tracked.
 outputs/autoresearch/prepared/*.jsonl
+
+# MTEB(deu) eval: keep summaries, run-metadata, the small mteb result-cache JSONs, and the
+# comparison doc; the verbose progress logs (with progress bars) are noise.
+outputs/mteb/*.log

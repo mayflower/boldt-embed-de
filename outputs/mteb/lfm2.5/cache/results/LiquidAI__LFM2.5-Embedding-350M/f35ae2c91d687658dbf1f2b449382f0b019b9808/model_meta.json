@@ -1,0 +1,40 @@
+{
+    "loader_kwargs": {},
+    "name": "LiquidAI/LFM2.5-Embedding-350M",
+    "revision": "f35ae2c91d687658dbf1f2b449382f0b019b9808",
+    "release_date": null,
+    "languages": null,
+    "n_parameters": null,
+    "n_active_parameters_override": null,
+    "n_embedding_parameters": 65945600,
+    "memory_usage_mb": null,
+    "max_tokens": 512,
+    "embed_dim": 1024,
+    "license": null,
+    "open_weights": null,
+    "public_training_code": null,
+    "public_training_data": null,
+    "framework": [
+        "Sentence Transformers",
+        "PyTorch"
+    ],
+    "reference": null,
+    "similarity_fn_name": "cosine",
+    "use_instructions": null,
+    "training_datasets": null,
+    "adapted_from": "LiquidAI/LFM2.5-Embedding-350M",
+    "superseded_by": null,
+    "modalities": [
+        "text"
+    ],
+    "model_type": [
+        "dense"
+    ],
+    "citation": null,
+    "contacts": null,
+    "experiment_kwargs": null,
+    "output_dtypes": null,
+    "extra_requirements_groups": null,
+    "loader": "SentenceTransformerEncoderWrapper",
+    "is_cross_encoder": false
+}

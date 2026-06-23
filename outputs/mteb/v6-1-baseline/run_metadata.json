@@ -1,0 +1,22 @@
+{
+  "command": "run_mteb_retrieval_de.py",
+  "commit": "c746ff99be260da6214c5b2de4d1ff51c896b1e0",
+  "model": "outputs/v6-1-dense-top50/checkpoints/boldt-dense-rag-v6-1",
+  "label": "v6-1-baseline",
+  "tasks": [
+    "GermanQuAD-Retrieval",
+    "GerDaLIRSmall",
+    "MIRACLRetrievalHardNegatives",
+    "MultiLongDocRetrieval"
+  ],
+  "langs": [
+    "deu"
+  ],
+  "batch_size": 64,
+  "max_seq_length": 256,
+  "loader": "st",
+  "query_prompt": null,
+  "doc_prompt": null,
+  "hardware": "Linux-6.11.0-1013-gcp-x86_64-with-glibc2.39",
+  "mteb_version": "2.16.0"
+}

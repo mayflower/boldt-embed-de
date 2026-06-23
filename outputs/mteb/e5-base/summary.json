@@ -1,0 +1,31 @@
+{
+  "meta": {
+    "command": "run_mteb_retrieval_de.py",
+    "commit": "c746ff99be260da6214c5b2de4d1ff51c896b1e0",
+    "model": "intfloat/multilingual-e5-base",
+    "label": "e5-base",
+    "tasks": [
+      "GermanQuAD-Retrieval",
+      "GerDaLIRSmall",
+      "MIRACLRetrievalHardNegatives",
+      "MultiLongDocRetrieval"
+    ],
+    "langs": [
+      "deu"
+    ],
+    "batch_size": 32,
+    "max_seq_length": 512,
+    "loader": "mteb",
+    "query_prompt": null,
+    "doc_prompt": null,
+    "hardware": "Linux-6.11.0-1013-gcp-x86_64-with-glibc2.39",
+    "mteb_version": "2.16.0"
+  },
+  "elapsed_seconds": 688.0,
+  "scores": {
+    "GermanQuAD-Retrieval": 0.9234271022383546,
+    "GerDaLIRSmall": 0.15298,
+    "MIRACLRetrievalHardNegatives": 0.52965,
+    "MultiLongDocRetrieval": 0.26332999999999995
+  }
+}

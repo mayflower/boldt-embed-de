@@ -1,0 +1,31 @@
+{
+  "meta": {
+    "command": "run_mteb_retrieval_de.py",
+    "commit": "c746ff99be260da6214c5b2de4d1ff51c896b1e0",
+    "model": "Qwen/Qwen3-Embedding-0.6B",
+    "label": "qwen3-0.6b",
+    "tasks": [
+      "GermanQuAD-Retrieval",
+      "GerDaLIRSmall",
+      "MIRACLRetrievalHardNegatives",
+      "MultiLongDocRetrieval"
+    ],
+    "langs": [
+      "deu"
+    ],
+    "batch_size": 16,
+    "max_seq_length": 512,
+    "loader": "mteb",
+    "query_prompt": null,
+    "doc_prompt": null,
+    "hardware": "Linux-6.11.0-1013-gcp-x86_64-with-glibc2.39",
+    "mteb_version": "2.16.0"
+  },
+  "elapsed_seconds": 1136.3,
+  "scores": {
+    "GermanQuAD-Retrieval": 0.9109422262552934,
+    "GerDaLIRSmall": 0.18048,
+    "MIRACLRetrievalHardNegatives": 0.54079,
+    "MultiLongDocRetrieval": 0.272125
+  }
+}
