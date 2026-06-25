@@ -314,6 +314,102 @@ def _clean_train_pairs_from_manifest(runtime: Dict[str, Any]) -> Tuple[Optional[
                   "nor zero raw hits — refusing to train on unverified data")
 
 
+_CATALOGUE_PATH = ROOT / "configs" / "data_sources.json"
+
+
+def _load_catalogue() -> Dict[str, Dict[str, Any]]:
+    """Map every catalogue source id -> its record (path/leakage/training_usable)."""
+    out: Dict[str, Dict[str, Any]] = {}
+    try:
+        cat = json.loads(_CATALOGUE_PATH.read_text(encoding="utf-8"))
+    except Exception:
+        return out
+    for grp in ("train_pairs_processed_unions", "train_pairs_raw_sources"):
+        for s in cat.get(grp, []) or []:
+            if isinstance(s, dict) and s.get("id"):
+                out[s["id"]] = s
+    return out
+
+
+def _materialize_data_mixture(config: Dict[str, Any], out_dir: Path,
+                              cmd_log: List[Dict[str, Any]]) -> Tuple[Optional[str], Optional[str]]:
+    """Build ONE real training corpus from catalogue sources named in ``config['data_mixture']``
+    (weights, keys = `configs/data_sources.json` ids), so the loop can search data MIXES in REAL
+    mode (today data_mixture only steers dry-run pseudo-metrics).
+
+    FAIL-CLOSED leakage: only sources flagged ``training_usable`` AND ``leakage in
+    {scanned_clean, clean}`` may be mixed — the union of individually-scanned-clean sources is clean
+    against the same eval sets, so NO slow in-trial re-scan is needed. Each source is stride-sampled
+    to its weighted share of ``runtime.mixture_total``; the kept set is FAQ-capped + domain-balanced
+    via ``train_modern.domain_balanced_examples``. Opt-in: runtime.materialize_mixture must be true.
+    Returns (mixed_path | None, error | None). Pure stdlib (no torch)."""
+    runtime = config.get("runtime", {}) or {}
+    if not runtime.get("materialize_mixture"):
+        return None, None
+    mixture = config.get("data_mixture") or {}
+    if not mixture:
+        return None, "materialize_mixture set but data_mixture is empty"
+    total = int(runtime.get("mixture_total", 500000))
+    faq_cap = float(runtime.get("faq_cap", 0.30))
+    catalogue = _load_catalogue()
+    wsum = sum(float(w) for w in mixture.values()) or 1.0
+
+    examples: List[Dict[str, Any]] = []
+    used: List[Dict[str, Any]] = []
+    for sid, weight in mixture.items():
+        rec = catalogue.get(sid)
+        if not rec:
+            return None, f"data_mixture source {sid!r} is not in configs/data_sources.json"
+        if not rec.get("training_usable"):
+            return None, f"data_mixture source {sid!r} is training_usable=false"
+        if rec.get("leakage") not in ("scanned_clean", "clean"):
+            return None, (f"data_mixture source {sid!r} leakage={rec.get('leakage')!r} — only "
+                          "scanned_clean/clean sources may be mixed (run run_full_leakage_scan first)")
+        path = rec.get("path")
+        p = Path(path) if path and Path(path).is_absolute() else (ROOT / str(path))
+        if not p.exists():
+            return None, f"data_mixture source {sid!r} file missing: {path}"
+        budget = max(1, int(round(total * float(weight) / wsum)))
+        rows = [ln for ln in p.read_text(encoding="utf-8").split("\n") if ln.strip()]
+        stride = max(1, len(rows) // budget)
+        kept = 0
+        for i in range(0, len(rows), stride):
+            try:
+                d = json.loads(rows[i])
+            except Exception:
+                continue
+            q = (d.get("query") or "").strip()
+            doc = (d.get("positive") or d.get("document") or "")
+            doc = doc.strip() if isinstance(doc, str) else ""
+            if not q or len(doc) < 5:
+                continue
+            examples.append({"query": q, "positive": doc,
+                             "domain": d.get("domain") or sid, "source": sid})
+            kept += 1
+            if kept >= budget:
+                break
+        used.append({"source": sid, "weight": float(weight), "budget": budget, "kept": kept})
+
+    if not examples:
+        return None, "data_mixture produced no usable examples"
+
+    try:
+        from boldt_embed.train_modern import domain_balanced_examples  # stdlib, lazy
+        balanced, bal_report = domain_balanced_examples(examples, faq_cap=faq_cap)
+    except Exception as exc:  # never silently train the wrong thing
+        return None, f"domain_balanced_examples failed: {type(exc).__name__}: {exc}"
+
+    mixed = Path(out_dir) / "data_mixture.jsonl"
+    with mixed.open("w", encoding="utf-8") as w:
+        for e in balanced:
+            w.write(json.dumps(e, ensure_ascii=False) + "\n")
+    cmd_log.append({"note": "materialized data_mixture from catalogue (scanned_clean sources only)",
+                    "data_mixture_sources": used, "faq_cap": faq_cap,
+                    "mixed_rows": len(balanced), "faq_balance": bal_report,
+                    "mixed_path": str(mixed)})
+    return str(mixed), None
+
+
 def _evaluate_in_process(ev, label: str, model_spec: Dict[str, Any], eval_sets: List[str],
                          eval_set_paths: Dict[str, Any]) -> Dict[str, Any]:
     """Evaluate ONE checkpoint over the eval sets by calling the eval script's own functions,
@@ -461,17 +557,27 @@ def _run_real(config: Dict[str, Any], out_dir: Path, run_id: str,
     train_pairs = runtime.get("train_pairs")
     hard_negs = runtime.get("hard_negatives")
     train_base = runtime.get("train_base_model")
-    # Leakage-safety: when a verified-clean prepared manifest is supplied, REAL training must use
-    # the file the leakage gate certified — not the raw pairs the base config points at. This ties
-    # "leakage: clean" to the data actually trained on (fail-closed if the cleaned file is missing).
-    clean_pairs, clean_err = _clean_train_pairs_from_manifest(runtime)
-    if clean_err:
-        return fail(f"leakage-safety: {clean_err}")
-    if do_train and clean_pairs:
-        cmd_log.append({"note": "training on manifest-certified clean data",
-                        "train_pairs_override": clean_pairs,
-                        "train_pairs_configured": train_pairs})
-        train_pairs = clean_pairs
+    # Data-mixture (opt-in): build a real training corpus from catalogue sources (scanned_clean only,
+    # fail-closed) so the loop can search data MIXES, not just one fixed file. Clean-by-construction,
+    # so it takes precedence over (and skips) the manifest-clean path below.
+    if do_train and runtime.get("materialize_mixture"):
+        mixed, mix_err = _materialize_data_mixture(config, out_dir, cmd_log)
+        if mix_err:
+            return fail(f"data-mixture: {mix_err}")
+        if mixed:
+            train_pairs = mixed
+    else:
+        # Leakage-safety: when a verified-clean prepared manifest is supplied, REAL training must use
+        # the file the leakage gate certified — not the raw pairs the base config points at. This ties
+        # "leakage: clean" to the data actually trained on (fail-closed if the cleaned file is missing).
+        clean_pairs, clean_err = _clean_train_pairs_from_manifest(runtime)
+        if clean_err:
+            return fail(f"leakage-safety: {clean_err}")
+        if do_train and clean_pairs:
+            cmd_log.append({"note": "training on manifest-certified clean data",
+                            "train_pairs_override": clean_pairs,
+                            "train_pairs_configured": train_pairs})
+            train_pairs = clean_pairs
     if do_train:
         if not train_script.exists():
             missing.append(f"{train_script.relative_to(ROOT)} (train script)")

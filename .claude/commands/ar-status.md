@@ -22,3 +22,7 @@ From the above, summarize for me:
 
 Reminder: only `real` rows with a verified-clean `leakage_status` and passing guardrails are
 promotable; `dry_run` rows are plumbing only. Do not run or change anything else.
+
+Note: this log tracks the in-loop **WebFAQ proxy**. The separate **MTEB(deu) frontier** program
+(beat e5-base/LFM2.5) is driven by `/ar-data`, `/ar-specialist`, `/ar-merge`, `/ar-distill` and
+judged by `/ar-mteb`; its results live under `outputs/mteb/<label>/summary.json`, not here.

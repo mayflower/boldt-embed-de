@@ -1,0 +1,23 @@
+{
+  "command": "run_mteb_retrieval_de.py",
+  "commit": "3849ad756bbfb224db3f2e711a169545892fbfba",
+  "model": "outputs/v8/listwise-kl/checkpoint",
+  "label": "v8-listwise-kl",
+  "tasks": [
+    "GermanQuAD-Retrieval",
+    "GerDaLIRSmall",
+    "MIRACLRetrievalHardNegatives",
+    "MultiLongDocRetrieval"
+  ],
+  "langs": [
+    "deu"
+  ],
+  "batch_size": 32,
+  "max_seq_length": 512,
+  "loader": "st",
+  "bidirectional": false,
+  "query_prompt": null,
+  "doc_prompt": null,
+  "hardware": "Linux-6.11.0-1013-gcp-x86_64-with-glibc2.39",
+  "mteb_version": "2.16.0"
+}

@@ -23,9 +23,11 @@ For round k = 1..N:
    State a one-line rationale. On k = 1, run the current config unchanged.
    In **real** mode the knobs that actually move training are `loss.temperature`,
    `training.learning_rate`, `training.warmup_ratio`, `training.max_steps`, and
-   `training.batch_size` — **`data_mixture` only moves dry-run pseudo-metrics** (real training uses
-   the whole verified-clean file), so don't spend real rounds tuning the mixture. Keep
-   `training.max_steps` modest (≈300) so each round fits the 20-minute budget, and if you raise
+   `training.batch_size`. By default `data_mixture` only moves dry-run pseudo-metrics (real training
+   uses the prepared manifest file) — so don't tune the mixture in a vanilla real round. To make the
+   mixture REAL, compose it first with `/ar-data` (sets `runtime.materialize_mixture=true`), which
+   builds + leakage-scans a corpus from `configs/data_sources.json` that this loop then trains on.
+   Keep `training.max_steps` modest (≈300) so each round fits the 20-minute budget, and if you raise
    `max_document_length` you must lower `batch_size` (the recipe caps seq length to fit GPU memory).
 2. Run exactly one iteration:
    - **dry:**  `conda run -n boldtembed python scripts/ar_loop.py --dry-run --status keep`

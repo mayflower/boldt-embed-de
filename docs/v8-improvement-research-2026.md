@@ -126,6 +126,33 @@ Next: uncap the sources (full SWIM-IR/mMARCO, more of the 17.9M mqa) + listwise-
 + per-task/balanced mixing. **Arc lesson: fetching real targeted data should have been step 1 — it
 moved every metric, where architecture/budget/local-recombination did not.**
 
+### Stage 2 — listwise-KL distillation (run; modest positive, domain-shaped)
+Pure listwise-KL FT (`scripts/train_listwise_kl.py`) from the diverse model over the cached
+teacher-scored lists (`reranker_train_lists_teacher_scored.jsonl`, 7500, each with a precomputed
+`teacher_softmax_target`). 1500 steps, top-24, lr 5e-6, grad-checkpointing. @512:
+
+| | GermanQuAD | GerDaLIR | MIRACL | MLDR |
+|---|---|---|---|---|
+| diverse base | 0.882 | **0.107** | 0.371 | 0.252 |
+| + listwise-KL | 0.887 | 0.086 | **0.385** | 0.255 |
+
+**MIRACL → new v8 best 0.385; GermanQuAD/MLDR up; GerDaLIR down (0.107→0.086).** The objective lever
+works but is shaped by the teacher-list domain (mostly short-doc QA german_stress/dt → sharpens
+short-doc ranking, costs legal/long). Per-batch loss is very noisy (B=4 over heterogeneous lists:
+0.04↔2.0) — judge by eval, not loss. **Higher-value next: score the NEW SWIM-IR/mMARCO data with the
+Qwen3-Reranker teacher (a ~1M-list inference job) and distill on THAT — domain-matched + at scale.**
+
+## v8 CONSOLIDATED (best per task across all runs)
+| | GermanQuAD | GerDaLIR | MIRACL | MLDR |
+|---|---|---|---|---|
+| v6.1 baseline | 0.843 | 0.046 | 0.332 | 0.197 |
+| **best v8** | **0.889** | **0.107** | **0.385** | **0.255** |
+| competitors | 0.91-0.92 | 0.15-0.18 | 0.52-0.54 | 0.24-0.27 |
+Real fetched data (SWIM-IR/mMARCO/mqa, 1.07M) + listwise-KL closed most of the GermanQuAD/MLDR gap
+and ~⅓ of MIRACL; GerDaLIR/MIRACL still trail. The two open levers to close the rest: (1) MORE data
+(uncap SWIM-IR/mMARCO, the 17.9M mqa) with balanced per-task mixing to avoid the dilution trade-off;
+(2) teacher-scored listwise-KL on that NEW data.
+
 ### Stage 1 — Broad weakly-supervised contrastive pretrain (data breadth)
 The missing stage. mE5 = ~1B pairs @ 32k batch; Qwen3 = 150M synthetic; we have **0**. Build a broad
 German/multilingual pair corpus from **local non-eval assets** — `qa_passage_non_eval_union.jsonl`
@@ -171,3 +198,22 @@ Stage 0 (foundational, ~hours) → gate → Stage 1 (GPU-days, data prep) → St
 loss) → gate. The AutoResearch loop can still hill-climb the *cheap* Stage-2 knobs (τ, #negs, mining
 margins) but the architecture/pretrain/data changes are recipe-level, outside its editable surface.
 Full citations: see `outputs/` research notes and the inline arXiv IDs above.
+
+## 6. Driving the program — the instrumented harness (no autonomous training)
+The findings above are now operationalized as user-driven slash commands (`AUTORESEARCH.md` §"The
+v8+ frontier program"). Nothing trains on its own — you trigger each GPU step. The map:
+
+| Phase | Command(s) | What it tests / produces |
+|---|---|---|
+| **0 — merge early-test** | `/ar-merge outputs/v8/swimir-12k/checkpoint,outputs/v8/diverse-causal/checkpoint` | Does soup of the existing wiki-specialist (MIRACL) + diverse-specialist (GerDaLIR) keep BOTH strong tasks? Needs only on-disk checkpoints — the cheapest signal on whether specialist→merge escapes the §"composition trade-off". |
+| **1 — balanced data** | `/ar-data swim_ir_de_full:0.4,mmarco_de:0.3,mqa_de:0.3` → `/ar-run 1 real` → `/ar-mteb` | Does an uncapped, domain-balanced, **materialized** mixture (the `_materialize_data_mixture` hook, fail-closed on unscanned sources) beat the capped diverse-16k mix on the aggregate? |
+| **2 — specialists + merge** | `/ar-specialist <src>` ×N from a shared warm-start → `/ar-merge` → `/ar-mteb` | Train one expert per domain (all warm-started from `diverse-causal` so they share a basin), then merge — the structural escape from the single-mix trade-off. |
+| **3 — distill** | `/ar-distill <merged> existing` (cheap) then `new:<src>` (teacher-scored, expensive) → `/ar-mteb` | Listwise-KL sharpens ranking; §Stage-2 showed it is **domain-shaped** (lifts the teacher-list domain, can cost others) — the frontier gate catches the regression. |
+
+The promotion bar is **`scripts/check_mteb_frontier_gate.py`** (a protected `check_*`, run post-eval
+outside the loop): a candidate is `promotable` only if its 4-task aggregate ≥ the same-size-peer
+frontier (max of e5-base / LFM2.5) **and** no per-task regression below the @512 baseline − tol
+**and** leakage clean. Every source the harness may train on is enumerated in
+`configs/data_sources.json` with its `leakage`/`training_usable` flags; the recipe is fail-closed on
+anything not `scanned_clean`. This keeps the §1–§4 discipline (train≠eval, no committed weights, no
+benchmark claim without a saved `outputs/mteb/<label>/summary.json`) intact under interactive driving.

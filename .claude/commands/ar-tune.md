@@ -23,7 +23,8 @@ Do this, then stop:
    sensible change to `configs/autoresearch/experiments/current.json`. Edit **only** these fields:
    `loss.*`, `training.*`, `data_mixture`, `matryoshka_dims`, `pooling`, `normalize_embeddings`.
    **Never** edit a protected surface, the base config, or the recipe scoring/gates. State the
-   one-line rationale.
+   one-line rationale. (A `data_mixture` edit only moves the dry-run proxy unless the mixture is
+   materialized — use `/ar-data` to make it real for a `real` round.)
 2. Run one iteration (dry-run unless I explicitly said "real"):
    ```bash
    conda run -n boldtembed python scripts/ar_loop.py --dry-run --status keep
