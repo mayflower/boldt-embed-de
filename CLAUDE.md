@@ -114,6 +114,20 @@ MMTEB) are held out; training uses non-benchmark permissive corpora. The
 `public_benchmarks_eval_only` split policy is a hard config error if violated. Leakage is
 checked by `leakage_index.py` / `scripts/run_full_leakage_scan.py`. See `docs/data/`.
 
+**Data sources catalogue (`configs/data_sources.json`) — single source of truth for what may be
+trained on.** Every German retrieval corpus on disk + fetchable online source is catalogued there
+with rows, domain, query/positive quality (e5 cosine), leakage status, and a `training_usable` flag,
+so the AutoResearch prep/recipe can *select* sources instead of grabbing convenient files. **Before
+adding any source to a training mixture: it must be `training_usable:true` AND have
+`leakage:"scanned_clean"`** (run `scripts/run_full_leakage_scan.py --drop-hits` against the eval
+corpora first; record the report path). Highlights: `v6_clean` (22k, the current production set);
+`broad_pairs_clean` (69k union, scanned); `swim_ir_de_full` (400k SWIM-IR Wikipedia ad-hoc =
+the MIRACL distribution, fetched via `scripts/fetch_online_de_pairs.py`); listwise-KL teacher lists
+(`reranker_train_lists_teacher_scored`); MNTP corpus (`mntp_texts`). `webfaq_train` is **eval-
+adjacent** (WebFAQ is the primary metric) — not training_usable without disjointness proof.
+Tooling: fetch = `fetch_online_de_pairs.py`, union = `build_broad_pairs.py`, scan =
+`run_full_leakage_scan.py`, quality probe = `probe_pair_quality.py`.
+
 **Teacher → student workflow:** strong teachers (`Qwen3-Embedding-8B` + `Qwen3-Reranker-8B`,
 both Apache-2.0, configured in `configs/teacher_models.json`) score multi-domain German data;
 the Boldt student is trained to match them (`config_teacher.py`, `teacher.py`,

@@ -1,0 +1,20 @@
+{
+  "command": "run_mteb_retrieval_de.py",
+  "commit": "5b8821ec45caf3b07893aefd88305db1fcbe558d",
+  "model": "outputs/autoresearch/runs/ar-real-20260623T021752/checkpoint",
+  "label": "v6-best-round7-2048",
+  "tasks": [
+    "GerDaLIRSmall",
+    "MultiLongDocRetrieval"
+  ],
+  "langs": [
+    "deu"
+  ],
+  "batch_size": 8,
+  "max_seq_length": 2048,
+  "loader": "st",
+  "query_prompt": null,
+  "doc_prompt": null,
+  "hardware": "Linux-6.11.0-1013-gcp-x86_64-with-glibc2.39",
+  "mteb_version": "2.16.0"
+}

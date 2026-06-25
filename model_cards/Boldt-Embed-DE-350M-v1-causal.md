@@ -149,6 +149,13 @@ Native 1024-d, truncatable to 768 / 512 / 256 / 128 / 64 (re-normalize after tru
 accuracy/footprint trade-off per dimension is reported by the Matryoshka sweep in
 `scripts/eval_hybrid_retrieval.py`.
 
+**Promotion policy (dims <256 are training-only).** 128- and 64-d prefixes are kept in the
+Matryoshka loss (nested training is free and front-loads information) but are **not recommended for
+production retrieval** — quality degrades measurably below 256-d (cf. MRL / Starbucks truncation
+results). **Recommended truncations: 1024 / 768 / 512 / 256.** A dimension is advertised as
+recommended only once its retention clears the gate on a real metric (the harness enforces 256-d
+retention ≥ 0.95); 128 / 64 are diagnostic-only.
+
 ## Production default
 **Current production default: causal (this variant)**, evidence-driven from the executed runs.
 bi+MNTP is competitive and beats causal in-domain (DT-test 0.967 vs 0.950), but causal keeps a

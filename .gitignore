@@ -95,3 +95,13 @@ outputs/autoresearch/prepared/*.jsonl
 # MTEB(deu) eval: keep summaries, run-metadata, the small mteb result-cache JSONs, and the
 # comparison doc; the verbose progress logs (with progress bars) are noise.
 outputs/mteb/*.log
+
+# v8 data pipeline: large fetched/derived training JSONL, model checkpoints, the MNTP-adapted base,
+# and verbose logs are local working files (regenerable via scripts/fetch_*.py +
+# run_full_leakage_scan.py). The small *.json leakage reports + the v8 doc/catalogue/eval summaries
+# ARE tracked. The SLERP merge (outputs/merged/) is a logged-negative checkpoint, not tracked.
+outputs/v8/**/*.jsonl
+outputs/v8/**/checkpoint/
+outputs/v8/mntp-base/
+outputs/v8/**/*.log
+outputs/merged/

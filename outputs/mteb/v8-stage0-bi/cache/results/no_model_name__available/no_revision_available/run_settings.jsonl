@@ -1,0 +1,4 @@
+{"task": "GermanQuAD-Retrieval", "split": "test", "subset": "default", "version": {"mteb": "2.16.0", "torch": "2.6.0+cu124", "sentence-transformers": "5.5.1", "flash-attn": null, "transformers": "5.9.0"}, "encode_kwargs": {"batch_size": 32}}
+{"task": "GerDaLIRSmall", "split": "test", "subset": "default", "version": {"mteb": "2.16.0", "torch": "2.6.0+cu124", "sentence-transformers": "5.5.1", "flash-attn": null, "transformers": "5.9.0"}, "encode_kwargs": {"batch_size": 32}}
+{"task": "MIRACLRetrievalHardNegatives", "split": "dev", "subset": "de", "version": {"mteb": "2.16.0", "torch": "2.6.0+cu124", "sentence-transformers": "5.5.1", "flash-attn": null, "transformers": "5.9.0"}, "encode_kwargs": {"batch_size": 32}}
+{"task": "MultiLongDocRetrieval", "split": "dev", "subset": "de", "version": {"mteb": "2.16.0", "torch": "2.6.0+cu124", "sentence-transformers": "5.5.1", "flash-attn": null, "transformers": "5.9.0"}, "encode_kwargs": {}}

@@ -64,6 +64,10 @@ def main() -> int:
                          "mteb.get_model, which applies the model's OFFICIAL prompts/pooling "
                          "(use for registry competitors e5/gte/Qwen so their numbers are fair)")
     ap.add_argument("--trust-remote-code", action="store_true")
+    ap.add_argument("--bidirectional", action="store_true",
+                    help="re-apply the LLM2Vec bidirectional mask patch after load (REQUIRED for a "
+                         "model trained bidirectional — the patch is runtime, not saved in weights, "
+                         "so without this the model is silently evaluated as causal). st loader only.")
     ap.add_argument("--config-kwargs", default=None,
                     help="st-loader only: JSON dict passed as SentenceTransformer config_kwargs "
                          "(e.g. disable a custom model's mem-efficient attention that asserts on CUDA)")
@@ -92,6 +96,12 @@ def main() -> int:
                 base.max_seq_length = args.max_seq_length
             except Exception:
                 pass
+    elif args.bidirectional:
+        # rebuild with eager attention + re-apply the LLM2Vec mask patch (runtime, not in weights)
+        from boldt_embed.train_modern import load_student_sentence_transformer
+        model = load_student_sentence_transformer(args.model, max_seq_length=args.max_seq_length,
+                                                  bidirectional=True)
+        model.max_seq_length = args.max_seq_length
     else:
         st_kwargs = {"trust_remote_code": True} if args.trust_remote_code else {}
         if args.config_kwargs:
@@ -121,6 +131,7 @@ def main() -> int:
         "batch_size": args.batch_size,
         "max_seq_length": args.max_seq_length,
         "loader": args.loader,
+        "bidirectional": args.bidirectional,
         "query_prompt": args.query_prompt,
         "doc_prompt": args.doc_prompt,
         "hardware": platform.platform(),

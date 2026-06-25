@@ -1,7 +1,7 @@
 {
   "run_id": "v6-1-leak-test",
   "base_checkpoint": "outputs/v6-dense-rag/checkpoints/boldt-dense-rag-v6",
-  "output": "/tmp/tmp7cmt2_u9/ckpt",
+  "output": "/tmp/tmplah2bzlf/ckpt",
   "max_steps": 1000,
   "batch_size": 64,
   "bf16": false,
@@ -39,5 +39,10 @@
   },
   "reranker_trained": false,
   "target_metric": "WebFAQ Recall@50 >= 0.90 while preserving Recall@100/guardrails/Matryoshka",
-  "purpose": "v6.1 dense retriever: pull WebFAQ positives from ranks 51-200 into the top-50 via rank-promotion over dense-v6 top-50 blockers; DENSE-ONLY, no reranker"
+  "purpose": "v6.1 dense retriever: pull WebFAQ positives from ranks 51-200 into the top-50 via rank-promotion over dense-v6 top-50 blockers; DENSE-ONLY, no reranker",
+  "optimizer": {
+    "lr": 2e-05,
+    "warmup_ratio": 0.0,
+    "temperature": null
+  }
 }

@@ -2,7 +2,7 @@
   "run_id": "v6-leak-test",
   "model": "outputs/v3-real-domain/checkpoints/boldt-modern-causal-v3",
   "lora": false,
-  "output": "/tmp/tmpbvdp04a0/ckpt",
+  "output": "/tmp/tmpi3my_00p/ckpt",
   "max_steps": 3000,
   "bf16": false,
   "gradient_checkpointing": false,

@@ -1,13 +1,14 @@
 {
   "extends": "configs/autoresearch/base_dense.json",
-  "name": "dense_real_300step_20min",
+  "name": "dense_real_best_lr1e5_temp05",
   "loss": {
     "temperature": 0.05
   },
   "training": {
-    "learning_rate": 0.00002,
+    "learning_rate": 1e-05,
     "warmup_ratio": 0.05,
-    "max_steps": 300,
+    "max_steps": 450,
+    "batch_size": 64,
     "budget_minutes": 20
   },
   "runtime": {

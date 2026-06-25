@@ -45,6 +45,9 @@ def main() -> int:
                     help="contrastive temperature (CMNRL scale=1/temperature); None=SBERT default")
     ap.add_argument("--bf16", action="store_true")
     ap.add_argument("--gradient-checkpointing", action="store_true")
+    ap.add_argument("--bidirectional", action="store_true",
+                    help="v8: convert the causal decoder to bidirectional attention (LLM2Vec mask "
+                         "patch, eager attention). Eval MUST re-apply the patch (runner --bidirectional).")
     ap.add_argument("--run-id", default="v6-1-dense-top50")
     ap.add_argument("--report", default=None)
     ap.add_argument("--dry-run", action="store_true")
@@ -101,7 +104,8 @@ def main() -> int:
         matryoshka_dims=plan["matryoshka_dims"], max_steps=args.max_steps,
         batch_size=args.batch_size, lr=args.lr, warmup_ratio=args.warmup_ratio,
         temperature=args.temperature, max_seq_length=args.max_seq_length, bf16=args.bf16,
-        gradient_checkpointing=args.gradient_checkpointing)
+        gradient_checkpointing=args.gradient_checkpointing, bidirectional=args.bidirectional)
+    card["bidirectional"] = args.bidirectional
     card["training_result"] = result
     out["run_card"] = card
     report_path.write_text(json.dumps(out, ensure_ascii=False, indent=2), encoding="utf-8")

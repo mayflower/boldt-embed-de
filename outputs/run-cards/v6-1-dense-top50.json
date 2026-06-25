@@ -4,7 +4,7 @@
   "output": "outputs/v6-1-dense-top50/checkpoints/boldt-dense-rag-v6-1",
   "max_steps": 1000,
   "batch_size": 64,
-  "bf16": true,
+  "bf16": false,
   "gradient_checkpointing": false,
   "timestamp": null,
   "loss_stack": [
@@ -47,27 +47,9 @@
   "reranker_trained": false,
   "target_metric": "WebFAQ Recall@50 >= 0.90 while preserving Recall@100/guardrails/Matryoshka",
   "purpose": "v6.1 dense retriever: pull WebFAQ positives from ranks 51-200 into the top-50 via rank-promotion over dense-v6 top-50 blockers; DENSE-ONLY, no reranker",
-  "training_result": {
-    "status": "ok",
-    "output_dir": "outputs/v6-1-dense-top50/checkpoints/boldt-dense-rag-v6-1",
-    "base_model": "outputs/v6-dense-rag/checkpoints/boldt-dense-rag-v6",
-    "datasets": [
-      "pairs",
-      "triplets"
-    ],
-    "num_pairs": 22500,
-    "num_rank_promotion_triplets": 28600,
-    "matryoshka_dims": [
-      1024,
-      768,
-      512,
-      256,
-      128,
-      64
-    ],
-    "max_steps": 1000,
-    "rank_promotion": "CMNRL explicit top-50 blocker negatives",
-    "reranker_trained": false,
-    "gpu_name": "NVIDIA RTX A6000"
+  "optimizer": {
+    "lr": 3e-05,
+    "warmup_ratio": 0.1,
+    "temperature": 0.02
   }
 }

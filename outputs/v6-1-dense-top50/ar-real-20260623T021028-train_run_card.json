@@ -1,0 +1,135 @@
+{
+  "run_card": {
+    "run_id": "ar-real-20260623T021028-train",
+    "base_checkpoint": "outputs/v6-dense-rag/checkpoints/boldt-dense-rag-v6",
+    "output": "/bigdata/johann/src/boldtembed/boldt-embed-de/outputs/autoresearch/runs/ar-real-20260623T021028/checkpoint",
+    "max_steps": 300,
+    "batch_size": 48,
+    "bf16": true,
+    "gradient_checkpointing": false,
+    "timestamp": null,
+    "loss_stack": [
+      "CachedMultipleNegativesRankingLoss",
+      "MatryoshkaLoss(dims=[1024, 768, 512, 256, 128, 64])",
+      "RankPromotion(CMNRL over query/positive/top50_blocker triplets)"
+    ],
+    "rank_promotion": "CMNRL with explicit top-50 false-positive negatives — the positive is pushed above the docs that currently outrank it (Recall@50 lever)",
+    "matryoshka_dims": [
+      1024,
+      768,
+      512,
+      256,
+      128,
+      64
+    ],
+    "batch_sampler": "NO_DUPLICATES",
+    "margin_mse": [
+      "MarginMSELoss(teacher margins; data-level teacher-vetted negatives)"
+    ],
+    "margin_mse_wired_as_separate_loss": false,
+    "pair_examples": 22178,
+    "rank_promotion_triplets": 28600,
+    "rank_promotion_queries": 1430,
+    "positive_rank_51_100": 546,
+    "positive_rank_101_200": 884,
+    "domain_mix": {
+      "faq_real": 1430
+    },
+    "hard_negative_margins": {
+      "with_margin": 60,
+      "avg": 7.454,
+      "distribution": {
+        "2-3": 6,
+        "3-4": 5,
+        "4-5": 7,
+        ">=5": 42
+      }
+    },
+    "reranker_trained": false,
+    "target_metric": "WebFAQ Recall@50 >= 0.90 while preserving Recall@100/guardrails/Matryoshka",
+    "purpose": "v6.1 dense retriever: pull WebFAQ positives from ranks 51-200 into the top-50 via rank-promotion over dense-v6 top-50 blockers; DENSE-ONLY, no reranker",
+    "optimizer": {
+      "lr": 1e-05,
+      "warmup_ratio": 0.05,
+      "temperature": 0.05
+    },
+    "training_result": {
+      "status": "ok",
+      "output_dir": "/bigdata/johann/src/boldtembed/boldt-embed-de/outputs/autoresearch/runs/ar-real-20260623T021028/checkpoint",
+      "base_model": "outputs/v6-dense-rag/checkpoints/boldt-dense-rag-v6",
+      "datasets": [
+        "pairs",
+        "triplets"
+      ],
+      "num_pairs": 22178,
+      "num_rank_promotion_triplets": 28600,
+      "matryoshka_dims": [
+        1024,
+        768,
+        512,
+        256,
+        128,
+        64
+      ],
+      "max_steps": 300,
+      "lr": 1e-05,
+      "warmup_ratio": 0.05,
+      "temperature": 0.05,
+      "rank_promotion": "CMNRL explicit top-50 blocker negatives",
+      "reranker_trained": false,
+      "gpu_name": "NVIDIA RTX A6000"
+    }
+  },
+  "loss_plan": {
+    "base_contrastive": "CachedMultipleNegativesRankingLoss",
+    "matryoshka_dims": [
+      1024,
+      768,
+      512,
+      256,
+      128,
+      64
+    ],
+    "rank_promotion": "CMNRL with explicit top-50 false-positive negatives — the positive is pushed above the docs that currently outrank it (Recall@50 lever)",
+    "margin_mse": [
+      "MarginMSELoss(teacher margins; data-level teacher-vetted negatives)"
+    ],
+    "margin_mse_wired_as_separate_loss": false,
+    "batch_sampler": "NO_DUPLICATES",
+    "loss_stack": [
+      "CachedMultipleNegativesRankingLoss",
+      "MatryoshkaLoss(dims=[1024, 768, 512, 256, 128, 64])",
+      "RankPromotion(CMNRL over query/positive/top50_blocker triplets)"
+    ]
+  },
+  "dataset_report": {
+    "pair_examples": 22178,
+    "rank_promotion_triplets": 28600,
+    "rank_promotion_queries": 1430,
+    "positive_rank_51_100": 546,
+    "positive_rank_101_200": 884,
+    "domain_mix": {
+      "faq_real": 1430
+    },
+    "has_teacher_margins": true,
+    "hard_negative_margins": {
+      "with_margin": 60,
+      "avg": 7.454,
+      "distribution": {
+        "2-3": 6,
+        "3-4": 5,
+        "4-5": 7,
+        ">=5": 42
+      }
+    },
+    "leakage_rows": 0,
+    "window": 200,
+    "top50": 50
+  },
+  "errors": [],
+  "optimizer": {
+    "lr": 1e-05,
+    "warmup_ratio": 0.05,
+    "temperature": 0.05
+  }
+}

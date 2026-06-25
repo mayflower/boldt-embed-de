@@ -702,8 +702,8 @@ def train_v6_1_dense_embedder(base_model: str, pair_examples: Sequence[Dict[str,
                               max_steps: int = -1, batch_size: int = 64, lr: float = 2e-5,
                               warmup_ratio: float = 0.0, temperature: Optional[float] = None,
                               max_seq_length: int = 256, bf16: bool = True,
-                              gradient_checkpointing: bool = False, device: Optional[str] = None
-                              ) -> Dict[str, Any]:
+                              gradient_checkpointing: bool = False, device: Optional[str] = None,
+                              bidirectional: bool = False) -> Dict[str, Any]:
     """v6.1 dense training (GPU). Continues from ``base_model`` and trains CachedMNRL -> Matryoshka
     over a DatasetDict of contrastive PAIRS (query, positive) + RANK-PROMOTION TRIPLETS
     (query, positive, top50-blocker). The triplets' explicit hard negatives ARE the rank-promotion
@@ -716,7 +716,8 @@ def train_v6_1_dense_embedder(base_model: str, pair_examples: Sequence[Dict[str,
     from sentence_transformers.training_args import BatchSamplers
 
     dims = list(matryoshka_dims or MATRYOSHKA_DEFAULT)
-    model = load_student_sentence_transformer(base_model, max_seq_length=max_seq_length, device=device)
+    model = load_student_sentence_transformer(base_model, max_seq_length=max_seq_length,
+                                              device=device, bidirectional=bidirectional)
     # temperature -> CMNRL scale (scale = 1/temperature); None keeps the SBERT default (scale 20 ≈
     # temperature 0.05). This lets the AutoResearch loop tune the contrastive temperature for real.
     cmnrl_kwargs = {} if temperature in (None, 0) else {"scale": round(1.0 / float(temperature), 4)}

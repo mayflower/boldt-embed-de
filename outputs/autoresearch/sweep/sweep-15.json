@@ -1,0 +1,19 @@
+{
+  "extends": "configs/autoresearch/base_dense.json",
+  "name": "sweep-15",
+  "loss": {
+    "temperature": 0.03
+  },
+  "training": {
+    "learning_rate": 1e-05,
+    "warmup_ratio": 0.1,
+    "max_steps": 300,
+    "budget_minutes": 20
+  },
+  "runtime": {
+    "dry_run": false,
+    "allow_gpu": true,
+    "write_checkpoints": true,
+    "train_pairs": "outputs/autoresearch/prepared/rag_pairs_clean.jsonl"
+  }
+}

@@ -2,7 +2,7 @@
   "run_id": "v6-rr-test",
   "model_base": "Boldt/Boldt-DC-350M",
   "lora": false,
-  "output": "/tmp/tmpnqgzbe55/ckpt",
+  "output": "/tmp/tmpfgvnz2e5/ckpt",
   "bf16": false,
   "gradient_checkpointing": false,
   "timestamp": null,

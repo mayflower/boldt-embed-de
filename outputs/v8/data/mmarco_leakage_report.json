@@ -1,0 +1,32 @@
+{
+  "status": "ok",
+  "candidates_path": "outputs/v8/data/mmarco_de.sanitized.jsonl",
+  "n_train_candidates": 253406,
+  "n_eval_texts": 317627,
+  "exact_hits": 0,
+  "exact_normalized_hits": 0,
+  "near_duplicate_hits": 1,
+  "total_flagged_candidates": 1,
+  "hits_by_eval_dataset": {
+    "miracl": 1
+  },
+  "hits_by_source": {
+    "mmarco_de": 1
+  },
+  "hits_by_domain": {
+    "msmarco_web": 1
+  },
+  "hits_by_license": {
+    "unknown": 1
+  },
+  "dropped_candidate_ids": [
+    "447db91087f51463"
+  ],
+  "jaccard_threshold": 0.9,
+  "scan_runtime_sec": 1481.8003,
+  "jaccard_comparisons": 11577129,
+  "blocked_pairs": 11577129,
+  "naive_comparisons": 80488587562,
+  "cleaned_candidates_path": "outputs/v8/data/mmarco_de_clean.jsonl",
+  "n_candidates_after_drop": 253405
+}

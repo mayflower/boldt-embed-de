@@ -98,6 +98,14 @@ and entity disambiguation (`german_adversarial.py`, `benchmarks/stress_cases_de.
 Native 1024-d, truncatable to 768 / 512 / 256 / 128 / 64 (re-normalize after truncation);
 per-dimension trade-off reported by the Matryoshka sweep in `scripts/eval_hybrid_retrieval.py`.
 
+**Promotion policy (dims <256 are training-only).** The 128- and 64-d prefixes are kept in the
+Matryoshka loss because nested training is free and front-loads information into early dimensions,
+but they are **not recommended for production retrieval**: quality degrades measurably below 256-d
+(MRL truncation underperforms purpose-trained low-dim models exactly in this regime, cf. the MRL /
+Starbucks results). **Recommended truncations: 1024 / 768 / 512 / 256.** A dimension is advertised
+as recommended only once its retention clears the gate on a real metric (the harness enforces 256-d
+retention ≥ 0.95); 128 / 64 are diagnostic-only.
+
 ## Production default
 **Current production default: causal (the sibling variant), not this one** — at the current
 300-step budget bi+MNTP wins in-domain (DT-test 0.967) but trails causal slightly on OOD legal.

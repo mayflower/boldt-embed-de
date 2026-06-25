@@ -1,0 +1,47 @@
+{
+  "run_id": "autoresearch-arrun-e2e-verify",
+  "run_type": "train_embedder",
+  "command": "python scripts/ar_loop.py --config /bigdata/johann/src/boldtembed/boldt-embed-de/configs/autoresearch/experiments/current.json --out /bigdata/johann/src/boldtembed/boldt-embed-de/outputs/autoresearch/runs/arrun-e2e-verify --budget-minutes 20 --notes autoresearch loop iteration --real --allow-gpu --allow-checkpoints --baseline outputs/autoresearch/baseline/metrics.json --prepared-manifest outputs/autoresearch/prepared/prepare_manifest.json",
+  "commit": "1c8744386b809766e75f5e4c6a219592e50fd5e6",
+  "date": "2026-06-22T19:18:04.766407+00:00",
+  "hardware": "Linux-6.11.0-1013-gcp-x86_64-with-glibc2.39",
+  "gpu": null,
+  "python": "3.12.13",
+  "torch": "2.6.0+cu124",
+  "transformers": "5.9.0",
+  "sentence_transformers": "5.5.1",
+  "input_artifacts": [
+    "/bigdata/johann/src/boldtembed/boldt-embed-de/configs/autoresearch/experiments/current.json",
+    "outputs/autoresearch/prepared/prepare_manifest.json"
+  ],
+  "output_artifacts": [
+    "/bigdata/johann/src/boldtembed/boldt-embed-de/outputs/autoresearch/runs/arrun-e2e-verify/metrics.json"
+  ],
+  "model": "dense-trial",
+  "dataset": "webfaq,germanquad,dt_test",
+  "metrics": {
+    "webfaq": {
+      "recall@100": 0.9841,
+      "ndcg@10": 0.6805,
+      "mrr@10": 0.6571
+    },
+    "germanquad": {
+      "ndcg@10": 0.8776
+    },
+    "dt_test": {
+      "ndcg@10": 0.9742
+    },
+    "matryoshka": {
+      "retention_256": 0.9852
+    },
+    "leakage": {
+      "hits": 0,
+      "status": "clean"
+    },
+    "system": {
+      "vram_gb": 3.77,
+      "throughput_pairs_per_sec": 2406.7
+    }
+  },
+  "notes": "AutoResearch real trial; leakage=clean"
+}

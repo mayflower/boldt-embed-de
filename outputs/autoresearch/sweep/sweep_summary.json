@@ -1,0 +1,33 @@
+{
+  "loops_run": 1,
+  "promotable_count": 1,
+  "best": {
+    "loop": 1,
+    "run_id": "sweep-01",
+    "temperature": 0.05,
+    "learning_rate": 2e-05,
+    "warmup_ratio": 0.05,
+    "trial_status": "ok",
+    "score": -0.030119,
+    "score_status": "pass",
+    "failed_gates": [],
+    "webfaq_recall100": 0.9841,
+    "promotable": true
+  },
+  "baseline": "/bigdata/johann/src/boldtembed/boldt-embed-de/outputs/autoresearch/baseline/metrics.json",
+  "rows": [
+    {
+      "loop": 1,
+      "run_id": "sweep-01",
+      "temperature": 0.05,
+      "learning_rate": 2e-05,
+      "warmup_ratio": 0.05,
+      "trial_status": "ok",
+      "score": -0.030119,
+      "score_status": "pass",
+      "failed_gates": [],
+      "webfaq_recall100": 0.9841,
+      "promotable": true
+    }
+  ]
+}

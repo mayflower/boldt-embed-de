@@ -1,0 +1,330 @@
+{
+  "_doc": "Catalogue of German retrieval data sources for training/eval. Read by the AutoResearch prep + recipe to select training data. RULES: (1) never train on `eval_only` sources (train != eval, leakage); (2) only `training_usable:true` sources may enter a training mixture; (3) any source with leakage != 'scanned_clean'/'clean' MUST pass scripts/run_full_leakage_scan.py before training (set leakage_report). quality_e5 = mean cosine(query,positive) under multilingual-e5-base over a 400-pair sample (scripts/probe_pair_quality.py); higher = tighter positives. Counts as of 2026-06-24.",
+  "fields": "id | role | location(kind) | rows | domain | quality_e5 | leakage | training_usable | notes",
+  "train_pairs_processed_unions": [
+    {
+      "id": "v6_clean",
+      "path": "outputs/autoresearch/prepared/train_candidates.clean.jsonl",
+      "rows": 22178,
+      "domain": "wiki+web+qa+faq+stress+longdoc",
+      "quality_e5": 0.892,
+      "leakage": "scanned_clean",
+      "leakage_report": "outputs/autoresearch/prepared/leakage_report.json",
+      "training_usable": true,
+      "notes": "CURRENT production training set (v6.1). Teacher-validated union of the v6 domains; 322 WebFAQ-overlapping rows already dropped."
+    },
+    {
+      "id": "broad_pairs_clean",
+      "path": "outputs/v8/data/broad_pairs_clean.jsonl",
+      "rows": 69274,
+      "domain": "all v6 + v2/v3 unions",
+      "quality_e5": null,
+      "leakage": "scanned_clean",
+      "leakage_report": "outputs/v8/data/leakage_report.json",
+      "training_usable": true,
+      "notes": "v8 union of v6_clean + candidates_v2 + v6_2 + faq_real_v3 + backtrans; 3513 dropped (3407 WebFAQ, 106 MIRACL). Arm-B scale test trained on this."
+    },
+    {
+      "id": "candidates_v2",
+      "path": "data/processed/candidates_v2.jsonl",
+      "rows": 44336,
+      "domain": "v2 raw union (admin/synth-faq/synth-legal/cross-lingual/backtrans/dt_dpr/swim_ir/adversarial)",
+      "quality_e5": 0.831,
+      "leakage": "unscanned",
+      "training_usable": true,
+      "notes": "Processed union of the v2 raw sources; subsumed in broad_pairs_clean (scanned)."
+    },
+    {
+      "id": "candidates_v3",
+      "path": "outputs/v3-real-domain/candidates_v3.clean.jsonl",
+      "rows": 24761,
+      "domain": "v3 raw union (backtrans/dt_dpr/faq_real/adversarial)",
+      "quality_e5": null,
+      "leakage": "unscanned",
+      "training_usable": true,
+      "notes": "v3 union. NOT yet used in any v8 experiment."
+    },
+    {
+      "id": "v6_2_guardrail",
+      "path": "data/processed/v6_2/rag_pairs_guardrail_upweighted.jsonl",
+      "rows": 33000,
+      "domain": "v6.2 guardrail-upweighted",
+      "quality_e5": null,
+      "leakage": "unscanned",
+      "training_usable": true,
+      "notes": "Mostly overlaps v6_clean (only ~1.5k unique vs v6_clean)."
+    }
+  ],
+  "train_pairs_raw_sources": [
+    {
+      "id": "swim_ir_de_full",
+      "kind": "online",
+      "hf": "nthakur/swim-ir-monolingual:de",
+      "path": "outputs/v8/data/online_pairs_clean.jsonl",
+      "rows": 392398,
+      "domain": "wiki_non_eval (MIRACL distribution)",
+      "quality_e5": 0.857,
+      "leakage": "scanned_clean",
+      "training_usable": true,
+      "notes": "FETCHED 2026-06-24 (scripts/fetch_online_de_pairs.py), capped at 400k of a larger set. Synthetic Wikipedia ad-hoc retrieval = the MIRACL distribution. Leakage scan vs all eval corpora IN PROGRESS -> clean file at the path; HIGH MIRACL-overlap risk (both Wikipedia).",
+      "leakage_report": "outputs/v8/data/online_leakage_report.json"
+    },
+    {
+      "id": "swim_ir_de_sample",
+      "path": "data/raw/v2/swim_ir_de.jsonl",
+      "rows": 6000,
+      "domain": "wiki_non_eval",
+      "quality_e5": 0.857,
+      "leakage": "unscanned",
+      "training_usable": true,
+      "notes": "Local 6k sample of SWIM-IR; superseded by swim_ir_de_full."
+    },
+    {
+      "id": "dt_de_dpr",
+      "path": "data/raw/v3/dt_de_dpr.jsonl",
+      "rows": 12000,
+      "domain": "wiki_non_eval (DPR)",
+      "quality_e5": 0.883,
+      "leakage": "unscanned",
+      "training_usable": true,
+      "notes": "German DPR over Wikipedia. v2 variant (9k) overlaps. Wikipedia retrieval."
+    },
+    {
+      "id": "faq_real_local",
+      "path": "data/raw/v3/faq_real_local.jsonl",
+      "rows": 15000,
+      "domain": "faq_real",
+      "quality_e5": 0.861,
+      "leakage": "unscanned",
+      "training_usable": true,
+      "notes": "Real FAQ pairs."
+    },
+    {
+      "id": "ger_backtrans_paraphrase",
+      "path": "data/raw/v2/ger_backtrans_paraphrase.jsonl",
+      "rows": 16000,
+      "domain": "paraphrase",
+      "quality_e5": 0.925,
+      "leakage": "unscanned",
+      "training_usable": true,
+      "notes": "Back-translation paraphrase (tight positives). v3 variant 15k."
+    },
+    {
+      "id": "synthetic_faq_v2",
+      "path": "data/raw/v2/synthetic_faq_v2.jsonl",
+      "rows": 10000,
+      "domain": "faq (synthetic)",
+      "quality_e5": 0.778,
+      "leakage": "unscanned",
+      "training_usable": true,
+      "notes": "Synthetic FAQ; softer positives."
+    },
+    {
+      "id": "synthetic_legal_v2",
+      "path": "data/raw/v2/synthetic_legal_v2.jsonl",
+      "rows": 6288,
+      "domain": "legal (synthetic)",
+      "quality_e5": 0.793,
+      "leakage": "unscanned",
+      "training_usable": true,
+      "notes": "Synthetic legal; GerDaLIR-adjacent. Adding data helped GerDaLIR in the Arm-B test."
+    },
+    {
+      "id": "synthetic_cross_lingual_v2",
+      "path": "data/raw/v2/synthetic_cross_lingual_v2.jsonl",
+      "rows": 4000,
+      "domain": "cross_lingual_de_en",
+      "quality_e5": 0.76,
+      "leakage": "unscanned",
+      "training_usable": true,
+      "notes": "DE<->EN; softest positives."
+    },
+    {
+      "id": "local_admin_v2",
+      "path": "data/raw/v2/local_admin_v2.jsonl",
+      "rows": 10000,
+      "domain": "admin (synthetic)",
+      "quality_e5": 0.774,
+      "leakage": "unscanned",
+      "training_usable": true,
+      "notes": "Synthetic admin; softer positives."
+    },
+    {
+      "id": "qa_passage_non_eval",
+      "path": "data/raw/v5/qa_passage_non_eval.jsonl",
+      "rows": 2500,
+      "domain": "qa_passage",
+      "quality_e5": null,
+      "leakage": "unscanned",
+      "training_usable": true,
+      "notes": "Curated QA-passage; already inside v6_clean."
+    },
+    {
+      "id": "german_stress",
+      "path": "data/raw/v5/german_stress.jsonl",
+      "rows": 1200,
+      "domain": "german_stress",
+      "quality_e5": null,
+      "leakage": "unscanned",
+      "training_usable": true,
+      "notes": "German hard cases (compounds/negation/legal-refs/dates). Inside v6_clean."
+    },
+    {
+      "id": "webfaq_train",
+      "path": "outputs/v4-rag-reranker/train/webfaq",
+      "rows": 11963,
+      "domain": "faq (WebFAQ train split)",
+      "quality_e5": null,
+      "leakage": "eval_adjacent",
+      "training_usable": false,
+      "notes": "WebFAQ TRAIN split. UNUSED. CAUTION: WebFAQ is the AutoResearch PRIMARY eval (recall@100) -> treat as eval-adjacent; only use after confirming train/eval query disjointness + a leakage scan."
+    },
+    {
+      "id": "mmarco_de",
+      "kind": "online",
+      "hf": "unicamp-dl/mmarco (direct file download: german collection+queries+triples)",
+      "path": "outputs/v8/data/mmarco_de_clean.jsonl",
+      "rows": 253405,
+      "domain": "msmarco_web (DIVERSITY)",
+      "quality_e5": null,
+      "leakage": "scanned_clean",
+      "leakage_report": "outputs/v8/data/mmarco_leakage_report.json",
+      "training_usable": true,
+      "notes": "FETCHED 2026-06-25 via direct TSV download (bypasses datasets>=4 script block). MS-MARCO-grade German web-search query->passage. Only 1 leak dropped. The diversity source."
+    },
+    {
+      "id": "mqa_de",
+      "kind": "online",
+      "hf": "clips/mqa (direct json.gz: data.de.faq/cqa)",
+      "path": "outputs/v8/data/mqa_de_sample_clean.jsonl",
+      "rows_source": 17886555,
+      "rows_sampled": 406513,
+      "domain": "faq_web",
+      "quality_e5": null,
+      "leakage": "scanned_clean",
+      "training_usable": true,
+      "notes": "FETCHED 2026-06-25. SOURCE IS 17.9M German web-FAQ pairs (parser fixed: nested questions[], drop null answers). Using a ~406k deterministic-stride SAMPLE; scan in progress.",
+      "rows_clean": 405909,
+      "leakage_report": "outputs/v8/data/mqa_leakage_report.json"
+    },
+    {
+      "id": "mldr_de_train",
+      "kind": "online",
+      "hf": "Shitao/MLDR (mldr-v1.0-de/train.jsonl.gz)",
+      "path": "outputs/v8/data/mldr_de_train_raw.jsonl",
+      "rows": 1847,
+      "domain": "long_doc_BENCHMARK",
+      "quality_e5": null,
+      "leakage": "QUARANTINED",
+      "training_usable": false,
+      "notes": "FETCHED 2026-06-25 but BENCHMARK train split (MLDR is an eval task). Only 1847 pairs; NOT used in training (eval-only policy) unless scanned vs MLDR eval and approved."
+    }
+  ],
+  "hard_negatives_and_distillation": [
+    {
+      "id": "dense_top50_hardnegatives",
+      "path": "data/processed/v6_1/dense_top50_hardnegatives.jsonl",
+      "rows": 1430,
+      "role": "hard_negatives",
+      "training_usable": true,
+      "notes": "Top-50 dense-mined rank-promotion negatives used by v6.1 / all v8 runs."
+    },
+    {
+      "id": "hardneg_teacher_scored",
+      "path": "data/processed/v6/hardneg_teacher_scored.jsonl",
+      "rows": 33948,
+      "role": "hard_negatives",
+      "training_usable": true,
+      "notes": "Teacher-scored hard negatives (larger pool, unused in v8 so far)."
+    },
+    {
+      "id": "reranker_train_lists_teacher_scored",
+      "path": "data/processed/v6/reranker_train_lists_teacher_scored.jsonl",
+      "rows": 7500,
+      "role": "listwise_teacher",
+      "training_usable": true,
+      "notes": "Per-query candidate LISTS with Qwen3-Reranker scores -> the input for LISTWISE-KL distillation (planned v8 Stage 2). Not yet used."
+    },
+    {
+      "id": "mntp_texts",
+      "path": "data/processed/mntp_texts.jsonl",
+      "rows": 3471,
+      "role": "mntp_corpus",
+      "training_usable": true,
+      "notes": "MNTP adaptation corpus (German). Used in v8 Stage-0a; thin -> a larger German-Wikipedia corpus would be better."
+    }
+  ],
+  "eval_only_NEVER_TRAIN": [
+    {
+      "id": "webfaq_eval",
+      "path": "outputs/v4-rag-reranker/eval/webfaq",
+      "rows": 1381,
+      "role": "eval_primary",
+      "notes": "AutoResearch PRIMARY metric (recall@100)."
+    },
+    {
+      "id": "germanquad_eval",
+      "path": "data/processed/eval/germanquad_corpus.jsonl",
+      "rows": 474,
+      "role": "eval_guardrail"
+    },
+    {
+      "id": "dt_test_eval",
+      "path": "data/processed/eval/dt_test_corpus.jsonl",
+      "rows": 5000,
+      "role": "eval_guardrail"
+    },
+    {
+      "id": "gerdalir_eval",
+      "path": "data/processed/eval/gerdalir_corpus.jsonl",
+      "rows": 9969,
+      "role": "eval"
+    },
+    {
+      "id": "miracl_de_reduced_eval",
+      "path": "data/processed/eval/miracl_de_reduced/corpus.jsonl",
+      "rows": 300803,
+      "role": "eval"
+    },
+    {
+      "id": "mteb_deu_tasks",
+      "kind": "online",
+      "hf": "mteb: GermanQuAD-Retrieval, GerDaLIRSmall, MIRACLRetrievalHardNegatives, MultiLongDocRetrieval, WebFAQRetrieval",
+      "role": "eval_benchmark",
+      "notes": "Official MTEB(deu) retrieval. EVAL ONLY. The MIRACL/GermanQuAD/GerDaLIR/MLDR train splits are benchmark data -> NOT for training (eval-only policy)."
+    }
+  ],
+  "online_fetchable_status": [
+    {
+      "id": "swim_ir_de",
+      "status": "FETCHED 392398 clean",
+      "route": "datasets streaming"
+    },
+    {
+      "id": "mmarco_de",
+      "status": "FETCHED 253405 clean",
+      "route": "DIRECT TSV download (script loader blocked)"
+    },
+    {
+      "id": "mqa_de",
+      "status": "FETCHED 17.9M source / 406k sample",
+      "route": "DIRECT json.gz download (script loader blocked); parser = nested questions[]"
+    },
+    {
+      "id": "mldr_de_train",
+      "status": "FETCHED 1847 (QUARANTINED benchmark)",
+      "route": "DIRECT jsonl.gz download"
+    },
+    {
+      "id": "germandpr",
+      "status": "NOT fetched (script-blocked; data files unclear)",
+      "route": "TODO parquet/direct"
+    }
+  ],
+  "tooling": {
+    "fetch": "scripts/fetch_online_de_pairs.py",
+    "union_local": "scripts/build_broad_pairs.py",
+    "leakage_scan": "scripts/run_full_leakage_scan.py (--candidates X --eval-corpus name=path... --drop-hits CLEAN)",
+    "quality_probe": "scripts/probe_pair_quality.py"
+  }
+}
