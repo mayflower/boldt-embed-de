@@ -77,101 +77,64 @@ conda run -n boldtembed python scripts/check_autoresearch_integrity.py --base-re
 The loop is instrumented as **project slash commands** under `.claude/commands/`, for use in an
 **interactive** Claude Code session. Type them at the prompt:
 
+There is **ONE loop** — `/ar-run` — and a few read-only/single-step helpers. You (Claude Code) are
+the orchestrator: `/ar-run` reads the measured state off disk, picks the single most reasonable next
+experiment, runs it, judges it, and repeats. There is **no controller, no state file, no fixed step
+order.**
+
 | Command | What it does |
 |---|---|
-| `/ar-orient` | Brief on the rules, editable vs protected surfaces, and current integrity status |
+| `/ar-run [rounds] [dry\|real]` | **THE loop.** Each round: assess state → pick the best next lever (tune / data / specialist / merge / distill) → run → eval on MTEB(deu) + gate → keep-or-revert. |
+| `/ar-orient` | Brief on the goal, rules, editable vs protected surfaces, integrity status |
 | `/ar-status` | Summarize `results.tsv` + the current config; best WebFAQ recall so far |
 | `/ar-prepare <args>` | Build the preparation manifest from local data (+ leakage report) |
-| `/ar-trial [dry\|real]` | Run ONE iteration (trial → score → log → integrity); report the verdict |
+| `/ar-trial [dry\|real]` | Run ONE proxy iteration (trial → score → log → integrity); report the verdict |
 | `/ar-tune [hypothesis]` | Make ONE editable-surface config change toward WebFAQ recall, then iterate |
-| `/ar-run [rounds] [dry\|real]` | **Autonomously** run several rounds back-to-back in one invocation |
 | `/ar-integrity [--base-ref REF]` | Run the protected-surface check and explain any violations |
-| `/ar-frontier [rounds] [dry\|real]` | **AUTONOMOUS** frontier program — the agent composes train/specialist/merge/distill itself |
-| `/ar-data <src:w,…> [total]` | Compose a leakage-clean training mixture from the data-source catalogue |
-| `/ar-specialist <source> [steps]` | Train one domain specialist from a shared warm-start (for merging) |
-| `/ar-merge <ckptA,ckptB,…> [mean\|slerp]` | Soup/SLERP complementary checkpoints + MTEB eval + frontier gate |
-| `/ar-distill <base-ckpt> [existing\|new]` | Listwise-KL distillation from the Qwen3-Reranker teacher lists |
-| `/ar-mteb <model> [label]` | The promotion eval: MTEB(deu) retrieval-core + same-size-peer frontier gate |
-| `/ar-controller [status\|next\|plan]` | **Stateful** controller: decide + plan the next trial from the event log (never starts GPU) |
-| `/ar-build-mixture <cfg>` | Build a manifested leakage-clean mixture from the catalogue (Prompt 04) |
-| `/ar-refresh-hardnegs <cfg>` | Refresh BM25/dense/teacher hard negatives + listwise lists (Prompt 05) |
-| `/ar-train-specialist <src>` | Train one specialist from the shared warm-start, scriptably (Prompt 07) |
-| `/ar-merge-search <cfg>` | Merge-search soup/SLERP/TIES/DARE over specialists (Prompt 08) |
-| `/ar-distill-trial <cfg>` | Listwise-KL distill trial: validate lists, plan train + eval (Prompt 09) |
-| `/ar-mteb-trial <model> <label>` | Plan/run an MTEB(deu) eval as a trial (Prompt 10) |
-| `/ar-promote <label>` | Run the frontier gate, write an auditable promotion verdict (Prompt 10) |
-| `/ar-report` | Pareto frontier across WebFAQ/MTEB/cost; missing≠0 (Prompt 11) |
 
-**The stateful controller program** (`docs/autoresearch-controller-2026.md` +
-`docs/autoresearch-runbook-v8.md`) wraps these into a deterministic state machine: every trial
-appends an event to `outputs/autoresearch/events.jsonl`, and `scripts/ar_controller.py` decides the
-next trial via a fixed ladder (data_mix → dense → hardneg_refresh → specialist ×2 → merge → distill
-→ mteb → promotion). Drive it with `make autoresearch-controller-dry` (status + next plan),
-`make autoresearch-report` (Pareto frontier), `make autoresearch-validate` (config + test gate). The
-controller only PLANS; real GPU/teacher steps are launched by running the printed command with its
-explicit `--real`/`--allow-*` flags.
+`/ar-run` is the only thing that loops; the rest are single-shot helpers for when you want to do one
+step or just look. Commands set `disable-model-invocation: true`, so they run only when you type them.
 
-A typical interactive session: `/ar-orient` → `/ar-status` → `/ar-trial dry` (sanity) →
-`/ar-tune "lower loss.temperature"` (iterate) → `/ar-trial real` once you have a baseline + a
-verified-clean prepared manifest. To go hands-free for several rounds at once, use `/ar-run 5 dry`
-(or `/ar-run 3 real`) — Claude tunes → runs → scores → repeats itself until N rounds or an
-early-stop condition (a promotable round, 3 flat rounds, or an integrity failure). Each per-round
-command stays one auditable step; `/ar-run` is the only one that loops on its own. Each command only touches the editable surface; the fail-closed
-scorer gates and the integrity guard keep edits honest. The commands are restricted via
-`allowed-tools` frontmatter and set `disable-model-invocation: true`, so they run only when you
-type them — the model won't fire trials on its own.
+## What `/ar-run` is optimizing (and the levers it picks from)
 
-## The v8+ frontier program (beat the same-size peers)
+**Goal:** beat the **same-size peers** (`multilingual-e5-base` 278M, `LFM2.5-Embedding-350M`) on the
+official **MTEB(deu) retrieval-core** — GermanQuAD-Retrieval, GerDaLIRSmall,
+MIRACLRetrievalHardNegatives, MultiLongDocRetrieval (nDCG@10, German subset). Qwen3-Embedding-0.6B is
+a *stretch reference*, not a gate (it is larger). Promotion is graded by
+`scripts/check_mteb_frontier_gate.py` (via `scripts/ar_promote.py`) on the saved
+`outputs/mteb/<label>/summary.json` — never claimed beyond the saved file. The in-loop WebFAQ proxy
+is a cheap inner signal `/ar-run` may use to triage cheap knob changes.
 
-The in-loop WebFAQ proxy above hill-climbs a fast diagnostic. The **product goal** is bigger: beat
-the **same-size peers** (`multilingual-e5-base` 278M, `LFM2.5-Embedding-350M`) on the official
-**MTEB(deu) retrieval-core** — GermanQuAD-Retrieval, GerDaLIRSmall, MIRACLRetrievalHardNegatives,
-MultiLongDocRetrieval (nDCG@10, German subset, @512). Qwen3-Embedding-0.6B is a *stretch reference*,
-not a gate (it is larger). This is graded by `scripts/check_mteb_frontier_gate.py`, **outside** the
-loop, on the saved `outputs/mteb/<label>/summary.json` — never claimed beyond the saved file.
-
-**What this session established (so we don't relitigate dead ends):**
-
+**What's established (so the loop doesn't relitigate dead ends):**
 - The lever that moves every task is **DATA** — real fetched online corpora (SWIM-IR moved MIRACL
-  0.332→0.385). Architecture changes did not: **bidirectional / LLM2Vec conversion is a net loss**
-  (clean A/B causal beat it 3/4, even with MNTP); **more steps saturate**; **SLERP of
-  near-identical checkpoints is a no-op**; **local recombination just dilutes**.
-- But no single ~1M mix maxes all four tasks — the **composition trade-off**: pure-wiki (SWIM-IR)
-  maxes MIRACL/GermanQuAD; web (mMARCO) + FAQ (mqa) maxes GerDaLIR but dilutes MIRACL.
-- The escape: **balanced data → complementary specialists → merge → listwise-KL distill**, each
-  judged by the frontier gate.
+  0.332→0.385). Architecture changes did not: **bidirectional / LLM2Vec is a net loss** (clean A/B
+  causal beat it 3/4, even with MNTP); **more steps saturate**; **SLERP of near-identical
+  checkpoints is a no-op**; **local recombination just dilutes**.
+- No single ~1M mix maxes all four tasks — the **composition trade-off**: pure-wiki (SWIM-IR) maxes
+  MIRACL/GermanQuAD; web (mMARCO) + FAQ (mqa) maxes GerDaLIR but dilutes MIRACL.
+- The escape: **balanced data → complementary specialists → merge → listwise-KL distill**.
 
-**The data-source catalogue** is `configs/data_sources.json` — every corpus we evaluated/fetched,
-each tagged `domain`, `rows`, `quality_e5`, `leakage`, `training_usable`. Only
-`training_usable:true` **and** `leakage ∈ {scanned_clean, clean}` sources may train; the recipe is
-**fail-closed** on anything else. `/ar-data` composes a weighted mixture from it; the recipe hook
-`_materialize_data_mixture()` (in `autoresearch_recipe.py`, the editable surface) builds ONE merged,
-FAQ-capped, domain-balanced JSONL in the run dir — the union of individually-scanned-clean sources
-is clean by construction, so no slow re-scan. Opt in via `runtime.materialize_mixture=true`.
+**The lever menu** `/ar-run` chooses from each round (it calls these scripts; you don't run them in a
+fixed order):
 
-**Two ways to run it.** `/ar-frontier [rounds] [dry|real]` is the **autonomous orchestrator**: the
-agent reads the program state (`scripts/ar_frontier_status.py` — ranked candidates, peer frontier,
-per-task leaders = complementary merge inputs), picks ONE move per round from {train-balanced,
-train-specialist, merge, distill}, evaluates the result at @512, gates it, and hill-climbs the
-aggregate — back-to-back, no manual step from you (run `dry` first to see the planned moves). The
-fine-grained commands below (`/ar-data`, `/ar-specialist`, `/ar-merge`, `/ar-distill`, `/ar-mteb`)
-are the **primitives** it composes; run them by hand only for a one-off or to debug a single move.
-
-**The phases the autonomous loop works through** (it triggers each move itself; `dry` plans without
-running):
-
-| Phase | Command(s) | Question it answers |
+| Lever | Script | When the state says to pick it |
 |---|---|---|
-| **0 — cheap tests** | `/ar-merge` on the two existing specialists (`outputs/v8/swimir-12k`, `outputs/v8/diverse-causal`) | Does specialist→merge escape the trade-off? (no training — existing checkpoints) |
-| **1 — balanced data** | `/ar-data` → `/ar-run 1 real` → `/ar-mteb` | Does an uncapped, domain-balanced mix lift the aggregate over a capped one? |
-| **2 — specialists + merge** | `/ar-specialist <src>` ×N (shared warm-start) → `/ar-merge` → `/ar-mteb` | Can complementary domain experts merge into one model that keeps each one's strong task? |
-| **3 — distill** | `/ar-distill <base>` → `/ar-mteb` | Does matching the Qwen3-Reranker's ranking sharpen the merged model further? |
+| tune | `scripts/ar_loop.py` | cheap knob hill-climb on the proxy |
+| data | `scripts/ar_build_mixture.py` | composition is the limiter (build a balanced clean mix) |
+| specialist | `scripts/ar_train_specialist.py` (+ `ar_refresh_hardnegatives.py`) | build a complementary domain expert from the shared warm-start |
+| merge | `scripts/ar_merge_search.py` | ≥2 complementary checkpoints exist — the trade-off escape (cheapest high-value) |
+| distill | `scripts/ar_distill_trial.py` | sharpen ranking from the Qwen3-Reranker teacher |
+| measure | `scripts/ar_mteb_trial.py` + `scripts/ar_promote.py` | eval + gate any produced checkpoint |
 
-Hygiene that carries across phases: re-baseline at @512 (`/ar-mteb <v6.1> v6-1-baseline-512`) so
-the gate's no-regression floor is apples-to-apples; merges train specialists from a **shared
-warm-start** (a common basin — required for soup to work); MLDR is trained at 256-token length
-(note the caveat when reading its MLDR score). The frontier gate is a `check_*` (protected) and runs
-**post-eval, outside the loop**, per the integrity rules.
+State is read from the artifacts on disk — `scripts/ar_frontier_status.py` (ranked candidates, peer
+frontier, per-task leaders = complementary merge inputs) and `scripts/ar_report.py` (Pareto view).
+**The data-source catalogue** `configs/data_sources.json` is the single source of truth for what may
+train: only `training_usable:true` **and** `leakage ∈ {scanned_clean, clean}` (fail-closed
+otherwise). The mixture builder (`data_mixture_optimizer.build_mixture`, which the recipe's
+`materialize_mixture` path also delegates to) is the one place that selects/dedups/FAQ-caps, so the
+gate can't drift. Hygiene the loop keeps: eval all candidates at the **same seq length** for a fair
+peer comparison; merge only specialists that share the warm-start basin; never train on a source
+that isn't scanned-clean.
 
 ### One iteration as a single command
 

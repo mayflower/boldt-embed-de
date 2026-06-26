@@ -1,8 +1,16 @@
-# AutoResearch Implementation Plan 2026 — stateful research orchestrator
+# AutoResearch Implementation Plan 2026
 
-This plan tracks the build that turns the single dense-trial loop into a **stateful, reproducible
-research orchestrator** (the `boldt-embed-de-claude-code-prompt-pack`, prompts 01–13). It is the
-orientation doc required by Prompt 01 and the running map of what each PR adds.
+> **Superseded in part.** This was the build plan for the prompt-pack (prompts 01–13). The
+> **deterministic controller / state-machine layer (Prompt 03: `ar_controller.py`,
+> `autoresearch_state.py`, `events.jsonl`, the fixed ladder) was removed** in favor of **one
+> Claude-orchestrated loop, `/ar-run`** (`AUTORESEARCH.md` + `docs/autoresearch-runbook-v8.md`):
+> Claude reads the state off disk, picks the next lever, runs+gates it, repeats — no state file, no
+> fixed order. The trial **tools** built by the other prompts (mixture builder, hard-neg refresh,
+> specialist trainer, merge search, distill, MTEB eval/promote, reporting, Pareto) all remain — they
+> are the levers the one loop composes. The historical plan is kept below for provenance.
+
+This plan tracked the build that turned the single dense-trial loop into a research orchestrator
+(the `boldt-embed-de-claude-code-prompt-pack`, prompts 01–13).
 
 ## Non-negotiable rules (every PR)
 - **Never weaken eval data, benchmark harnesses, or release gates.** `data/processed/eval/**`,

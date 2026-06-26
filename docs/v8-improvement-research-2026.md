@@ -199,27 +199,33 @@ loss) → gate. The AutoResearch loop can still hill-climb the *cheap* Stage-2 k
 margins) but the architecture/pretrain/data changes are recipe-level, outside its editable surface.
 Full citations: see `outputs/` research notes and the inline arXiv IDs above.
 
-## 6. Driving the program — the instrumented harness
-The findings above are operationalized so the **AutoResearch agent drives the whole program**, not
-manual step-by-step execution. `/ar-frontier [rounds] [dry|real]` is the autonomous orchestrator:
-each round it reads the program state (`scripts/ar_frontier_status.py`), picks ONE move from
-{train-balanced, train-specialist, merge, distill}, evaluates at @512, gates with
-`check_mteb_frontier_gate.py`, and hill-climbs the same-size-peer aggregate — back-to-back. The
-single-purpose commands below are the **primitives** it composes (also runnable by hand for a one-off
-or to debug a move). Launch a long real program deliberately (it trains+evals several models on the
-A6000); `dry` prints the planned move sequence first.
+## 6. Driving the program — the one loop
+The findings above are operationalized as **one** Claude-orchestrated loop, `/ar-run` (see
+`AUTORESEARCH.md` and `docs/autoresearch-runbook-v8.md`). Each round it reads the measured state off
+disk (`scripts/ar_frontier_status.py`, `scripts/ar_report.py`), picks the single most reasonable next
+lever, runs it, evals on MTEB(deu), gates with `scripts/ar_promote.py` →
+`check_mteb_frontier_gate.py`, and keeps or reverts. No controller, no state file, no fixed order —
+Claude does the sequencing. `dry` (default) plans/validates without GPU; `real` runs on the A6000.
 
-| Phase | Command(s) | What it tests / produces |
+The lever menu the loop chooses from (it calls these scripts; it does not run them in a fixed order):
+
+| Lever | Script | When the state says to pick it |
 |---|---|---|
-| **0 — merge early-test** | `/ar-merge outputs/v8/swimir-12k/checkpoint,outputs/v8/diverse-causal/checkpoint` | Does soup of the existing wiki-specialist (MIRACL) + diverse-specialist (GerDaLIR) keep BOTH strong tasks? Needs only on-disk checkpoints — the cheapest signal on whether specialist→merge escapes the §"composition trade-off". |
-| **1 — balanced data** | `/ar-data swim_ir_de_full:0.4,mmarco_de:0.3,mqa_de:0.3` → `/ar-run 1 real` → `/ar-mteb` | Does an uncapped, domain-balanced, **materialized** mixture (the `_materialize_data_mixture` hook, fail-closed on unscanned sources) beat the capped diverse-16k mix on the aggregate? |
-| **2 — specialists + merge** | `/ar-specialist <src>` ×N from a shared warm-start → `/ar-merge` → `/ar-mteb` | Train one expert per domain (all warm-started from `diverse-causal` so they share a basin), then merge — the structural escape from the single-mix trade-off. |
-| **3 — distill** | `/ar-distill <merged> existing` (cheap) then `new:<src>` (teacher-scored, expensive) → `/ar-mteb` | Listwise-KL sharpens ranking; §Stage-2 showed it is **domain-shaped** (lifts the teacher-list domain, can cost others) — the frontier gate catches the regression. |
+| tune | `scripts/ar_loop.py` | cheap knob hill-climb on the proxy |
+| data mix | `scripts/ar_build_mixture.py` | composition is the limiter |
+| specialist | `scripts/ar_train_specialist.py` (+ `ar_refresh_hardnegatives.py`) | build a complementary domain expert from the shared warm-start |
+| merge | `scripts/ar_merge_search.py` | ≥2 complementary checkpoints exist — the trade-off escape; cheapest high-value |
+| distill | `scripts/ar_distill_trial.py` | sharpen ranking from the Qwen3-Reranker teacher |
 
-The promotion bar is **`scripts/check_mteb_frontier_gate.py`** (a protected `check_*`, run post-eval
-outside the loop): a candidate is `promotable` only if its 4-task aggregate ≥ the same-size-peer
-frontier (max of e5-base / LFM2.5) **and** no per-task regression below the @512 baseline − tol
-**and** leakage clean. Every source the harness may train on is enumerated in
-`configs/data_sources.json` with its `leakage`/`training_usable` flags; the recipe is fail-closed on
-anything not `scanned_clean`. This keeps the §1–§4 discipline (train≠eval, no committed weights, no
-benchmark claim without a saved `outputs/mteb/<label>/summary.json`) intact under interactive driving.
+The cheapest first move is a **merge of the two existing specialists**
+(`outputs/v8/swimir-12k/checkpoint` + `outputs/v8/diverse-causal/checkpoint`) — no training, and it
+answers whether specialist→merge escapes the §"composition trade-off".
+
+The promotion bar is **`scripts/check_mteb_frontier_gate.py`** (a protected `check_*`): a candidate is
+`promotable` only if its 4-task aggregate ≥ the same-size-peer frontier (max of e5-base / LFM2.5)
+**and** no per-task regression below the `v6-1-baseline` floor − tol (baseline must cover the
+candidate's tasks) **and** leakage clean. Every trainable source is enumerated in
+`configs/data_sources.json` with its `leakage`/`training_usable` flags; the single mixture builder
+(`data_mixture_optimizer.build_mixture`, which the recipe's `materialize_mixture` path delegates to)
+is fail-closed on anything not `scanned_clean`. This keeps the §1–§4 discipline (train≠eval, no
+committed weights, no benchmark claim without a saved `outputs/mteb/<label>/summary.json`) intact.

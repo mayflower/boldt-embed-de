@@ -111,7 +111,5 @@ outputs/merged/
 outputs/autoresearch/mixtures/**/*.jsonl
 outputs/autoresearch/hardneg/**/*.jsonl
 outputs/autoresearch/distill/**/*.jsonl
-outputs/autoresearch/controller/
-outputs/autoresearch/events.jsonl
 outputs/autoresearch/reports/
 outputs/autoresearch/mteb/

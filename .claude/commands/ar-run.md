@@ -1,54 +1,62 @@
 ---
-description: Autonomously run MULTIPLE AutoResearch rounds in one go (tune → trial → score → repeat)
+description: THE AutoResearch loop — you assess the state, pick the most reasonable next experiment, run it, judge it, repeat
 argument-hint: "[rounds] [dry|real]"
 allowed-tools: Bash(conda run *) Bash(tail *) Bash(cat *) Read Edit
 disable-model-invocation: true
 ---
-# AutoResearch — autonomous multi-round loop
+# AutoResearch loop
 
-Run several iterations **back-to-back without me triggering each one**, in THIS turn. Parse
-`$ARGUMENTS`: first token = number of rounds **N** (default 5); second token = mode `dry` (default)
-or `real`.
+Run the AutoResearch loop yourself, in THIS turn — there is no separate controller, no state file, no
+fixed step order. **You are the orchestrator.** Each round you read the measured state off disk,
+choose the single most promising next experiment, run it, measure it, and decide whether to keep it.
 
-Setup: skim `AUTORESEARCH.md`. The editable surface is **only**
-`configs/autoresearch/experiments/current.json`. PRIMARY metric = `webfaq_recall@100`; the
-GermanQuAD / DT-test guardrails (Δ ≥ −0.005) and 256-d retention (≥ 0.95) must not regress. Keep a
-running table and remember the best result + the config that produced it.
+Parse `$ARGUMENTS`: first token = rounds **N** (default 3); second = `dry` (default — plan/validate,
+no GPU) or `real` (run on the A6000). Tell me before a long real sweep (N≥3 real).
 
-For round k = 1..N:
+**Goal:** improve German retrieval toward **beating the same-size peers** (e5-base 278M, LFM2.5 350M)
+on MTEB(deu) retrieval-core (GermanQuAD / GerDaLIR / MIRACL / MLDR), without regressing any task. The
+in-loop WebFAQ proxy is a cheap inner signal; the MTEB frontier gate is the authoritative judge.
 
-1. If k > 1, make **ONE** small, sensible change to `current.json` within editable fields
-   (`loss.*`, `training.*`, `data_mixture`, `matryoshka_dims`, `pooling`, `normalize_embeddings`),
-   guided by the verdicts so far — hill-climb the primary metric, and revert a change that hurt it.
-   State a one-line rationale. On k = 1, run the current config unchanged.
-   In **real** mode the knobs that actually move training are `loss.temperature`,
-   `training.learning_rate`, `training.warmup_ratio`, `training.max_steps`, and
-   `training.batch_size`. By default `data_mixture` only moves dry-run pseudo-metrics (real training
-   uses the prepared manifest file) — so don't tune the mixture in a vanilla real round. To make the
-   mixture REAL, compose it first with `/ar-data` (sets `runtime.materialize_mixture=true`), which
-   builds + leakage-scans a corpus from `configs/data_sources.json` that this loop then trains on.
-   Keep `training.max_steps` modest (≈300) so each round fits the 20-minute budget, and if you raise
-   `max_document_length` you must lower `batch_size` (the recipe caps seq length to fit GPU memory).
-2. Run exactly one iteration:
-   - **dry:**  `conda run -n boldtembed python scripts/ar_loop.py --dry-run --status keep`
-   - **real:** `conda run -n boldtembed python scripts/ar_loop.py --real --allow-gpu --allow-checkpoints --status keep --baseline outputs/autoresearch/baseline/metrics.json --prepared-manifest outputs/autoresearch/prepared/prepare_manifest.json`
-     (`--allow-checkpoints` is what makes a real round actually **train**; without it the round is
-     eval-only and just re-measures the baseline.)
-3. Read the JSON verdict, then run the integrity check:
-   `conda run -n boldtembed python scripts/check_autoresearch_integrity.py --format json`.
-   If it flags anything **outside** `configs/autoresearch/experiments/*.json`, **revert your last
-   edit and STOP**.
-4. Append the round to your table.
+For each round k = 1..N:
 
-**Stop early** if: a round is `promotable: true`; OR 3 consecutive rounds show no WebFAQ
-improvement; OR the integrity check fails.
+1. **Assess the state from artifacts** (the artifacts ARE the state — nothing to record):
+   ```bash
+   conda run -n boldtembed python scripts/ar_frontier_status.py --format markdown   # ranked candidates, peer frontier, per-task leaders + gaps
+   conda run -n boldtembed python scripts/ar_report.py --format markdown --no-write  # Pareto view + proxy metrics
+   ```
+   Also note which checkpoints exist (`outputs/v8/*`, `outputs/merged/*`) and what last round changed.
 
-At the end, print: a compact table (round · change · webfaq_recall · score · promotable), the best
-config found, and the recommended next step. Never claim a benchmark beyond what the verdicts
-report — dry-run numbers are plumbing only, and a real promotion still needs human review.
+2. **Pick the single most reasonable next move** and state a one-line rationale. The menu (choose by
+   what the state says is the gap — don't run them in a fixed order):
+   - **tune** — edit `configs/autoresearch/experiments/current.json` (loss/training/data_mixture) and
+     run a fast proxy trial (`scripts/ar_loop.py`). Cheapest; good for knob hill-climbing.
+   - **data** — build a better/more-balanced leakage-clean mixture from the catalogue
+     (`scripts/ar_build_mixture.py`) when composition is the limiter.
+   - **specialist** — train one domain expert from the shared warm-start
+     (`scripts/ar_train_specialist.py`); needs hard negatives first
+     (`scripts/ar_refresh_hardnegatives.py`).
+   - **merge** — soup/SLERP/TIES/DARE over complementary specialists
+     (`scripts/ar_merge_search.py`) once ≥2 complementary checkpoints exist — the trade-off escape;
+     highest value-per-GPU-minute when specialists are on disk.
+   - **distill** — listwise-KL from the teacher ranking (`scripts/ar_distill_trial.py`) to sharpen.
 
-Note: in `real` mode each round **trains** on the RTX A6000 — at the default ≈300 steps that's
-~5–7 min/round and writes a ~1.7 GB checkpoint under `outputs/autoresearch/runs/<run_id>/` (git-
-ignored; prune old run dirs if disk gets tight). It also consumes context, so keep N modest (3–5)
-and tell me before launching a long real sweep. For a large unattended grid use
-`scripts/ar_sweep.py` instead (it prunes all but the best checkpoint).
+3. **Run it.** Dry mode → the tool's `--dry-run` (validates + plans, no GPU). Real mode → add the
+   tool's explicit `--real`/`--allow-gpu`/`--allow-checkpoints`/`--allow-merge` flags.
+
+4. **Measure + judge.** Eval any produced checkpoint and gate it:
+   ```bash
+   conda run -n boldtembed python scripts/ar_mteb_trial.py --model <ckpt> --label <name> [--real --allow-gpu]
+   conda run -n boldtembed python scripts/ar_promote.py --candidate <name> --format markdown
+   ```
+   Keep the move if it raises the frontier aggregate with no per-task regression; otherwise note why
+   and try a different lever next round. After any edit to `current.json`, run
+   `scripts/check_autoresearch_integrity.py --format json` and revert + stop if it flags anything
+   outside `configs/autoresearch/experiments/*.json`.
+
+**Stop early** if a candidate is promotable, OR two rounds bring no frontier improvement, OR integrity
+fails. At the end print a compact table (round · move · rationale · result · best-so-far) and the
+recommended next move.
+
+**Rules:** leakage is fail-closed (only scanned_clean catalogue sources train); never claim a number
+beyond a saved `outputs/mteb/<label>/summary.json` (ADR-005); a real promotion still needs human
+review; no weights are committed (everything lands under git-ignored `outputs/`).
