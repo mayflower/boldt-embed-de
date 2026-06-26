@@ -1,0 +1,19 @@
+{
+  "name": "hybrid_multivector_ceiling_breaker",
+  "status": "optional_research_track",
+  "activated_when": "single-vector dense stagnates on MIRACL/general retrieval AFTER data + merge + distill have been exhausted (see docs/research/hybrid-multivector-ceiling-breaker.md)",
+  "is_product_default": false,
+  "modes": [
+    {"name": "sparse_dense_hybrid", "desc": "BM25/SPLADE sparse score fused with the dense score (e.g. RRF / weighted sum)"},
+    {"name": "splade_head", "desc": "SPLADE-like learned sparse head on the encoder, if compatible"},
+    {"name": "bge_m3_style", "desc": "joint dense + sparse + multi-vector representation, evaluated separately"},
+    {"name": "colbert_late_interaction", "desc": "per-token vectors + MaxSim; a separate retrieval mode, not the dense product"},
+    {"name": "reranked_two_stage", "desc": "dense first-stage + the existing Boldt reranker, as an alternative to a higher pure-dense frontier"}
+  ],
+  "rules": {
+    "dense_single_vector_remains_primary": true,
+    "hybrid_may_not_replace_dense_promotion": true,
+    "separate_gates_and_reports": true,
+    "never_train_on_eval_data": true
+  }
+}

@@ -105,3 +105,13 @@ outputs/v8/**/checkpoint/
 outputs/v8/mntp-base/
 outputs/v8/**/*.log
 outputs/merged/
+# v8 controller program (Prompt 03-11): big materialized corpora / hard-neg & listwise lists /
+# controller working dir + state log are regenerable runtime artifacts; the small manifest.json /
+# report.md / *_manifest.json / promotion_*.{json,md} sidecars ARE tracked.
+outputs/autoresearch/mixtures/**/*.jsonl
+outputs/autoresearch/hardneg/**/*.jsonl
+outputs/autoresearch/distill/**/*.jsonl
+outputs/autoresearch/controller/
+outputs/autoresearch/events.jsonl
+outputs/autoresearch/reports/
+outputs/autoresearch/mteb/

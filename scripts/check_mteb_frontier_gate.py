@@ -28,8 +28,12 @@ SHORT = {"GermanQuAD-Retrieval": "GermanQuAD", "GerDaLIRSmall": "GerDaLIR",
          "MIRACLRetrievalHardNegatives": "MIRACL", "MultiLongDocRetrieval": "MLDR"}
 
 
-def _scores(label: str, required: bool = True) -> dict:
-    p = ROOT / "outputs" / "mteb" / label / "summary.json"
+def _mteb_root(root=None) -> Path:
+    return Path(root) if root else (ROOT / "outputs" / "mteb")
+
+
+def _scores(label: str, required: bool = True, root=None) -> dict:
+    p = _mteb_root(root) / label / "summary.json"
     if not p.exists():
         if required:
             raise SystemExit(f"missing MTEB summary for {label!r}: {p} (run /ar-mteb first)")
@@ -37,8 +41,8 @@ def _scores(label: str, required: bool = True) -> dict:
     return json.loads(p.read_text(encoding="utf-8")).get("scores", {})
 
 
-def _meta(label: str) -> dict:
-    p = ROOT / "outputs" / "mteb" / label / "summary.json"
+def _meta(label: str, root=None) -> dict:
+    p = _mteb_root(root) / label / "summary.json"
     if not p.exists():
         return {}
     return json.loads(p.read_text(encoding="utf-8")).get("meta", {})
@@ -49,16 +53,20 @@ def main(argv=None) -> int:
     ap.add_argument("--candidate", required=True, help="MTEB label under outputs/mteb/")
     ap.add_argument("--peers", default="e5-base,lfm2.5",
                     help="same-size-peer MTEB labels to beat (comma-separated)")
-    ap.add_argument("--baseline", default="v6-1-baseline-512",
-                    help="own-baseline label for the do-not-regress guardrail")
+    ap.add_argument("--baseline", default="v6-1-baseline",
+                    help="own-baseline label for the do-not-regress guardrail (a committed @256 "
+                         "baseline exists; pass a @512 re-baseline label for a tighter floor)")
     ap.add_argument("--tol", type=float, default=0.005)
+    ap.add_argument("--mteb-root", default=None,
+                    help="directory of <label>/summary.json (default outputs/mteb; for tests/reuse)")
     ap.add_argument("--format", choices=["markdown", "json"], default="markdown")
     args = ap.parse_args(argv)
 
-    cand = _scores(args.candidate)
-    peers = {p: _scores(p) for p in (x.strip() for x in args.peers.split(",")) if p}
-    base = _scores(args.baseline, required=False)
-    cmeta = _meta(args.candidate)
+    root = args.mteb_root
+    cand = _scores(args.candidate, root=root)
+    peers = {p: _scores(p, root=root) for p in (x.strip() for x in args.peers.split(",")) if p}
+    base = _scores(args.baseline, required=False, root=root)
+    cmeta = _meta(args.candidate, root=root)
 
     def agg(s):
         vals = [s[t] for t in TASKS if isinstance(s.get(t), (int, float))]
@@ -94,9 +102,15 @@ def main(argv=None) -> int:
         beats += 1 if won else 0
         per_task.append({"task": SHORT[t], "candidate": c, "peer_best": pf,
                          "baseline": b, "beats_peer": won})
-        if isinstance(c, (int, float)) and isinstance(b, (int, float)):  # do-not-regress vs own base
-            add(f"no_regress_{SHORT[t]}", c >= b - args.tol,
-                f"{SHORT[t]} {c} >= baseline {b} - {args.tol}")
+        if isinstance(c, (int, float)):  # do-not-regress vs own base
+            if isinstance(b, (int, float)):
+                add(f"no_regress_{SHORT[t]}", c >= b - args.tol,
+                    f"{SHORT[t]} {c} >= baseline {b} - {args.tol}")
+            elif base_has_scores:
+                # baseline exists but lacks THIS task the candidate reports → the guardrail can't
+                # be verified for it, so fail closed rather than silently skip (coverage gap).
+                add(f"no_regress_{SHORT[t]}", False,
+                    f"baseline {args.baseline!r} has no {SHORT[t]} score — do-not-regress unverifiable")
 
     # WebFAQ primary do-not-regress (optional, if a WebFAQ summary is supplied as candidate meta)
     wf = cmeta.get("webfaq_recall100")

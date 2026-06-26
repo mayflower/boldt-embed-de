@@ -15,10 +15,9 @@
     "leakage_hits_max": 0
   },
   "data_mixture": {
-    "mmarco_de": 0.45,
-    "clips_mqa_de": 0.25,
-    "webfaq_train": 0.20,
-    "german_stress": 0.10
+    "swim_ir_de_full": 0.40,
+    "mmarco_de": 0.30,
+    "mqa_de": 0.30
   },
   "loss": {
     "type": "cached_mnrl_matryoshka_distillation",

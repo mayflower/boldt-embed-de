@@ -1,0 +1,17 @@
+{
+  "name": "mteb_retrieval_core",
+  "tasks": ["GermanQuAD-Retrieval", "GerDaLIRSmall", "MIRACLRetrievalHardNegatives", "MultiLongDocRetrieval"],
+  "langs": ["deu"],
+  "loader": "st",
+  "batch_size": 32,
+  "max_seq_length": 512,
+  "peers": ["e5-base", "lfm2.5"],
+  "baseline": "v6-1-baseline",
+  "tol": 0.005,
+  "long_doc_native_context": {
+    "enabled": false,
+    "tasks": ["GerDaLIRSmall", "MultiLongDocRetrieval"],
+    "max_seq_length": 2048,
+    "note": "optional second pass at native context (the @512 pass is the fair same-size-peer comparison; long-doc tasks also reported at 2048 where the model supports it)"
+  }
+}

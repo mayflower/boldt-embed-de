@@ -67,6 +67,27 @@ def validate_recipe_config(config: Dict[str, Any]) -> List[str]:
     loss = config.get("loss", {})
     if loss and not isinstance(loss.get("type", ""), str):
         errors.append("loss.type must be a string")
+    # Catalogue hygiene: when the mixture will be MATERIALIZED into a real training corpus, every
+    # source id must resolve in configs/data_sources.json, be training_usable, and be leakage-clean.
+    # (For a non-materialized mix the weights only steer dry-run pseudo-metrics, so we don't gate it.)
+    runtime = config.get("runtime", {}) or {}
+    if runtime.get("materialize_mixture") and isinstance(mix, dict) and mix:
+        catalogue = _load_catalogue()
+        for sid, weight in mix.items():
+            rec = catalogue.get(sid)
+            if rec is None:
+                errors.append(f"data_mixture source {sid!r} is not in configs/data_sources.json "
+                              "(materialize_mixture=true requires a catalogued source)")
+                continue
+            if not rec.get("training_usable"):
+                errors.append(f"data_mixture source {sid!r} is training_usable=false "
+                              "(not allowed in a materialized mixture)")
+            elif rec.get("leakage") not in ("scanned_clean", "clean"):
+                errors.append(f"data_mixture source {sid!r} leakage={rec.get('leakage')!r} — only "
+                              "scanned_clean/clean sources may be materialized "
+                              "(run scripts/run_full_leakage_scan.py first)")
+            if not isinstance(weight, (int, float)) or isinstance(weight, bool) or weight <= 0:
+                errors.append(f"data_mixture source {sid!r} weight must be > 0 when materialized")
     return errors
 
 
@@ -92,6 +113,24 @@ def build_training_plan(config: Dict[str, Any]) -> Dict[str, Any]:
     requested_seq = max(max_query, max_doc)
     seq_cap = max(max_query, SAFE_BATCH_TOKENS // max(batch_size, 1))
     effective_seq = min(requested_seq, seq_cap)
+    grad_accum = max(1, int(training.get("grad_accumulation", 1)))
+    mini_batch = training.get("mini_batch_size")
+    # effective contrastive batch = per-device batch × accumulation steps. An explicit
+    # effective_batch_size in the config is honored only when consistent; otherwise the derived value
+    # wins and the inconsistency is recorded (never silently trusted).
+    derived_eff_batch = batch_size * grad_accum
+    requested_eff_batch = training.get("effective_batch_size")
+    temp_schedule = training.get("temperature_schedule", "constant")
+    grad_ckpt = bool(training.get("gradient_checkpointing", False))
+    max_triplets = training.get("max_triplets_per_query")
+    # Honesty: which knobs actually reach REAL training vs. are plan-only (so the run card never
+    # implies an inert knob was active). The trainer's CMNRL scale is constant, so any non-constant
+    # temperature_schedule is plan-only until a real scheduler exists.
+    plan_only = []
+    if temp_schedule not in (None, "constant"):
+        plan_only.append("temperature_schedule")
+    if requested_eff_batch is not None and requested_eff_batch != derived_eff_batch:
+        plan_only.append("effective_batch_size(requested≠batch×accum)")
     return {
         "task": config.get("task", "dense_retriever"),
         "base_model": config.get("base_model", "Boldt/Boldt-DC-350M"),
@@ -109,7 +148,13 @@ def build_training_plan(config: Dict[str, Any]) -> Dict[str, Any]:
         "learning_rate": training.get("learning_rate", 2e-5),
         "warmup_ratio": training.get("warmup_ratio", 0.05),
         "batch_size": batch_size,
-        "grad_accumulation": training.get("grad_accumulation", 1),
+        "grad_accumulation": grad_accum,
+        "mini_batch_size": int(mini_batch) if mini_batch else None,
+        "effective_batch_size": derived_eff_batch,
+        "effective_batch_size_requested": requested_eff_batch,
+        "gradient_checkpointing": grad_ckpt,
+        "temperature_schedule": temp_schedule,
+        "max_triplets_per_query": max_triplets,
         "max_query_length": max_query,
         "max_document_length": max_doc,
         "max_seq_length": effective_seq,
@@ -117,6 +162,7 @@ def build_training_plan(config: Dict[str, Any]) -> Dict[str, Any]:
         "seq_capped_for_memory": effective_seq < requested_seq,
         "max_steps": training.get("max_steps"),
         "dtype": training.get("dtype", "bfloat16"),
+        "plan_only_knobs": plan_only,
     }
 
 
@@ -335,14 +381,15 @@ def _materialize_data_mixture(config: Dict[str, Any], out_dir: Path,
                               cmd_log: List[Dict[str, Any]]) -> Tuple[Optional[str], Optional[str]]:
     """Build ONE real training corpus from catalogue sources named in ``config['data_mixture']``
     (weights, keys = `configs/data_sources.json` ids), so the loop can search data MIXES in REAL
-    mode (today data_mixture only steers dry-run pseudo-metrics).
+    mode (data_mixture otherwise only steers dry-run pseudo-metrics).
 
-    FAIL-CLOSED leakage: only sources flagged ``training_usable`` AND ``leakage in
-    {scanned_clean, clean}`` may be mixed — the union of individually-scanned-clean sources is clean
-    against the same eval sets, so NO slow in-trial re-scan is needed. Each source is stride-sampled
-    to its weighted share of ``runtime.mixture_total``; the kept set is FAQ-capped + domain-balanced
-    via ``train_modern.domain_balanced_examples``. Opt-in: runtime.materialize_mixture must be true.
-    Returns (mixed_path | None, error | None). Pure stdlib (no torch)."""
+    The actual build is DELEGATED to ``boldt_embed.data_mixture_optimizer.build_mixture`` — the single
+    canonical mixture builder — so the fail-closed leakage/training_usable gate, stride-sampling,
+    dedup and FAQ cap can never drift between this path and ``scripts/ar_build_mixture.py``. Only
+    sources flagged ``training_usable`` AND ``leakage in {scanned_clean, clean}`` are admitted (the
+    union of individually-scanned-clean sources is clean, so no in-trial re-scan). Opt-in:
+    runtime.materialize_mixture must be true. Returns (train_jsonl_path | None, error | None).
+    Pure stdlib (no torch)."""
     runtime = config.get("runtime", {}) or {}
     if not runtime.get("materialize_mixture"):
         return None, None
@@ -351,63 +398,30 @@ def _materialize_data_mixture(config: Dict[str, Any], out_dir: Path,
         return None, "materialize_mixture set but data_mixture is empty"
     total = int(runtime.get("mixture_total", 500000))
     faq_cap = float(runtime.get("faq_cap", 0.30))
-    catalogue = _load_catalogue()
-    wsum = sum(float(w) for w in mixture.values()) or 1.0
-
-    examples: List[Dict[str, Any]] = []
-    used: List[Dict[str, Any]] = []
-    for sid, weight in mixture.items():
-        rec = catalogue.get(sid)
-        if not rec:
-            return None, f"data_mixture source {sid!r} is not in configs/data_sources.json"
-        if not rec.get("training_usable"):
-            return None, f"data_mixture source {sid!r} is training_usable=false"
-        if rec.get("leakage") not in ("scanned_clean", "clean"):
-            return None, (f"data_mixture source {sid!r} leakage={rec.get('leakage')!r} — only "
-                          "scanned_clean/clean sources may be mixed (run run_full_leakage_scan first)")
-        path = rec.get("path")
-        p = Path(path) if path and Path(path).is_absolute() else (ROOT / str(path))
-        if not p.exists():
-            return None, f"data_mixture source {sid!r} file missing: {path}"
-        budget = max(1, int(round(total * float(weight) / wsum)))
-        rows = [ln for ln in p.read_text(encoding="utf-8").split("\n") if ln.strip()]
-        stride = max(1, len(rows) // budget)
-        kept = 0
-        for i in range(0, len(rows), stride):
-            try:
-                d = json.loads(rows[i])
-            except Exception:
-                continue
-            q = (d.get("query") or "").strip()
-            doc = (d.get("positive") or d.get("document") or "")
-            doc = doc.strip() if isinstance(doc, str) else ""
-            if not q or len(doc) < 5:
-                continue
-            examples.append({"query": q, "positive": doc,
-                             "domain": d.get("domain") or sid, "source": sid})
-            kept += 1
-            if kept >= budget:
-                break
-        used.append({"source": sid, "weight": float(weight), "budget": budget, "kept": kept})
-
-    if not examples:
-        return None, "data_mixture produced no usable examples"
-
+    # translate the recipe's compact config into the optimizer's config shape, then delegate
+    opt_config = {
+        "name": "ar_materialized_mixture",
+        "total_rows": total,
+        "sources": {sid: float(w) for sid, w in mixture.items()},
+        "constraints": {"faq_cap": faq_cap},
+    }
     try:
-        from boldt_embed.train_modern import domain_balanced_examples  # stdlib, lazy
-        balanced, bal_report = domain_balanced_examples(examples, faq_cap=faq_cap)
-    except Exception as exc:  # never silently train the wrong thing
-        return None, f"domain_balanced_examples failed: {type(exc).__name__}: {exc}"
-
-    mixed = Path(out_dir) / "data_mixture.jsonl"
-    with mixed.open("w", encoding="utf-8") as w:
-        for e in balanced:
-            w.write(json.dumps(e, ensure_ascii=False) + "\n")
-    cmd_log.append({"note": "materialized data_mixture from catalogue (scanned_clean sources only)",
-                    "data_mixture_sources": used, "faq_cap": faq_cap,
-                    "mixed_rows": len(balanced), "faq_balance": bal_report,
-                    "mixed_path": str(mixed)})
-    return str(mixed), None
+        from boldt_embed import data_mixture_optimizer as dmo  # stdlib, lazy
+        catalogue = dmo.load_catalogue(_CATALOGUE_PATH)
+        result = dmo.build_mixture(opt_config, catalogue, out_dir=Path(out_dir))
+    except Exception as exc:  # MixtureConfigError (fail-closed, names the source id) or IO error
+        return None, f"{type(exc).__name__}: {exc}"
+    train_path = result.get("written", {}).get("train")
+    if not train_path:
+        return None, "data_mixture produced no usable examples"
+    manifest = result.get("manifest", {})
+    cmd_log.append({"note": "materialized data_mixture via data_mixture_optimizer "
+                            "(single builder; scanned_clean sources only)",
+                    "data_mixture_sources": manifest.get("sources"), "faq_cap": faq_cap,
+                    "mixed_rows": manifest.get("rows_written"),
+                    "domain_mix": manifest.get("domain_mix"),
+                    "leakage": manifest.get("leakage"), "mixed_path": train_path})
+    return str(train_path), None
 
 
 def _evaluate_in_process(ev, label: str, model_spec: Dict[str, Any], eval_sets: List[str],
@@ -491,6 +505,15 @@ def _build_train_cmd(train_script, *, train_base, train_pairs, hard_negs, ckpt, 
            "--run-id", f"{run_id}-train"]
     if plan.get("temperature") is not None:
         cmd += ["--temperature", str(plan["temperature"])]
+    # generalization knobs (Prompt 06) — only forward what the trainer really supports
+    if int(plan.get("grad_accumulation", 1)) > 1:
+        cmd += ["--grad-accumulation", str(plan["grad_accumulation"])]
+    if plan.get("mini_batch_size"):
+        cmd += ["--mini-batch-size", str(plan["mini_batch_size"])]
+    if plan.get("max_triplets_per_query"):
+        cmd += ["--max-triplets-per-query", str(plan["max_triplets_per_query"])]
+    if plan.get("gradient_checkpointing"):
+        cmd.append("--gradient-checkpointing")
     if plan.get("dtype") == "bfloat16":
         cmd.append("--bf16")
     return cmd
@@ -648,9 +671,14 @@ def _run_real(config: Dict[str, Any], out_dir: Path, run_id: str,
     metrics = _map_eval_summary(summary, label, leakage)
     (out_dir / "recipe_commands.json").write_text(
         json.dumps({"commands": cmd_log}, ensure_ascii=False, indent=2), encoding="utf-8")
+    # A trial is "ok" if it produced the metrics for the eval sets it was actually asked to run.
+    # WebFAQ is only required when it was requested (a germanquad/dt_test-only config legitimately
+    # has no WebFAQ metric and must not be marked failed).
+    webfaq_requested = "webfaq" in eval_sets
+    trial_ok = (not webfaq_requested) or (metrics["webfaq"].get("recall@100") is not None)
     result = {
         "run_id": run_id,
-        "status": "ok" if metrics["webfaq"].get("recall@100") is not None else "fail",
+        "status": "ok" if trial_ok else "fail",
         "mode": "real",
         "metrics": metrics,
         "training_plan": plan,

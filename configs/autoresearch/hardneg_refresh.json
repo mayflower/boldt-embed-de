@@ -1,0 +1,19 @@
+{
+  "name": "v8_refresh_001",
+  "queries": "outputs/autoresearch/mixtures/v8_balanced/train.jsonl",
+  "corpus": "outputs/autoresearch/mixtures/v8_balanced/train.jsonl",
+  "candidate_pools": ["bm25", "dense_current", "dense_teacher"],
+  "teacher_scores": null,
+  "dense_current_embeddings": null,
+  "dense_teacher_embeddings": null,
+  "negatives_per_query": 8,
+  "candidate_list_k": 32,
+  "false_negative_filter": {
+    "method": "margin_or_ratio",
+    "margin": 0.1,
+    "ratio": 0.95
+  },
+  "domain_balance": {
+    "max_per_domain": 4
+  }
+}

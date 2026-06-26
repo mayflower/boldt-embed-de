@@ -199,9 +199,15 @@ loss) → gate. The AutoResearch loop can still hill-climb the *cheap* Stage-2 k
 margins) but the architecture/pretrain/data changes are recipe-level, outside its editable surface.
 Full citations: see `outputs/` research notes and the inline arXiv IDs above.
 
-## 6. Driving the program — the instrumented harness (no autonomous training)
-The findings above are now operationalized as user-driven slash commands (`AUTORESEARCH.md` §"The
-v8+ frontier program"). Nothing trains on its own — you trigger each GPU step. The map:
+## 6. Driving the program — the instrumented harness
+The findings above are operationalized so the **AutoResearch agent drives the whole program**, not
+manual step-by-step execution. `/ar-frontier [rounds] [dry|real]` is the autonomous orchestrator:
+each round it reads the program state (`scripts/ar_frontier_status.py`), picks ONE move from
+{train-balanced, train-specialist, merge, distill}, evaluates at @512, gates with
+`check_mteb_frontier_gate.py`, and hill-climbs the same-size-peer aggregate — back-to-back. The
+single-purpose commands below are the **primitives** it composes (also runnable by hand for a one-off
+or to debug a move). Launch a long real program deliberately (it trains+evals several models on the
+A6000); `dry` prints the planned move sequence first.
 
 | Phase | Command(s) | What it tests / produces |
 |---|---|---|

@@ -38,6 +38,10 @@ def main() -> int:
     ap.add_argument("--max-triplets-per-query", type=int, default=None)
     ap.add_argument("--max-steps", type=int, default=1000)
     ap.add_argument("--batch-size", type=int, default=64)
+    ap.add_argument("--grad-accumulation", type=int, default=1,
+                    help="gradient accumulation steps; effective batch = batch-size * this")
+    ap.add_argument("--mini-batch-size", type=int, default=None,
+                    help="CachedMNRL/GradCache chunk size (caps activation memory of the cached forward)")
     ap.add_argument("--max-seq-length", type=int, default=256)
     ap.add_argument("--lr", type=float, default=2e-5)
     ap.add_argument("--warmup-ratio", type=float, default=0.0)
@@ -104,7 +108,8 @@ def main() -> int:
         matryoshka_dims=plan["matryoshka_dims"], max_steps=args.max_steps,
         batch_size=args.batch_size, lr=args.lr, warmup_ratio=args.warmup_ratio,
         temperature=args.temperature, max_seq_length=args.max_seq_length, bf16=args.bf16,
-        gradient_checkpointing=args.gradient_checkpointing, bidirectional=args.bidirectional)
+        gradient_checkpointing=args.gradient_checkpointing, bidirectional=args.bidirectional,
+        gradient_accumulation=args.grad_accumulation, mini_batch_size=args.mini_batch_size)
     card["bidirectional"] = args.bidirectional
     card["training_result"] = result
     out["run_card"] = card

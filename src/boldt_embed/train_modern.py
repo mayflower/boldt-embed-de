@@ -703,7 +703,8 @@ def train_v6_1_dense_embedder(base_model: str, pair_examples: Sequence[Dict[str,
                               warmup_ratio: float = 0.0, temperature: Optional[float] = None,
                               max_seq_length: int = 256, bf16: bool = True,
                               gradient_checkpointing: bool = False, device: Optional[str] = None,
-                              bidirectional: bool = False) -> Dict[str, Any]:
+                              bidirectional: bool = False, gradient_accumulation: int = 1,
+                              mini_batch_size: Optional[int] = None) -> Dict[str, Any]:
     """v6.1 dense training (GPU). Continues from ``base_model`` and trains CachedMNRL -> Matryoshka
     over a DatasetDict of contrastive PAIRS (query, positive) + RANK-PROMOTION TRIPLETS
     (query, positive, top50-blocker). The triplets' explicit hard negatives ARE the rank-promotion
@@ -721,6 +722,11 @@ def train_v6_1_dense_embedder(base_model: str, pair_examples: Sequence[Dict[str,
     # temperature -> CMNRL scale (scale = 1/temperature); None keeps the SBERT default (scale 20 ≈
     # temperature 0.05). This lets the AutoResearch loop tune the contrastive temperature for real.
     cmnrl_kwargs = {} if temperature in (None, 0) else {"scale": round(1.0 / float(temperature), 4)}
+    # mini_batch_size is the CachedMNRL/GradCache chunk: it caps the activation memory of the cached
+    # forward independently of the (larger) effective contrastive batch, so a big in-batch-negative
+    # count fits on the A6000. None keeps the SBERT default (32).
+    if mini_batch_size:
+        cmnrl_kwargs["mini_batch_size"] = int(mini_batch_size)
     loss = L.MatryoshkaLoss(model, L.CachedMultipleNegativesRankingLoss(model, **cmnrl_kwargs),
                             matryoshka_dims=dims)
 
@@ -739,7 +745,9 @@ def train_v6_1_dense_embedder(base_model: str, pair_examples: Sequence[Dict[str,
 
     args = SentenceTransformerTrainingArguments(
         output_dir=output_dir, num_train_epochs=epochs, max_steps=max_steps,
-        per_device_train_batch_size=batch_size, learning_rate=lr, warmup_ratio=warmup_ratio,
+        per_device_train_batch_size=batch_size,
+        gradient_accumulation_steps=max(1, int(gradient_accumulation)),
+        learning_rate=lr, warmup_ratio=warmup_ratio,
         bf16=bf16, gradient_checkpointing=gradient_checkpointing,
         batch_sampler=BatchSamplers.NO_DUPLICATES)
     trainer = SentenceTransformerTrainer(model=model, args=args, train_dataset=train_dataset,
@@ -750,6 +758,9 @@ def train_v6_1_dense_embedder(base_model: str, pair_examples: Sequence[Dict[str,
             "datasets": sorted(parts), "num_pairs": len(pair_examples),
             "num_rank_promotion_triplets": len(triplet_examples), "matryoshka_dims": dims,
             "max_steps": max_steps, "lr": lr, "warmup_ratio": warmup_ratio,
+            "gradient_accumulation": max(1, int(gradient_accumulation)),
+            "effective_batch_size": batch_size * max(1, int(gradient_accumulation)),
+            "mini_batch_size": int(mini_batch_size) if mini_batch_size else None,
             "temperature": temperature, "rank_promotion": "CMNRL explicit top-50 blocker negatives",
             "reranker_trained": False,
             "gpu_name": torch.cuda.get_device_name(0) if torch.cuda.is_available() else None}

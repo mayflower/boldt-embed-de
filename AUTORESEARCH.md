@@ -86,11 +86,30 @@ The loop is instrumented as **project slash commands** under `.claude/commands/`
 | `/ar-tune [hypothesis]` | Make ONE editable-surface config change toward WebFAQ recall, then iterate |
 | `/ar-run [rounds] [dry\|real]` | **Autonomously** run several rounds back-to-back in one invocation |
 | `/ar-integrity [--base-ref REF]` | Run the protected-surface check and explain any violations |
+| `/ar-frontier [rounds] [dry\|real]` | **AUTONOMOUS** frontier program — the agent composes train/specialist/merge/distill itself |
 | `/ar-data <src:w,…> [total]` | Compose a leakage-clean training mixture from the data-source catalogue |
 | `/ar-specialist <source> [steps]` | Train one domain specialist from a shared warm-start (for merging) |
 | `/ar-merge <ckptA,ckptB,…> [mean\|slerp]` | Soup/SLERP complementary checkpoints + MTEB eval + frontier gate |
 | `/ar-distill <base-ckpt> [existing\|new]` | Listwise-KL distillation from the Qwen3-Reranker teacher lists |
 | `/ar-mteb <model> [label]` | The promotion eval: MTEB(deu) retrieval-core + same-size-peer frontier gate |
+| `/ar-controller [status\|next\|plan]` | **Stateful** controller: decide + plan the next trial from the event log (never starts GPU) |
+| `/ar-build-mixture <cfg>` | Build a manifested leakage-clean mixture from the catalogue (Prompt 04) |
+| `/ar-refresh-hardnegs <cfg>` | Refresh BM25/dense/teacher hard negatives + listwise lists (Prompt 05) |
+| `/ar-train-specialist <src>` | Train one specialist from the shared warm-start, scriptably (Prompt 07) |
+| `/ar-merge-search <cfg>` | Merge-search soup/SLERP/TIES/DARE over specialists (Prompt 08) |
+| `/ar-distill-trial <cfg>` | Listwise-KL distill trial: validate lists, plan train + eval (Prompt 09) |
+| `/ar-mteb-trial <model> <label>` | Plan/run an MTEB(deu) eval as a trial (Prompt 10) |
+| `/ar-promote <label>` | Run the frontier gate, write an auditable promotion verdict (Prompt 10) |
+| `/ar-report` | Pareto frontier across WebFAQ/MTEB/cost; missing≠0 (Prompt 11) |
+
+**The stateful controller program** (`docs/autoresearch-controller-2026.md` +
+`docs/autoresearch-runbook-v8.md`) wraps these into a deterministic state machine: every trial
+appends an event to `outputs/autoresearch/events.jsonl`, and `scripts/ar_controller.py` decides the
+next trial via a fixed ladder (data_mix → dense → hardneg_refresh → specialist ×2 → merge → distill
+→ mteb → promotion). Drive it with `make autoresearch-controller-dry` (status + next plan),
+`make autoresearch-report` (Pareto frontier), `make autoresearch-validate` (config + test gate). The
+controller only PLANS; real GPU/teacher steps are launched by running the printed command with its
+explicit `--real`/`--allow-*` flags.
 
 A typical interactive session: `/ar-orient` → `/ar-status` → `/ar-trial dry` (sanity) →
 `/ar-tune "lower loss.temperature"` (iterate) → `/ar-trial real` once you have a baseline + a
@@ -130,7 +149,16 @@ each tagged `domain`, `rows`, `quality_e5`, `leakage`, `training_usable`. Only
 FAQ-capped, domain-balanced JSONL in the run dir — the union of individually-scanned-clean sources
 is clean by construction, so no slow re-scan. Opt in via `runtime.materialize_mixture=true`.
 
-**The driven phases** (you trigger each; nothing trains autonomously):
+**Two ways to run it.** `/ar-frontier [rounds] [dry|real]` is the **autonomous orchestrator**: the
+agent reads the program state (`scripts/ar_frontier_status.py` — ranked candidates, peer frontier,
+per-task leaders = complementary merge inputs), picks ONE move per round from {train-balanced,
+train-specialist, merge, distill}, evaluates the result at @512, gates it, and hill-climbs the
+aggregate — back-to-back, no manual step from you (run `dry` first to see the planned moves). The
+fine-grained commands below (`/ar-data`, `/ar-specialist`, `/ar-merge`, `/ar-distill`, `/ar-mteb`)
+are the **primitives** it composes; run them by hand only for a one-off or to debug a single move.
+
+**The phases the autonomous loop works through** (it triggers each move itself; `dry` plans without
+running):
 
 | Phase | Command(s) | Question it answers |
 |---|---|---|

@@ -1,0 +1,17 @@
+{
+  "name": "v8_merge_search",
+  "parents": [
+    {"label": "wiki_miracl", "path": "outputs/v8/specialists/spec-wiki_miracl/checkpoint"},
+    {"label": "web_msmarco", "path": "outputs/v8/specialists/spec-web_msmarco/checkpoint"},
+    {"label": "faq_web", "path": "outputs/v8/specialists/spec-faq_web/checkpoint"}
+  ],
+  "warm_start": "outputs/v8/diverse-causal/checkpoint",
+  "methods": [
+    {"name": "mean"},
+    {"name": "weighted_mean", "weights_grid": [[0.5, 0.25, 0.25], [0.25, 0.5, 0.25], [0.25, 0.25, 0.5]]},
+    {"name": "slerp_pairwise", "t_grid": [0.3, 0.5, 0.7]},
+    {"name": "ties", "density_grid": [0.2, 0.5]},
+    {"name": "dare_linear", "density_grid": [0.2, 0.5], "rescale": true}
+  ],
+  "eval": {"fast_proxy": true, "mteb_after_search": false}
+}

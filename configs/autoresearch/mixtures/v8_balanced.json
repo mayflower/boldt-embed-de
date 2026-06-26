@@ -1,0 +1,16 @@
+{
+  "name": "v8_balanced",
+  "total_rows": 1000000,
+  "sources": {
+    "swim_ir_de_full": 0.40,
+    "mmarco_de": 0.30,
+    "mqa_de": 0.30
+  },
+  "constraints": {
+    "faq_cap": 0.30,
+    "min_domain_share": 0.05,
+    "max_domain_share": 0.60,
+    "length_buckets": {"short": 0.40, "medium": 0.40, "long": 0.20},
+    "dedupe": {"exact": true, "normalized_text": true, "simhash": false}
+  }
+}

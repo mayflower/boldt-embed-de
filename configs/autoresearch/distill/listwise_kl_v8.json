@@ -1,0 +1,22 @@
+{
+  "name": "v8_lwkl_existing",
+  "base_checkpoint": "outputs/merged/v8_merge_search/best/checkpoint",
+  "lists": "data/processed/v6/reranker_train_lists_teacher_scored.jsonl",
+  "output": "outputs/v8/distill/v8_lwkl_existing/checkpoint",
+  "training": {
+    "steps": 1500,
+    "batch_queries": 4,
+    "list_k": 24,
+    "lr": 5e-6,
+    "tau": 0.05,
+    "contrastive_weight": 0.0,
+    "max_seq_length": 256
+  },
+  "new_teacher_lists": {
+    "enabled": false,
+    "source_ids": ["swim_ir_de_full", "mmarco_de", "mqa_de"],
+    "candidate_pools": ["bm25", "dense_current"],
+    "teacher": "qwen3-reranker-8b",
+    "slice_rows": 50000
+  }
+}
